@@ -1,6 +1,6 @@
 """
-Zero-IA: Plataforma Minimalista de Auditoría y Detección de Huellas de IA
-Diseño de alto nivel para Trabajos de Fin de Máster y Publicaciones Académicas.
+Zero-IA: Plataforma Avanzada de Auditoría, Detección y Mitigación de Huellas de IA
+Diseño de alto nivel para Evaluación Académica, TFM y Publicaciones Científicas.
 """
 
 import streamlit as st
@@ -11,152 +11,259 @@ from core.document_parser import parse_document
 from core.detector import AIDetector
 from export.report_generator import export_annotated_docx, export_markdown_report
 
-# Configuración de página minimalista
+# Configuración de página
 st.set_page_config(
-    page_title="Zero-IA | Validador Académico",
-    page_icon="⚖️",
+    page_title="Zero-IA · Academic AI Footprint Auditor",
+    page_icon="⚡",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Estética CSS de Alto Nivel (Minimalista, Editorial, Académica)
+# Estética UI Premium Moderna
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap');
 
     html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         color: #0f172a;
-        background-color: #fcfcfd;
+        background-color: #f8fafc;
     }
 
-    /* Ocultar elementos sobrantes de Streamlit */
+    /* Ocultar elementos innecesarios de Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
 
-    /* Contenedor principal estilizado */
     .block-container {
-        padding-top: 2rem;
-        padding-bottom: 3rem;
-        max-width: 1400px;
+        padding-top: 1.5rem;
+        padding-bottom: 2.5rem;
+        max-width: 1440px;
     }
 
-    /* Encabezado */
-    .header-title {
-        font-size: 2.1rem;
-        font-weight: 700;
-        letter-spacing: -0.03em;
-        color: #090d16;
-        margin-bottom: 0.2rem;
-    }
-    .header-subtitle {
-        font-size: 0.98rem;
-        color: #64748b;
-        margin-bottom: 1.8rem;
-    }
-
-    /* Hero Metric Box */
-    .hero-metric-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 14px;
-        padding: 20px 24px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    /* Barra Superior Premium */
+    .top-navbar {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 14px 24px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .brand-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .brand-icon {
+        background: linear-gradient(135deg, #2563eb, #7c3aed);
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 1.1rem;
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+    .brand-title {
+        font-size: 1.35rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: #090d16;
+        line-height: 1.1;
+    }
+    .brand-sub {
+        font-size: 0.8rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 20px;
+    }
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #10b981;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    }
+
+    /* Tarjetas de Entrada */
+    .input-section-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 20px 24px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
         margin-bottom: 1.5rem;
     }
-    .hero-stat-label {
-        font-size: 0.82rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        font-weight: 600;
-        color: #64748b;
-    }
-    .hero-stat-value {
-        font-size: 2.4rem;
-        font-weight: 800;
-        letter-spacing: -0.04em;
-        line-height: 1;
-        margin-top: 4px;
-    }
 
-    /* Indicadores de riesgo sutiles */
-    .score-high { color: #dc2626; }
-    .score-med { color: #d97706; }
-    .score-low { color: #16a34a; }
-
-    /* Visor de Documento tipo Manuscrito */
-    .paper-viewer {
+    /* Dashboard de Métricas */
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 1.5rem;
+    }
+    .metric-box {
         background: #ffffff;
         border: 1px solid #e2e8f0;
         border-radius: 14px;
-        padding: 32px 36px;
-        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+        padding: 18px 20px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .metric-box::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+    }
+    .border-danger::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
+    .border-warning::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+    .border-success::before { background: linear-gradient(90deg, #10b981, #059669); }
+    .border-primary::before { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+
+    .metric-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        color: #64748b;
+        margin-bottom: 6px;
+    }
+    .metric-value {
+        font-size: 2.1rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        color: #0f172a;
+    }
+    .metric-desc {
+        font-size: 0.78rem;
+        color: #64748b;
+        margin-top: 6px;
+    }
+
+    /* Hoja de Documento Académico */
+    .document-sheet {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 36px 44px;
+        box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
         font-family: 'Newsreader', Georgia, serif;
-        font-size: 1.14rem;
-        line-height: 2.0;
+        font-size: 1.18rem;
+        line-height: 2.1;
         color: #1e293b;
-        max-height: 720px;
+        max-height: 740px;
         overflow-y: auto;
     }
 
-    /* Resaltados elegantes y minimalistas */
-    .hl-ai-high {
-        background-color: #fee2e2;
-        border-bottom: 2px solid #ef4444;
+    /* Resaltadores Visuales */
+    .hl-critical {
+        background: rgba(239, 68, 68, 0.16);
+        border-bottom: 2.5px solid #dc2626;
         color: #991b1b;
-        padding: 2px 4px;
+        padding: 2px 5px;
         border-radius: 4px;
         transition: all 0.2s ease;
+        cursor: pointer;
     }
-    .hl-ai-high:hover {
-        background-color: #fecaca;
+    .hl-critical:hover {
+        background: rgba(239, 68, 68, 0.28);
     }
 
-    .hl-ai-med {
-        background-color: #fef3c7;
-        border-bottom: 2px solid #f59e0b;
+    .hl-warning {
+        background: rgba(245, 158, 11, 0.18);
+        border-bottom: 2.5px solid #d97706;
         color: #92400e;
-        padding: 2px 4px;
+        padding: 2px 5px;
         border-radius: 4px;
         transition: all 0.2s ease;
+        cursor: pointer;
     }
-    .hl-ai-med:hover {
-        background-color: #fde68a;
+    .hl-warning:hover {
+        background: rgba(245, 158, 11, 0.3);
     }
 
-    .hl-ai-low {
+    .hl-clean {
         color: #1e293b;
     }
 
-    /* Tarjetas de auditoría lateral */
-    .audit-card {
+    /* Tarjetas de Acción de Humanización */
+    .action-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 10px;
+        border-radius: 12px;
         padding: 16px;
         margin-bottom: 12px;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        transition: transform 0.15s ease, border-color 0.15s ease;
     }
-    .audit-card:hover {
+    .action-card:hover {
         border-color: #cbd5e1;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        transform: translateY(-1px);
     }
-    .pill-badge {
-        display: inline-block;
+    .chip-badge {
         font-size: 0.72rem;
         font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 9999px;
+        padding: 3px 8px;
+        border-radius: 6px;
         letter-spacing: 0.04em;
         text-transform: uppercase;
+        display: inline-block;
     }
-    .pill-high { background: #fee2e2; color: #b91c1c; }
-    .pill-med { background: #fef3c7; color: #b45309; }
-    .pill-low { background: #dcfce7; color: #15803d; }
+    .chip-red { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .chip-yellow { background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; }
+    .chip-green { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+
+    .diff-original {
+        background: #fff5f5;
+        border-left: 3px solid #ef4444;
+        padding: 10px 12px;
+        border-radius: 6px;
+        font-size: 0.92rem;
+        color: #7f1d1d;
+        margin: 8px 0;
+        font-style: italic;
+    }
+    .diff-suggestion {
+        background: #f0fdf4;
+        border-left: 3px solid #10b981;
+        padding: 10px 12px;
+        border-radius: 6px;
+        font-size: 0.92rem;
+        color: #14532d;
+        margin: 8px 0;
+        font-weight: 500;
+    }
+
+    /* Estilo del botón principal */
+    div.stButton > button:first-child {
+        font-weight: 600;
+        border-radius: 10px;
+        padding: 0.6rem 1.2rem;
+        transition: all 0.2s ease;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -168,231 +275,264 @@ def get_detector():
 
 detector = get_detector()
 
-# Barra Superior / Brand Minimalista
-col_h1, col_h2 = st.columns([0.7, 0.3])
-with col_h1:
-    st.markdown('<div class="header-title">Zero-IA <span style="font-size: 0.95rem; font-weight: 500; color: #64748b; margin-left: 8px;">Validador Académico</span></div>', unsafe_allow_html=True)
-    st.markdown('<div class="header-subtitle">Detección y señalización precisa de huellas sintéticas para TFM, Tesis y Artículos.</div>', unsafe_allow_html=True)
+# Barra Superior
+st.markdown("""
+<div class="top-navbar">
+    <div class="brand-group">
+        <div class="brand-icon">Z</div>
+        <div>
+            <div class="brand-title">Zero-IA</div>
+            <div class="brand-sub">Academic Footprint Validator & Content Humanizer</div>
+        </div>
+    </div>
+    <div class="status-badge">
+        <div class="status-dot"></div>
+        Motor Neuronal & Estilométrico Activo (Local)
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-with col_h2:
-    st.markdown("<div style='text-align: right; padding-top: 10px;'><span style='background:#f1f5f9; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight:600; color:#475569;'>Motor Local Privado</span></div>", unsafe_allow_html=True)
+# Sección de Carga con diseño card
+with st.expander("📂 Ingesta de Documentos (Word / PDF / Texto)", expanded=("analysis" not in st.session_state)):
+    tab_doc, tab_paste = st.tabs(["📄 Cargar Archivo .docx / .pdf", "✏️ Pegar Manuscrito"])
 
-# Sección de Entrada Limpia
-with st.expander("📥 Cargar Documento o Pegar Texto", expanded=("analysis" not in st.session_state)):
-    tab_doc, tab_direct = st.tabs(["📄 Archivo Word (.docx) o PDF (.pdf)", "✏️ Pegar Texto"])
-
-    uploaded_doc_text = ""
-    doc_name = "Manuscrito"
+    doc_text = ""
+    doc_label = "Manuscrito Académico"
 
     with tab_doc:
-        uploaded_file = st.file_uploader(
-            "Arrastra tu archivo aquí:",
+        up_file = st.file_uploader(
+            "Selecciona tu trabajo de máster o tesis:",
             type=["docx", "pdf", "txt"],
             label_visibility="collapsed"
         )
-        if uploaded_file is not None:
+        if up_file:
             try:
-                parsed = parse_document(uploaded_file.getvalue(), uploaded_file.name)
-                uploaded_doc_text = parsed["full_text"]
-                doc_name = uploaded_file.name
-                st.caption(f"✓ **{uploaded_file.name}** cargado ({parsed['word_count']} palabras detectadas).")
+                parsed = parse_document(up_file.getvalue(), up_file.name)
+                doc_text = parsed["full_text"]
+                doc_label = up_file.name
+                st.success(f"Documento cargado correctamente: **{up_file.name}** ({parsed['word_count']} palabras detectadas).")
             except Exception as e:
-                st.error(f"Error al leer archivo: {e}")
+                st.error(f"Error en extracción: {e}")
 
-    with tab_direct:
-        pasted_input = st.text_area(
-            "Pega aquí el fragmento a validar:",
-            height=140,
+    with tab_paste:
+        direct_text = st.text_area(
+            "Texto directo:",
+            height=130,
             label_visibility="collapsed",
-            placeholder="Pega aquí el texto de tu tesis, capítulo o artículo para detectar huellas..."
+            placeholder="Pega aquí el contenido de tu sección, capítulo o artículo científico..."
         )
-        if pasted_input.strip():
-            uploaded_doc_text = pasted_input
-            doc_name = "Texto Pegado"
+        if direct_text.strip():
+            doc_text = direct_text
+            doc_label = "Texto Directo"
 
-    col_btn, col_sample = st.columns([0.3, 0.7])
-    with col_btn:
-        run_analysis = st.button("Analizar Documento", type="primary", use_container_width=True)
-    with col_sample:
-        if st.button("Cargar Texto de Ejemplo para Probar", type="secondary"):
-            uploaded_doc_text = (
+    c_btn1, c_btn2 = st.columns([0.35, 0.65])
+    with c_btn1:
+        trigger_audit = st.button("🚀 Ejecutar Auditoría Completa", type="primary", use_container_width=True)
+    with c_btn2:
+        if st.button("🧪 Cargar Muestra Demostrativa de IA", type="secondary"):
+            doc_text = (
                 "En el ámbito de la inteligencia artificial, es importante destacar que los modelos de lenguaje desempeñan un papel crucial. "
                 "En el panorama actual, estas tecnologías transforman la investigación de manera holística, eficiente y escalable. "
-                "Durante los ensayos realizados en el laboratorio en octubre de 2023, observamos ciertas variaciones manuales. "
-                "En conclusión, el desarrollo tecnológico constituye una piedra angular para las futuras generaciones."
+                "Durante los ensayos realizados en el laboratorio en octubre de 2023, observamos ciertas variaciones manuales imprevistas. "
+                "En conclusión, el desarrollo tecnológico constituye una piedra angular para las futuras generaciones académicas."
             )
-            doc_name = "Muestra de Prueba"
-            run_analysis = True
+            doc_label = "Muestra de Demostración"
+            trigger_audit = True
 
-    if run_analysis:
-        if not uploaded_doc_text or len(uploaded_doc_text.strip()) < 25:
-            st.warning("Introduce un texto con al menos 25 caracteres.")
+    if trigger_audit:
+        if not doc_text or len(doc_text.strip()) < 25:
+            st.warning("Introduce al menos 25 caracteres para analizar.")
         else:
-            with st.spinner("Analizando perplejidad, ráfaga sintáctica y huellas discursivas..."):
-                st.session_state["analysis"] = detector.analyze_document(uploaded_doc_text)
-                st.session_state["doc_name"] = doc_name
-                st.session_state["raw_text"] = uploaded_doc_text
+            with st.spinner("Analizando perplejidad, ráfaga, homogeneidad sintáctica y patrones de LLM..."):
+                st.session_state["analysis"] = detector.analyze_document(doc_text)
+                st.session_state["doc_name"] = doc_label
+                st.session_state["raw_text"] = doc_text
 
 
-# Panel Principal de Resultados (Si hay análisis)
+# Render de Resultados
 if "analysis" in st.session_state:
     res = st.session_state["analysis"]
-    ai_pct = res["global_ai_percentage"]
-    d_name = st.session_state.get("doc_name", "Documento")
+    ai_score = res["global_ai_percentage"]
+    d_title = st.session_state.get("doc_name", "Documento")
 
-    # Determinar estilo según severidad
-    if ai_pct >= 60:
-        score_class = "score-high"
-        verdict_text = "Huella de IA Elevada"
-        verdict_sub = "Se detectó un patrón de redacción predominantemente generado por IA."
-    elif ai_pct >= 30:
-        score_class = "score-med"
-        verdict_text = "Texto Mixto / Posible Asistencia de IA"
-        verdict_sub = "Partes del texto presentan alta uniformidad o frases cliché de modelos LLM."
+    # Clasificación y Estilos
+    if ai_score >= 60:
+        badge_style = "border-danger"
+        verdict_color = "#dc2626"
+        verdict_title = "Alta Huella de IA Detectada"
+        verdict_desc = "El texto muestra baja perplejidad y monotonía típica de ChatGPT."
+    elif ai_score >= 30:
+        badge_style = "border-warning"
+        verdict_color = "#d97706"
+        verdict_title = "Contenido Mixto / Posible Asistencia"
+        verdict_desc = "Se identificaron secciones u oraciones con patrones sintéticos."
     else:
-        score_class = "score-low"
-        verdict_text = "Autoría Natural / Humana"
-        verdict_sub = "El texto presenta ritmo variado, riqueza léxica y ausencia de muletillas de IA."
+        badge_style = "border-success"
+        verdict_color = "#10b981"
+        verdict_title = "Autoría Natural / Humana"
+        verdict_desc = "El ritmo, perplejidad y léxico son consistentes con redacción humana."
 
-    # Hero Metrics Card
+    # 4 Tarjetas de Métricas Principales
     st.markdown(f"""
-    <div class="hero-metric-card">
-        <div>
-            <div class="hero-stat-label">Probabilidad Global de IA</div>
-            <div class="hero-stat-value {score_class}">{ai_pct}%</div>
-            <div style="font-size: 0.95rem; font-weight: 600; color: #1e293b; margin-top: 4px;">{verdict_text}</div>
-            <div style="font-size: 0.82rem; color: #64748b;">{verdict_sub}</div>
+    <div class="metric-grid">
+        <div class="metric-box {badge_style}">
+            <div class="metric-label">Probabilidad Global de IA</div>
+            <div class="metric-value" style="color: {verdict_color};">{ai_score}%</div>
+            <div class="metric-desc"><b>{verdict_title}</b></div>
         </div>
-        <div style="display: flex; gap: 32px; text-align: right;">
-            <div>
-                <div class="hero-stat-label">Total Oraciones</div>
-                <div style="font-size: 1.5rem; font-weight: 700; color: #1e293b;">{res['total_sentences']}</div>
-                <div style="font-size: 0.78rem; color: #64748b;">{res['total_words']} palabras</div>
-            </div>
-            <div>
-                <div class="hero-stat-label">Señaladas en Rojo</div>
-                <div style="font-size: 1.5rem; font-weight: 700; color: #dc2626;">{res['high_risk_sentences']}</div>
-                <div style="font-size: 0.78rem; color: #64748b;">Alta probabilidad IA</div>
-            </div>
-            <div>
-                <div class="hero-stat-label">Señaladas en Amarillo</div>
-                <div style="font-size: 1.5rem; font-weight: 700; color: #d97706;">{res['medium_risk_sentences']}</div>
-                <div style="font-size: 0.78rem; color: #64748b;">Sospechosas</div>
-            </div>
-            <div>
-                <div class="hero-stat-label">Naturales (Verde)</div>
-                <div style="font-size: 1.5rem; font-weight: 700; color: #16a34a;">{res['low_risk_sentences']}</div>
-                <div style="font-size: 0.78rem; color: #64748b;">Estilo orgánico</div>
-            </div>
+        <div class="metric-box border-primary">
+            <div class="metric-label">Perplejidad Media</div>
+            <div class="metric-value">{res['perplexity_metrics']['mean_perplexity']}</div>
+            <div class="metric-desc">Predecibilidad estadística (GPTZero PPL)</div>
+        </div>
+        <div class="metric-box border-primary">
+            <div class="metric-label">Ráfaga (Burstiness)</div>
+            <div class="metric-value">{res['perplexity_metrics']['burstiness']}</div>
+            <div class="metric-desc">Variabilidad de ritmo entre frases</div>
+        </div>
+        <div class="metric-box {badge_style}">
+            <div class="metric-label">Huellas Críticas</div>
+            <div class="metric-value">{res['high_risk_sentences']} <span style="font-size: 1.1rem; font-weight:500; color:#64748b;">/ {res['total_sentences']}</span></div>
+            <div class="metric-desc">{round((res['high_risk_sentences']/max(1, res['total_sentences']))*100, 1)}% oraciones en riesgo alto</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Layout en 2 Columnas: Izquierda Visor (62%) | Derecha Auditoría y Sugerencias (38%)
-    col_viewer, col_audit = st.columns([0.62, 0.38], gap="large")
+    # Gráfico interactivo estilizado de Ráfaga / Perplejidad por Oración
+    if res["sentences"] and len(res["sentences"]) > 1:
+        with st.expander("📈 Curva de Ráfaga y Perplejidad Oración por Oración", expanded=False):
+            sent_nums = [f"O{i+1}" for i in range(len(res["sentences"]))]
+            ppls = [s["perplexity"] for s in res["sentences"]]
+            bar_colors = ["#ef4444" if s["risk_level"] == "high" else "#f59e0b" if s["risk_level"] == "medium" else "#10b981" for s in res["sentences"]]
 
-    with col_viewer:
-        st.markdown(f"**Visor del Manuscrito** · *{d_name}*", help="Cada oración está señalada según su probabilidad de IA. Pasa el ratón sobre cualquier frase para ver su índice individual.")
+            fig = go.Figure()
+            fig.add_trace(go.Bar(
+                x=sent_nums,
+                y=ppls,
+                marker=dict(color=bar_colors, opacity=0.85, line=dict(width=1, color="#e2e8f0")),
+                name="Perplejidad",
+                hovertemplate="Oración %{x}<br>Perplejidad: %{y}<extra></extra>"
+            ))
+            fig.add_hline(y=40, line_dash="dash", line_color="#ef4444", annotation_text="Umbral Predecible (<40)", annotation_position="top left")
+            fig.add_hline(y=70, line_dash="dash", line_color="#10b981", annotation_text="Umbral Humano (>70)", annotation_position="bottom left")
+            fig.update_layout(
+                paper_bgcolor="#ffffff",
+                plot_bgcolor="#fafafa",
+                height=260,
+                margin=dict(l=30, r=30, t=20, b=30),
+                xaxis=dict(showgrid=False),
+                yaxis=dict(showgrid=True, gridcolor="#f1f5f9"),
+                font=dict(family="Inter, sans-serif", size=12, color="#475569")
+            )
+            st.plotly_chart(fig, use_container_width=True)
 
-        # Construir el HTML del Visor Editorial
-        paper_html = ""
-        current_p = -1
+    # Vista Dividida: Documento a la Izquierda (60%) | Panel de Humanización a la Derecha (40%)
+    col_left, col_right = st.columns([0.60, 0.40], gap="large")
+
+    with col_left:
+        st.markdown(f"**Manuscrito Anotado** · *{d_title}*")
+
+        # Construcción del visor de documento
+        doc_html = ""
+        last_pid = -1
 
         for s in res["sentences"]:
-            if s["paragraph_idx"] != current_p:
-                if current_p != -1:
-                    paper_html += "</p><p style='margin-bottom: 1.2rem;'>"
+            if s["paragraph_idx"] != last_pid:
+                if last_pid != -1:
+                    doc_html += "</p><p style='margin-bottom: 1.3rem;'>"
                 else:
-                    paper_html += "<p style='margin-bottom: 1.2rem;'>"
-                current_p = s["paragraph_idx"]
+                    doc_html += "<p style='margin-bottom: 1.3rem;'>"
+                last_pid = s["paragraph_idx"]
 
-            risk = s["risk_level"]
-            cls_name = "hl-ai-high" if risk == "high" else "hl-ai-med" if risk == "medium" else "hl-ai-low"
-            reason_tooltip = f"Riesgo: {int(s['ai_score']*100)}% IA | Perplejidad: {s['perplexity']} | {' ; '.join(s['reasons'])}"
+            r_level = s["risk_level"]
+            cls = "hl-critical" if r_level == "high" else "hl-warning" if r_level == "medium" else "hl-clean"
+            info = f"IA: {int(s['ai_score']*100)}% | PPL: {s['perplexity']} | {' ; '.join(s['reasons'])}"
 
-            paper_html += f"<span class='{cls_name}' title='{reason_tooltip}'>{s['text']}</span> "
+            doc_html += f"<span class='{cls}' title='{info}'>{s['text']}</span> "
 
-        paper_html += "</p>"
+        doc_html += "</p>"
 
-        st.markdown(f'<div class="paper-viewer">{paper_html}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="document-sheet">{doc_html}</div>', unsafe_allow_html=True)
 
-        # Barra inferior de exportación
-        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-        exp_col1, exp_col2 = st.columns(2)
-        docx_bytes = export_annotated_docx(res)
-        with exp_col1:
+        # Acciones de Exportación
+        st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
+        col_d1, col_d2 = st.columns(2)
+        docx_data = export_annotated_docx(res)
+        with col_d1:
             st.download_button(
-                label="Descargar Word (.docx) Anotado",
-                data=docx_bytes,
-                file_name=f"ZeroIA_{d_name}.docx",
+                label="📄 Descargar Word (.docx) Auditado",
+                data=docx_data,
+                file_name=f"ZeroIA_{d_title}.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 use_container_width=True
             )
-        with exp_col2:
-            md_report = export_markdown_report(res)
+        with col_d2:
+            md_data = export_markdown_report(res)
             st.download_button(
-                label="Descargar Reporte de Auditoría (.md)",
-                data=md_report,
-                file_name=f"Auditoria_{d_name}.md",
+                label="📑 Descargar Reporte Técnico (.md)",
+                data=md_data,
+                file_name=f"Informe_Auditoria_{d_title}.md",
                 mime="text/markdown",
                 use_container_width=True
             )
 
-    with col_audit:
-        tab_cards, tab_live_edit = st.tabs(["📋 Huellas Señaladas", "✏️ Editor en Vivo (Humanizar)"])
+    with col_right:
+        tab_suggestions, tab_editor = st.tabs(["💡 Plan de Mitigación de Huellas", "✍️ Editor de Humanización en Vivo"])
 
-        with tab_cards:
-            # Filtro de severidad
-            filter_opt = st.segmented_control(
-                "Filtrar:",
-                options=["Todas las Huellas", "Solo Críticas (Rojo)", "Revisión (Amarillo)"],
+        with tab_suggestions:
+            filter_mode = st.segmented_control(
+                "Filtro:",
+                options=["Todas las Huellas", "Críticas (Rojo)", "Revisión (Amarillo)"],
                 default="Todas las Huellas",
                 label_visibility="collapsed"
             )
 
-            flagged = [s for s in res["sentences"] if s["risk_level"] in ["high", "medium"]]
-            if filter_opt == "Solo Críticas (Rojo)":
-                flagged = [s for s in flagged if s["risk_level"] == "high"]
-            elif filter_opt == "Revisión (Amarillo)":
-                flagged = [s for s in flagged if s["risk_level"] == "medium"]
+            flagged_list = [s for s in res["sentences"] if s["risk_level"] in ["high", "medium"]]
+            if filter_mode == "Críticas (Rojo)":
+                flagged_list = [s for s in flagged_list if s["risk_level"] == "high"]
+            elif filter_mode == "Revisión (Amarillo)":
+                flagged_list = [s for s in flagged_list if s["risk_level"] == "medium"]
 
-            if not flagged:
-                st.success("No se encontraron oraciones con este nivel de alerta. El texto es estilísticamente limpio.")
+            if not flagged_list:
+                st.success("✨ No existen oraciones con este nivel de alerta. El manuscrito mantiene un estilo natural y orgánico.")
             else:
-                st.caption(f"Mostrando **{len(flagged)}** oraciones que contienen patrones detectables de IA:")
+                st.caption(f"Se identificaron **{len(flagged_list)}** oraciones con huellas detectables:")
 
-                for idx, s in enumerate(flagged):
-                    pill_class = "pill-high" if s["risk_level"] == "high" else "pill-med"
-                    pill_label = f"{int(s['ai_score']*100)}% IA"
+                for idx, s in enumerate(flagged_list):
+                    c_badge = "chip-red" if s["risk_level"] == "high" else "chip-yellow"
+                    c_title = f"{int(s['ai_score']*100)}% IA"
 
-                    with st.expander(f"Frase {s['sentence_idx']+1} (Párrafo {s['paragraph_idx']+1}) · {pill_label}", expanded=(idx == 0)):
-                        st.markdown(f"<span class='pill-badge {pill_class}'>{pill_label}</span> <span style='font-size: 0.8rem; color:#64748b;'>Perplejidad: {s['perplexity']} | {s['word_count']} palabras</span>", unsafe_allow_html=True)
-                        st.markdown(f"<div style='font-size: 0.95rem; font-style: italic; color:#334155; margin: 8px 0; background:#f8fafc; padding:10px; border-radius:6px;'>\"{s['text']}\"</div>", unsafe_allow_html=True)
+                    with st.expander(f"Frase #{s['sentence_idx']+1} (Párrafo {s['paragraph_idx']+1}) · {c_title}", expanded=(idx == 0)):
+                        st.markdown(f"<span class='chip-badge {c_badge}'>{c_title}</span> <span style='font-size: 0.8rem; color:#64748b; margin-left:8px;'>Perplejidad: <b>{s['perplexity']}</b> · Longitud: <b>{s['word_count']} palabras</b></span>", unsafe_allow_html=True)
 
-                        st.markdown("<div style='font-size: 0.82rem; font-weight:600; color:#475569;'>¿POR QUÉ FUE SEÑALADA?</div>", unsafe_allow_html=True)
+                        st.markdown(f'<div class="diff-original">"{s["text"]}"</div>', unsafe_allow_html=True)
+
+                        st.markdown("<div style='font-size: 0.78rem; font-weight:700; color:#475569; text-transform:uppercase;'>Diagnóstico Forense:</div>", unsafe_allow_html=True)
                         for r in s["reasons"]:
                             st.markdown(f"<div style='font-size: 0.84rem; color: #dc2626;'>• {r}</div>", unsafe_allow_html=True)
 
                         sugg = s.get("suggestions", {})
                         if sugg.get("tips"):
-                            st.markdown("<div style='font-size: 0.82rem; font-weight:600; color:#475569; margin-top:8px;'>CÓMO QUITAR LA HUELLA:</div>", unsafe_allow_html=True)
+                            st.markdown("<div style='font-size: 0.78rem; font-weight:700; color:#475569; margin-top:8px; text-transform:uppercase;'>Estrategia para Eliminar la Huella:</div>", unsafe_allow_html=True)
                             for t in sugg["tips"]:
                                 st.markdown(f"<div style='font-size: 0.84rem; color: #1e293b;'>✓ {t}</div>", unsafe_allow_html=True)
 
                         if sugg.get("suggested_rewrite"):
-                            st.markdown("<div style='font-size: 0.82rem; font-weight:600; color:#0d9488; margin-top:8px;'>PROPUESTA DE REESCRITURA NATURAL:</div>", unsafe_allow_html=True)
-                            st.markdown(f"<div style='background: #f0fdfa; border: 1px solid #ccfbf1; padding: 10px; border-radius: 6px; font-size: 0.9rem; color: #115e59; font-weight: 500;'>\"{sugg['suggested_rewrite']}\"</div>", unsafe_allow_html=True)
+                            st.markdown("<div style='font-size: 0.78rem; font-weight:700; color:#059669; margin-top:8px; text-transform:uppercase;'>Propuesta de Reescritura Humana:</div>", unsafe_allow_html=True)
+                            st.markdown(f'<div class="diff-suggestion">"{sugg["suggested_rewrite"]}"</div>', unsafe_allow_html=True)
 
-        with tab_live_edit:
-            st.markdown("<div style='font-size: 0.88rem; color: #475569; margin-bottom: 8px;'>Edita el texto a continuación aplicando las sugerencias para eliminar las huellas de IA y comprueba el nuevo porcentaje:</div>", unsafe_allow_html=True)
-            edited_text = st.text_area(
-                "Editor de Humanización:",
+        with tab_editor:
+            st.markdown("<div style='font-size: 0.86rem; color: #475569; margin-bottom: 6px;'>Aplica las sugerencias directamente sobre tu texto y pulsa el botón para re-evaluar la probabilidad de IA al instante:</div>", unsafe_allow_html=True)
+
+            text_draft = st.text_area(
+                "Editor interactivo:",
                 value=st.session_state.get("raw_text", ""),
-                height=380,
+                height=420,
                 label_visibility="collapsed"
             )
-            if st.button("🔄 Recalcular % de IA del Texto Editado", type="primary", use_container_width=True):
-                with st.spinner("Reevaluando métricas y perplejidad del texto editado..."):
-                    st.session_state["analysis"] = detector.analyze_document(edited_text)
-                    st.session_state["raw_text"] = edited_text
+
+            if st.button("🔄 Recalcular Probabilidad de IA", type="primary", use_container_width=True):
+                with st.spinner("Reevaluando métricas en tiempo real..."):
+                    st.session_state["analysis"] = detector.analyze_document(text_draft)
+                    st.session_state["raw_text"] = text_draft
                     st.rerun()
