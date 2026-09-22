@@ -59,28 +59,26 @@ Si prefieres realizar los pasos de forma manual:
 
 ---
 
-## 🔒 Cómo subirlo a un Repositorio Privado en GitHub
+## 🔒 Repositorio del Proyecto
 
-Para compartir este proyecto de forma privada entre los miembros de tu equipo:
+Este proyecto está configurado para el repositorio privado del equipo:
+👉 **[https://github.com/ByCarlox/Zero-IA](https://github.com/ByCarlox/Zero-IA)**
 
-1. **Crear un repositorio vacío en GitHub:**
-   - Ve a [github.com/new](https://github.com/new).
-   - Nómbralo (por ejemplo `tfm-validador-ia`).
-   - Selecciónalo como **Private** (Privado).
-   - No marques inicializar con README ni .gitignore (ya los tenemos listos).
+### Para subir los cambios (Push inicial)
+El repositorio local ya está inicializado y vinculado a `origin https://github.com/ByCarlox/Zero-IA.git`. Para subir el código a GitHub, ejecuta en tu terminal:
 
-2. **Vincular tu repositorio local y subir el código:**
-   ```bash
-   git init
-   git add .
-   git commit -m "feat: Validador de huellas de IA para Word y PDF (Open Source)"
-   git branch -M main
-   git remote add origin https://github.com/TU_USUARIO/TU_REPOSITORIO.git
-   git push -u origin main
-   ```
+```bash
+git push -u origin main
+```
+*(GitHub te solicitará tu usuario `ByCarlox` y tu **Personal Access Token** como contraseña en el primer push).*
 
-3. **Invitar a tus compañeros:**
-   - En tu repositorio de GitHub, ve a **Settings** > **Collaborators** > **Add people** e introduce los usuarios o correos de tus compañeros.
+### Invitar a tus compañeros
+Una vez subido, en tu repositorio de GitHub ve a **Settings** > **Collaborators** > **Add people** e introduce los usuarios de GitHub de tus compañeros para que puedan clonarlo con:
+```bash
+git clone https://github.com/ByCarlox/Zero-IA.git
+cd Zero-IA
+./run.sh
+```
 
 ---
 
