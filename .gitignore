@@ -1,0 +1,34 @@
+# Python & Virtual Environments
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Caches and Model weights
+.cache/
+hf_cache/
+*.bin
+*.safetensors
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Uploaded private test documents
+uploads/
+output/
+*.docx
+*.pdf
+!examples/*.docx
+!examples/*.pdf
+
+# Temp files
+*.tmp
+*.log
