@@ -555,6 +555,129 @@ body {
   opacity: 0.9;
 }
 
+/* Chips de Filtro */
+.filter-chip {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-chip:hover {
+  color: var(--text-primary);
+  border-color: var(--border-active);
+}
+
+.filter-chip.active {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border-color: var(--text-primary);
+}
+
+/* Clases de filtrado para oraciones */
+.dimmed-sentence {
+  opacity: 0.22;
+  filter: grayscale(1);
+}
+
+/* Footer & Disclaimer */
+.app-footer {
+  margin-top: 60px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.disclaimer-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 18px 22px;
+  margin-bottom: 20px;
+}
+
+.disclaimer-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.disclaimer-text {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  padding-bottom: 16px;
+}
+
+/* Modo Impresión / Guardar en PDF */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .gemini-header,
+  .hero-container,
+  .header-actions,
+  .inspector-panel,
+  .tab-nav,
+  .btn-secondary,
+  .btn-primary,
+  .filter-chip,
+  #newAnalysisBtn,
+  #downloadReportBtn,
+  #printReportBtn {
+    display: none !important;
+  }
+  .main-layout {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+  .canvas-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .manuscript-viewer {
+    border: none !important;
+    box-shadow: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    font-size: 11pt !important;
+    line-height: 1.8 !important;
+    color: #111111 !important;
+  }
+  .sentence-high {
+    background-color: #fee2e2 !important;
+    border-bottom: 1.5px solid #dc2626 !important;
+    color: #991b1b !important;
+  }
+  .sentence-medium {
+    background-color: #fef3c7 !important;
+    border-bottom: 1.5px solid #d97706 !important;
+    color: #92400e !important;
+  }
+  .disclaimer-card {
+    border: 1px solid #cccccc !important;
+    background: #fafafa !important;
+  }
+}
+
 /* Responsive */
 @media (max-width: 980px) {
   .canvas-grid {

@@ -345,5 +345,81 @@ downloadReportBtn.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
+// Botón Imprimir / Guardar en PDF
+const printReportBtn = document.getElementById("printReportBtn");
+if (printReportBtn) {
+  printReportBtn.addEventListener("click", () => {
+    window.print();
+  });
+}
+
+// Botón de Limpieza Automática de Clichés
+const autoCleanBtn = document.getElementById("autoCleanBtn");
+if (autoCleanBtn) {
+  autoCleanBtn.addEventListener("click", () => {
+    let text = liveEditorText.value;
+    if (!text || text.trim().length === 0) return;
+
+    let count = 0;
+    // Aplicar reemplazos conocidos
+    const REPLACEMENTS_MAP = {
+      "en el ámbito de": "En",
+      "en el panorama actual": "Hoy en día",
+      "en la era digital": "En los últimos años",
+      "es importante destacar que": "Conviene notar que",
+      "es fundamental señalar que": "Debe considerarse que",
+      "cabe destacar que": "Específicamente,",
+      "cabe mencionar que": "Asimismo,",
+      "en conclusión": "Por consiguiente,",
+      "en resumen": "En síntesis,",
+      "juega un papel fundamental": "influye decisivamente",
+      "desempeña un papel crucial": "es determinante",
+      "es un testimonio de": "demuestra",
+      "un tapiz de": "una combinación de",
+      "una piedra angular": "un pilar esencial",
+      "delve into": "examine",
+      "a testament to": "evidence of",
+      "rich tapestry": "diverse set",
+      "plays a pivotal role": "is essential"
+    };
+
+    Object.keys(REPLACEMENTS_MAP).forEach(cliche => {
+      const reg = new RegExp(cliche, "gi");
+      if (reg.test(text)) {
+        text = text.replace(reg, REPLACEMENTS_MAP[cliche]);
+        count++;
+      }
+    });
+
+    liveEditorText.value = text;
+    if (count > 0) {
+      alert(`✨ Se sustituyeron ${count} muletillas de IA por alternativas académicas. Pulsa "Recalcular % de IA" para ver el nuevo resultado.`);
+    } else {
+      alert("No se encontraron muletillas automáticas directas. Prueba a reescribir manualmente las frases marcadas.");
+    }
+  });
+}
+
+// Filtros de visualización en el Manuscrito
+const filterChips = document.querySelectorAll(".filter-chip");
+filterChips.forEach(chip => {
+  chip.addEventListener("click", () => {
+    filterChips.forEach(c => c.classList.remove("active"));
+    chip.classList.add("active");
+
+    const mode = chip.dataset.filter;
+    const sentences = manuscriptViewer.querySelectorAll(".manuscript-sentence");
+
+    sentences.forEach(s => {
+      s.classList.remove("dimmed-sentence");
+      if (mode === "high" && !s.classList.contains("sentence-high")) {
+        s.classList.add("dimmed-sentence");
+      } else if (mode === "medium" && !s.classList.contains("sentence-medium")) {
+        s.classList.add("dimmed-sentence");
+      }
+    });
+  });
+});
+
 // Inicializar al cargar
 initTheme();

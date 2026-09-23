@@ -114,18 +114,24 @@
         
         <!-- Columna Izquierda: Visor del Manuscrito -->
         <div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
             <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-secondary);">Manuscrito Anotado</div>
-            <div style="font-size: 0.8rem; color: var(--text-tertiary);">Haz clic en una frase para ver el diagnóstico</div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 0.78rem; color: var(--text-tertiary);">Filtrar vista:</span>
+              <button class="filter-chip active" data-filter="all" id="filterAllBtn">Todo</button>
+              <button class="filter-chip" data-filter="high" id="filterHighBtn">Solo Rojas</button>
+              <button class="filter-chip" data-filter="medium" id="filterMedBtn">Solo Amarillas</button>
+            </div>
           </div>
           
           <div class="manuscript-viewer" id="manuscriptViewer">
             <!-- El contenido dinámico de oraciones se inyecta aquí -->
           </div>
 
-          <div style="display: flex; gap: 12px; margin-top: 16px;">
+          <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
             <button class="btn-secondary" id="newAnalysisBtn">← Nuevo Análisis</button>
             <button class="btn-secondary" id="downloadReportBtn">📑 Descargar Dictamen (.md)</button>
+            <button class="btn-secondary" id="printReportBtn">🖨️ Imprimir / Guardar PDF</button>
           </div>
         </div>
 
@@ -152,7 +158,12 @@
             <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 8px;">
               Edita tu manuscrito aplicando las recomendaciones y recalcula la probabilidad de IA al instante:
             </p>
-            <textarea id="liveEditorText" style="width: 100%; height: 380px; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; color: var(--text-primary); font-family: var(--font-family); font-size: 0.95rem; padding: 12px; resize: none; outline: none; line-height: 1.6;"></textarea>
+            <div style="margin-bottom: 8px;">
+              <button class="btn-secondary" id="autoCleanBtn" style="width: 100%; font-size: 0.82rem; padding: 6px 10px;">
+                ✨ Limpieza Rápida de Clichés (Humanizar)
+              </button>
+            </div>
+            <textarea id="liveEditorText" style="width: 100%; height: 340px; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; color: var(--text-primary); font-family: var(--font-family); font-size: 0.95rem; padding: 12px; resize: none; outline: none; line-height: 1.6;"></textarea>
             <button class="btn-primary" id="recalculateBtn" style="width: 100%; margin-top: 12px;">
               🔄 Recalcular % de IA
             </button>
@@ -161,6 +172,26 @@
 
       </div>
     </section>
+
+    <!-- Footer con Disclaimer Legal Académico -->
+    <footer class="app-footer">
+      <div class="disclaimer-card">
+        <div class="disclaimer-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Aviso Legal y Descargo de Responsabilidad (Academic Disclaimer)
+        </div>
+        <p class="disclaimer-text">
+          <b>Zero-IA</b> es una herramienta técnica orientativa para asistencia en redacción y auditoría de estilo basada en modelos probabilísticos y heurísticos de procesamiento del lenguaje natural (NLP). Sus índices y diagnósticos reflejan grados de predictibilidad estadística y <b>no constituyen una prueba jurídica ni concluyente de autoría</b>, no debiendo reemplazar la valoración cualitativa de comités de ética, docentes o tribunales evaluadores.
+        </p>
+        <p class="disclaimer-text" style="margin-top: 6px;">
+          <b>Garantía de Privacidad:</b> El análisis se ejecuta 100% en el entorno local de su navegador web (<i>Client-Side Execution</i>). Ningún texto, archivo ni dato confidencial es transmitido, indexado o almacenado en servidores externos.
+        </p>
+      </div>
+      <div class="footer-bottom">
+        <span>Zero-IA · Open Source Academic Tool</span>
+        <span>Licencia MIT</span>
+      </div>
+    </footer>
 
   </main>
 
