@@ -392,24 +392,24 @@ if "analysis" in st.session_state:
     if ai_score >= 65:
         badge_style = "border-danger"
         verdict_color = "#dc2626"
-        verdict_title = "Alta concentración de señales de estilo"
-        verdict_desc = "Varias reglas de estilo se activaron; revisar su pertinencia."
+        verdict_title = "Alta concentración de patrones de IA"
+        verdict_desc = "Varias estructuras y clichés típicos de IA se activaron; se recomienda revisión profunda."
     elif ai_score >= 35:
         badge_style = "border-warning"
         verdict_color = "#d97706"
-        verdict_title = "Concentración media de señales de estilo"
-        verdict_desc = "Algunas reglas de estilo se activaron."
+        verdict_title = "Concentración media de patrones de IA"
+        verdict_desc = "Se identificaron algunos patrones repetitivos o predecibles."
     else:
         badge_style = "border-success"
         verdict_color = "#10b981"
-        verdict_title = "Baja concentración de señales de estilo"
-        verdict_desc = "Pocas señales según estas reglas; no permite inferir autoría."
+        verdict_title = "Baja concentración de patrones de IA"
+        verdict_desc = "Pocos patrones según estas reglas; no permite inferir autoría."
 
     # 4 Tarjetas de Métricas Principales
     st.markdown(f"""
     <div class="metric-grid">
         <div class="metric-box {badge_style}">
-            <div class="metric-label">Señales de estilo</div>
+            <div class="metric-label">Patrones de IA</div>
             <div class="metric-value" style="color: {verdict_color};">{ai_score}/100</div>
             <div class="metric-desc"><b>{res.get('classification', verdict_title)}</b></div>
         </div>

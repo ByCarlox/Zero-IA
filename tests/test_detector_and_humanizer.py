@@ -58,7 +58,7 @@ class TestDetectorAndHumanizer(unittest.TestCase):
         )
         result = self.detector.analyze_document(human_text)
         self.assertLess(result["global_ai_percentage"], 40.0)
-        self.assertIn("POCAS SEÑALES", result["verdict_badge"])
+        self.assertIn("POCOS PATRONES", result["verdict_badge"])
 
     def test_detector_bibliography_isolation(self):
         text_with_bib = (

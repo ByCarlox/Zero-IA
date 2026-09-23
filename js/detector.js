@@ -476,18 +476,18 @@ function analyzeDocument(rawText) {
   const globalPercentage = Math.round(Math.max(0.0, Math.min(1.0, rawGlobal)) * 100);
 
   // Veredicto heurístico descriptivo (no calibrado, sin inferir autoría)
-  let classification = "Baja concentración de señales de estilo";
+  let classification = "Baja concentración de patrones de IA";
   let verdictColor = "green";
-  let verdictBadge = "🟢 POCAS SEÑALES";
-  let verdictSummary = `El documento muestra diversidad léxica, variabilidad rítmica natural (${burstiness} de ráfaga) y baja presencia de fórmulas fijas de IA. Nota: La ausencia de señales no garantiza autoría humana, solo indica estilo variado según estas reglas heurísticas.`;
+  let verdictBadge = "🟢 POCOS PATRONES";
+  let verdictSummary = `El documento muestra diversidad léxica, variabilidad rítmica natural (${burstiness} de ráfaga) y baja presencia de patrones sintéticos de IA. Nota: La baja presencia de patrones no garantiza autoría humana, solo indica redacción variada según estas reglas heurísticas.`;
 
   if (globalPercentage >= 65) {
-    classification = "Alta concentración de señales de estilo";
+    classification = "Alta concentración de patrones de IA";
     verdictColor = "red";
     verdictBadge = "🔴 ALTA CONCENTRACIÓN";
     verdictSummary = `El análisis heurístico identificó una concentración elevada de patrones sintéticos (${globalPercentage}%), con baja perplejidad (${meanPpl}), cadencia uniforme y ${highRiskCount} oraciones críticas. Este índice es orientativo y no constituye una prueba concluyente de autoría.`;
   } else if (globalPercentage >= 35) {
-    classification = "Concentración media de señales de estilo";
+    classification = "Concentración media de patrones de IA";
     verdictColor = "yellow";
     verdictBadge = "🟡 CONCENTRACIÓN MEDIA";
     verdictSummary = `El texto presenta rasgos combinados (${globalPercentage}%): coexisten pasajes con ritmo variado y secciones con estructuras sintácticas homogéneas o frases formulaicas (${highRiskCount} oraciones en riesgo alto). Se recomienda una revisión cualitativa.`;

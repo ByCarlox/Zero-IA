@@ -39,6 +39,9 @@ const liveEditorText = document.getElementById("liveEditorText");
 const recalculateBtn = document.getElementById("recalculateBtn");
 const newAnalysisBtn = document.getElementById("newAnalysisBtn");
 const downloadReportBtn = document.getElementById("downloadReportBtn");
+const btnToggleGuide = document.getElementById("btnToggleGuide");
+const btnCloseGuide = document.getElementById("btnCloseGuide");
+const metricsGuideSection = document.getElementById("metricsGuideSection");
 
 // Tema Oscuro / Claro
 function initTheme() {
@@ -438,11 +441,11 @@ function renderResults(analysis) {
 
   if (verdictCard) {
     verdictCard.className = `executive-verdict-card verdict-${analysis.verdictColor}`;
-    verdictTitle.innerText = "Resumen de estilo";
-    verdictSubtitle.innerText = `Índice de señales: ${analysis.globalPercentage}/100 · ${analysis.totalWords} palabras evaluadas`;
-    verdictPill.innerText = (analysis.verdictColor === "red" ? "Concentración alta" : analysis.verdictColor === "yellow" ? "Concentración media" : "Concentración baja");
+    verdictTitle.innerText = "Resumen de estilo y patrones";
+    verdictSubtitle.innerText = `Índice de patrones de IA: ${analysis.globalPercentage}/100 · ${analysis.totalWords} palabras evaluadas`;
+    verdictPill.innerText = analysis.verdictBadge || (analysis.verdictColor === "red" ? "🔴 ALTA CONCENTRACIÓN" : analysis.verdictColor === "yellow" ? "🟡 CONCENTRACIÓN MEDIA" : "🟢 POCOS PATRONES");
     verdictPill.className = `tag-badge badge-${analysis.verdictColor}`;
-    verdictBody.innerText = `${analysis.highRiskSentences} de ${analysis.totalSentences} frases requieren una revisión prioritaria según las reglas de estilo. Selecciona una frase del manuscrito para consultar la observación y sus alternativas. Este índice orienta la revisión; no determina la autoría del texto.`;
+    verdictBody.innerText = `${analysis.highRiskSentences} de ${analysis.totalSentences} frases presentan concentración de patrones sintéticos o fórmulas fijas. Selecciona una frase del manuscrito para consultar la observación y sus alternativas. Este índice orienta la revisión y no determina la autoría del texto.`;
     verdictIcon.innerText = analysis.verdictColor === "red" ? "!" : analysis.verdictColor === "yellow" ? "—" : "✓";
   }
 
@@ -530,7 +533,7 @@ function showSentenceDetail(s) {
 
   let html = `
     <div style="margin-bottom: 14px;">
-      <span class="tag-badge ${badgeClass}">${pct}/100 señales · ${s.riskLevel === "high" ? "Prioridad alta" : s.riskLevel === "medium" ? "Prioridad media" : "Prioridad baja"}</span>
+      <span class="tag-badge ${badgeClass}">${pct}/100 patrones · ${s.riskLevel === "high" ? "Prioridad alta" : s.riskLevel === "medium" ? "Prioridad media" : "Prioridad baja"}</span>
       <span style="font-size: 0.8rem; color: var(--text-secondary); margin-left: 8px;">Índice léxico: <b>${s.perplexity}</b></span>
     </div>
     <div style="font-size: 0.95rem; font-style: italic; color: var(--text-primary); margin-bottom: 12px; padding: 10px; background: var(--bg-surface-elevated); border-radius: 8px;">
@@ -595,7 +598,7 @@ function renderInspectorList(sentences) {
     html += `
       <button type="button" class="humanize-card" data-sentence-index="${s.globalIdx}">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <span class="tag-badge ${badgeClass}">${Math.round(s.aiScore * 100)}/100 · señales</span>
+          <span class="tag-badge ${badgeClass}">${Math.round(s.aiScore * 100)}/100 · patrones</span>
           <span style="font-size: 0.75rem; color: var(--text-secondary);">Índice léxico: ${s.perplexity}</span>
         </div>
         <div style="font-size: 0.88rem; color: var(--text-primary); line-height: 1.4;">"${escapeHTML(s.text.slice(0, 90))}${s.text.length > 90 ? "…" : ""}"</div>
@@ -653,9 +656,9 @@ newAnalysisBtn.addEventListener("click", () => {
 downloadReportBtn.addEventListener("click", () => {
   if (!currentAnalysis) return;
 
-  let report = `# Auditoría de Estilo y Señales - Zero-IA\n\n`;
-  report += `- **Índice Global de Señales:** ${currentAnalysis.globalPercentage}/100\n`;
-  report += `- **Veredicto de Estilo:** ${currentAnalysis.classification}\n`;
+  let report = `# Auditoría de Patrones de IA y Redacción - Zero-IA\n\n`;
+  report += `- **Índice Global de Patrones de IA:** ${currentAnalysis.globalPercentage}/100\n`;
+  report += `- **Veredicto:** ${currentAnalysis.classification}\n`;
   report += `- **Aviso Metodológico:** Este índice describe heurísticas superficiales de estilo y no constituye un dictamen concluyente de autoría.\n`;
   if (currentAnalysis.verdictSummary) {
     report += `- **Dictamen:** ${currentAnalysis.verdictSummary}\n`;
@@ -716,6 +719,47 @@ if (printReportBtn) {
     window.print();
   });
 }
+
+// Guía Desplegable de Interpretación de Métricas
+if (btnToggleGuide && metricsGuideSection) {
+  btnToggleGuide.addEventListener("click", () => {
+    const isHidden = metricsGuideSection.style.display === "none";
+    metricsGuideSection.style.display = isHidden ? "block" : "none";
+    btnToggleGuide.setAttribute("aria-expanded", isHidden ? "true" : "false");
+    if (isHidden) {
+      metricsGuideSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  });
+}
+
+if (btnCloseGuide && metricsGuideSection) {
+  btnCloseGuide.addEventListener("click", () => {
+    metricsGuideSection.style.display = "none";
+    if (btnToggleGuide) btnToggleGuide.setAttribute("aria-expanded", "false");
+  });
+}
+
+document.querySelectorAll(".stat-info-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (metricsGuideSection) {
+      metricsGuideSection.style.display = "block";
+      if (btnToggleGuide) btnToggleGuide.setAttribute("aria-expanded", "true");
+      const targetId = btn.getAttribute("data-guide-target");
+      if (targetId) {
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          targetEl.style.borderColor = "var(--accent-blue)";
+          targetEl.style.boxShadow = "0 0 0 2px var(--accent-blue)";
+          setTimeout(() => {
+            targetEl.style.borderColor = "";
+            targetEl.style.boxShadow = "";
+          }, 2000);
+        }
+      }
+    }
+  });
+});
 
 // Botón de Limpieza Automática de Clichés
 const autoCleanBtn = document.getElementById("autoCleanBtn");

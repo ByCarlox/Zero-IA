@@ -78,33 +78,95 @@
 
     <!-- Informe de revisión -->
     <section class="results-container" id="resultsContainer" aria-label="Resultados del análisis">
-      <div class="report-heading"><div><div class="eyebrow">INFORME DEL DOCUMENTO</div><h1>Tu revisión, en detalle.</h1><p>Indicadores orientativos para una lectura crítica y una edición consciente.</p></div><span class="report-status">Análisis completado</span></div>
+      <div class="report-heading">
+        <div>
+          <div class="eyebrow">INFORME DEL DOCUMENTO</div>
+          <h1>Tu revisión, en detalle.</h1>
+          <p>Indicadores orientativos para una lectura crítica y una edición consciente.</p>
+        </div>
+        <div class="report-heading-actions">
+          <button type="button" class="btn-guide-toggle" id="btnToggleGuide" aria-expanded="false" aria-controls="metricsGuideSection" title="Explicación de las métricas">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span>¿Qué significa cada métrica?</span>
+            <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <span class="report-status">Análisis completado</span>
+        </div>
+      </div>
+
+      <!-- Guía explicativa de terminologías (Desplegable) -->
+      <div class="metrics-guide-panel" id="metricsGuideSection" style="display: none;">
+        <div class="guide-panel-header">
+          <div class="guide-panel-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <strong>Guía de interpretación de métricas e indicadores</strong>
+          </div>
+          <button type="button" class="guide-close-btn" id="btnCloseGuide" aria-label="Cerrar guía">✕</button>
+        </div>
+        <div class="guide-grid">
+          <div class="guide-card" id="guideCardPatrones">
+            <div class="guide-card-tag">Escala 0 – 100</div>
+            <h4>Patrones de IA</h4>
+            <p>Evalúa la presencia de fórmulas fijas, conectores típicos de LLMs y uniformidad estructural. Valores bajos (0-30) señalan redacción natural y diversa; valores altos (65+) indican patrones sintéticos característicos de asistentes de IA.</p>
+          </div>
+          <div class="guide-card" id="guideCardLexico">
+            <div class="guide-card-tag">Perplejidad</div>
+            <h4>Índice léxico</h4>
+            <p>Estima la riqueza y predictibilidad del vocabulario. Una puntuación alta (&gt;75) refleja variedad léxica y términos especializados (propio de redacción experta). Puntuaciones bajas (&lt;45) denotan expresiones muy predecibles.</p>
+          </div>
+          <div class="guide-card" id="guideCardVariacion">
+            <div class="guide-card-tag">Burstiness</div>
+            <h4>Variación entre frases</h4>
+            <p>Mide la alternancia en el ritmo y longitud de las oraciones. La redacción humana es variada (combina oraciones breves con largas y complejas, &gt;20); la IA tiende a generar frases de longitud muy similar (&lt;15).</p>
+          </div>
+          <div class="guide-card" id="guideCardPrioritarias">
+            <div class="guide-card-tag">Revisión focalizada</div>
+            <h4>Frases prioritarias</h4>
+            <p>Señala las oraciones donde coinciden varios factores sintéticos (clichés, longitud monótona o baja perplejidad). Te permite focalizar la lectura y humanización en el manuscrito interactivo.</p>
+          </div>
+        </div>
+        <div class="guide-footer-note">
+          <span>💡 <strong>Nota metodológica:</strong> Estos indicadores son estimaciones estadísticas descriptivas para la autorrevisión y no constituyen una prueba jurídica ni concluyente de autoría.</span>
+        </div>
+      </div>
       
       <!-- Barra Superior de Estadísticas -->
       <div class="top-stats-bar">
         <div class="stat-card primary">
-          <div class="stat-title">Señales de estilo</div>
+          <div class="stat-title-row">
+            <div class="stat-title">Patrones de IA</div>
+            <button type="button" class="stat-info-btn" data-guide-target="guideCardPatrones" title="¿Qué significa Patrones de IA?">ⓘ</button>
+          </div>
           <div class="stat-metric-hero">
             <span id="globalPercentage">0/100</span>
           </div>
-          <div style="font-size: 0.78rem; color: var(--text-secondary);">Heurística descriptiva de estilo</div>
+          <div style="font-size: 0.78rem; color: var(--text-secondary);">Coincidencia con estructuras sintéticas</div>
           <div id="verdictBadge" class="tag-badge" style="margin-top: 6px;">Analizando</div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-title">Índice léxico</div>
+          <div class="stat-title-row">
+            <div class="stat-title">Índice léxico</div>
+            <button type="button" class="stat-info-btn" data-guide-target="guideCardLexico" title="¿Qué significa Índice léxico?">ⓘ</button>
+          </div>
           <div class="stat-metric-hero" id="meanPerplexity">0.0</div>
           <div style="font-size: 0.78rem; color: var(--text-secondary);">Estimación heurística</div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-title">Variación entre frases</div>
+          <div class="stat-title-row">
+            <div class="stat-title">Variación entre frases</div>
+            <button type="button" class="stat-info-btn" data-guide-target="guideCardVariacion" title="¿Qué significa Variación entre frases?">ⓘ</button>
+          </div>
           <div class="stat-metric-hero" id="burstinessScore">0.0</div>
           <div style="font-size: 0.78rem; color: var(--text-secondary);">Dispersión del índice léxico</div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-title">Frases prioritarias</div>
+          <div class="stat-title-row">
+            <div class="stat-title">Frases prioritarias</div>
+            <button type="button" class="stat-info-btn" data-guide-target="guideCardPrioritarias" title="¿Qué significa Frases prioritarias?">ⓘ</button>
+          </div>
           <div class="stat-metric-hero" style="color: var(--color-danger-border);">
             <span id="highRiskCount">0</span>
           </div>
@@ -239,6 +301,6 @@
   <script src="js/academic-review.js"></script>
   <script src="js/detector.js"></script>
   <script src="js/document-parser.js"></script>
-  <script src="js/app.js?v=20260923-2"></script>
+  <script src="js/app.js?v=20260923-3"></script>
 </body>
 </html>

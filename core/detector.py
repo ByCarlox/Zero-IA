@@ -206,7 +206,7 @@ class AIDetector:
 
         # 7. Veredicto Heurístico Descriptivo (no calibrado)
         if global_ai_score >= 65.0:
-            classification = "Alta concentración de señales de estilo"
+            classification = "Alta concentración de patrones de IA"
             verdict_badge = "🔴 ALTA CONCENTRACIÓN"
             verdict_summary = (
                 f"El análisis heurístico identificó una concentración elevada de patrones sintéticos ({global_ai_score}%), "
@@ -214,19 +214,19 @@ class AIDetector:
                 "Este índice es orientativo y no constituye una prueba concluyente de autoría."
             )
         elif global_ai_score >= 35.0:
-            classification = "Concentración media de señales de estilo"
+            classification = "Concentración media de patrones de IA"
             verdict_badge = "🟡 CONCENTRACIÓN MEDIA"
             verdict_summary = (
                 f"El texto presenta una combinación de pasajes con ritmo variado y secciones con estructuras sintácticas homogéneas o frases formulaicas ({global_ai_score}%). "
                 "Se recomienda una revisión cualitativa de las oraciones señaladas."
             )
         else:
-            classification = "Baja concentración de señales de estilo"
-            verdict_badge = "🟢 POCAS SEÑALES"
+            classification = "Baja concentración de patrones de IA"
+            verdict_badge = "🟢 POCOS PATRONES"
             verdict_summary = (
                 f"El documento muestra diversidad léxica, variabilidad rítmica natural ({burstiness:.1f} de ráfaga) "
-                f"y baja presencia de fórmulas fijas de IA ({global_ai_score}%). "
-                "Nota: La ausencia de señales no garantiza autoría humana, solo indica estilo variado según estas reglas heurísticas."
+                f"y baja presencia de patrones de IA ({global_ai_score}%). "
+                "Nota: La baja presencia de patrones no garantiza autoría humana, solo indica redacción variada según estas reglas heurísticas."
             )
 
         if watermark_result["has_watermark"]:

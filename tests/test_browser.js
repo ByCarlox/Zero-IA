@@ -34,7 +34,7 @@ assert.equal(ZeroIADetector.stripInvisibleCharacters(dirty), 'Texto con marcas.'
 const withBib = 'El sensor acústico registró valores normales durante el experimento.\n\nReferencias\nGómez, A. (2020). Métodos. Editorial Ciencia.';
 const resBib = ZeroIADetector.analyzeDocument(withBib);
 assert.ok(resBib.sentences.some(s => s.isBibliography));
-assert.equal(resBib.classification, 'Baja concentración de señales de estilo');
+assert.equal(resBib.classification, 'Baja concentración de patrones de IA');
 
 // Los destinos DOM del controlador deben existir en la página real.
 const html = fs.readFileSync('index.html', 'utf8');
