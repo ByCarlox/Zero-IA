@@ -17,10 +17,20 @@
     }
     return Math.max(1, total);
   }
-  function academicReview(text, currentYear = new Date().getFullYear()) {
+  function splitBibliography(text) {
     const heading = /^\s*(?:#{1,6}\s*)?(?:referencias(?: bibliográficas)?|bibliografía|references|bibliography)\s*:?\s*$/im.exec(text);
-    const body = heading ? text.slice(0, heading.index) : text;
-    const bibliography = heading ? text.slice(heading.index + heading[0].length) : '';
+    if (!heading) return { body: text, bibliography: '', hasBibliography: false };
+    return {
+      body: text.slice(0, heading.index),
+      bibliography: text.slice(heading.index + heading[0].length),
+      hasBibliography: true
+    };
+  }
+  function academicReview(text, currentYear = new Date().getFullYear()) {
+    const bibData = splitBibliography(text);
+    const body = bibData.body;
+    const bibliography = bibData.bibliography;
+    const heading = bibData.hasBibliography;
     const words = body.toLowerCase().match(/[a-záéíóúüñ]+/g) || [];
     const sentences = root.ZeroIADetector.splitSentences(body).filter(s => /[a-záéíóúüñ]/i.test(s));
     const n = words.length, f = sentences.length, count = words.reduce((sum, w) => sum + syllables(w), 0);
@@ -86,5 +96,5 @@
       ...c.findings.map(i => `[${i.code}] ${i.message} Evidencia: ${i.evidence}`),
       'Una coincidencia interna no confirma autenticidad; contrastar autor, título, año y fuente original.'].join('\n\n');
   }
-  root.ZeroIAAcademic = {academicReview, summary, syllables};
+  root.ZeroIAAcademic = {academicReview, summary, syllables, splitBibliography};
 })(typeof window === 'undefined' ? globalThis : window);

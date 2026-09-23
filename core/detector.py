@@ -34,7 +34,12 @@ class AIDetector:
                 "sentences": []
             }
 
-        paragraphs = split_into_paragraphs(raw_text)
+        # Separar bibliografía para no distorsionar métricas de estilo y perplejidad
+        from core.academic_review import split_bibliography
+        body_text, bib_text, has_bib = split_bibliography(raw_text)
+        analysis_text = body_text if (has_bib and clean_words(body_text)) else raw_text
+
+        paragraphs = split_into_paragraphs(analysis_text)
         all_sentences: List[str] = []
         structured_info: List[Dict[str, Any]] = []
 
@@ -45,18 +50,31 @@ class AIDetector:
                 structured_info.append({
                     "paragraph_idx": p_idx,
                     "sentence_idx": s_idx,
-                    "text": s
+                    "text": s,
+                    "is_bibliography": False
+                })
+
+        # Si hay bibliografía, registrar sus párrafos sin mezclarlos en el análisis de IA
+        if has_bib and bib_text.strip():
+            bib_paragraphs = split_into_paragraphs(bib_text)
+            start_p_idx = len(paragraphs)
+            for bp_idx, bp in enumerate(bib_paragraphs):
+                structured_info.append({
+                    "paragraph_idx": start_p_idx + bp_idx,
+                    "sentence_idx": 0,
+                    "text": bp,
+                    "is_bibliography": True
                 })
 
         if not all_sentences:
             return {
-                "error": "No se encontraron oraciones legibles.",
+                "error": "No se encontraron oraciones legibles en el cuerpo del documento.",
                 "ai_score": 0.0,
                 "classification": "Sin oraciones",
                 "sentences": []
             }
 
-        # 1. Perplejidad y Burstiness
+        # 1. Perplejidad y Burstiness sobre el cuerpo del documento
         ppl_result = self.perplexity_engine.analyze_document(all_sentences)
         sentence_ppls = ppl_result["sentence_perplexities"]
         mean_ppl = ppl_result["mean_perplexity"]
@@ -79,6 +97,23 @@ class AIDetector:
             s_text = item["text"]
             words = clean_words(s_text)
             w_len = len(words)
+
+            if item.get("is_bibliography"):
+                analyzed_sentences.append({
+                    "paragraph_idx": item["paragraph_idx"],
+                    "sentence_idx": item["sentence_idx"],
+                    "text": s_text,
+                    "word_count": w_len,
+                    "perplexity": 100.0,
+                    "cliches": [],
+                    "ai_score": 0.0,
+                    "risk_level": "low",
+                    "is_bibliography": True,
+                    "reasons": ["Entrada bibliográfica: excluida del análisis de estilo."],
+                    "suggestions": {"original": s_text, "risk_level": "low", "tips": [], "suggested_rewrite": None}
+                })
+                continue
+
             ppl = sentence_ppls[i] if i < len(sentence_ppls) else 50.0
 
             # Detección de clichés en esta oración

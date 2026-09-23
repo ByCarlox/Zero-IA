@@ -204,7 +204,20 @@ function analyzeDocument(rawText) {
     return { error: "El documento está vacío." };
   }
 
-  const paragraphs = splitParagraphs(rawText);
+  // Separar bibliografía para no distorsionar métricas de estilo ni perplejidad
+  let bodyText = rawText;
+  let bibText = "";
+  let hasBib = false;
+  if (window.ZeroIAAcademic && typeof window.ZeroIAAcademic.splitBibliography === "function") {
+    const bibSplit = window.ZeroIAAcademic.splitBibliography(rawText);
+    if (bibSplit.hasBibliography && extractWords(bibSplit.body).length > 0) {
+      bodyText = bibSplit.body;
+      bibText = bibSplit.bibliography;
+      hasBib = true;
+    }
+  }
+
+  const paragraphs = splitParagraphs(bodyText);
   const structuredSentences = [];
   const allSentencesText = [];
 
@@ -215,16 +228,31 @@ function analyzeDocument(rawText) {
       structuredSentences.push({
         paragraphIdx: pIdx,
         sentenceIdx: sIdx,
-        text: sText
+        text: sText,
+        isBibliography: false
       });
     });
   });
 
-  if (structuredSentences.length === 0) {
-    return { error: "No se identificaron oraciones legibles." };
+  // Si hay bibliografía, registrar sus párrafos sin mezclarlos en el análisis de IA
+  if (hasBib && bibText.trim()) {
+    const bibParagraphs = splitParagraphs(bibText);
+    const startPIdx = paragraphs.length;
+    bibParagraphs.forEach((bp, bpIdx) => {
+      structuredSentences.push({
+        paragraphIdx: startPIdx + bpIdx,
+        sentenceIdx: 0,
+        text: bp,
+        isBibliography: true
+      });
+    });
   }
 
-  const allWords = extractWords(rawText);
+  if (allSentencesText.length === 0) {
+    return { error: "No se identificaron oraciones legibles en el cuerpo del documento." };
+  }
+
+  const allWords = extractWords(bodyText);
   const wordCount = allWords.length;
   const ttr = wordCount > 0 ? parseFloat((new Set(allWords).size / wordCount).toFixed(3)) : 0;
   const entropy = computeEntropy(allWords);
@@ -249,6 +277,24 @@ function analyzeDocument(rawText) {
     const sText = item.text;
     const words = extractWords(sText);
     const wLen = words.length;
+
+    if (item.isBibliography) {
+      return {
+        globalIdx: idx,
+        paragraphIdx: item.paragraphIdx,
+        sentenceIdx: item.sentenceIdx,
+        text: sText,
+        wordCount: wLen,
+        perplexity: 100.0,
+        aiScore: 0.0,
+        riskLevel: "low",
+        isBibliography: true,
+        reasons: ["Entrada bibliográfica: excluida del análisis de estilo."],
+        tips: [],
+        suggestedRewrite: null
+      };
+    }
+
     const ppl = ppls[idx];
     const cliches = detectCliches(sText);
 
@@ -314,7 +360,8 @@ function analyzeDocument(rawText) {
     };
   });
 
-  const totalS = analyzedSentences.length;
+  const contentSentences = analyzedSentences.filter(s => !s.isBibliography);
+  const totalS = contentSentences.length || 1;
   const pctHigh = highRiskCount / totalS;
   const pctMed = mediumRiskCount / totalS;
   let rawGlobal = (pctHigh * 0.70) + (pctMed * 0.30) + ((1.0 - Math.min(1.0, cv)) * 0.20);
@@ -350,7 +397,7 @@ function analyzeDocument(rawText) {
     ttr,
     entropy,
     sentences: analyzedSentences,
-    paragraphs: paragraphs
+    paragraphs: hasBib && bibText.trim() ? [...paragraphs, ...splitParagraphs(bibText)] : paragraphs
   };
 }
 

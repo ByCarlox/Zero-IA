@@ -60,6 +60,23 @@ class TestDetectorAndHumanizer(unittest.TestCase):
         self.assertLess(result["global_ai_percentage"], 40.0)
         self.assertIn("POCAS SEÑALES", result["verdict_badge"])
 
+    def test_detector_bibliography_isolation(self):
+        text_with_bib = (
+            "Durante las pruebas que hicimos en el laboratorio el pasado mes de octubre, observamos anomalías claras. "
+            "El sensor registró variaciones significativas en la señal acústica.\n\n"
+            "Referencias\n"
+            "García, M. (2023). Estudio de sensores. Revista de Ingeniería, 12(3), 45-56. https://doi.org/10.1000/182\n"
+            "López, J. (2022). Métodos acústicos. Editorial Ciencia."
+        )
+        result = self.detector.analyze_document(text_with_bib)
+        self.assertLess(result["global_ai_percentage"], 40.0)
+        bib_sentences = [s for s in result["sentences"] if s.get("is_bibliography")]
+        self.assertTrue(len(bib_sentences) >= 1)
+        for bs in bib_sentences:
+            self.assertEqual(bs["risk_level"], "low")
+            self.assertEqual(bs["ai_score"], 0.0)
+            self.assertIn("bibliográfica", bs["reasons"][0])
+
 
 if __name__ == "__main__":
     unittest.main()
