@@ -196,6 +196,89 @@ function generateHumanizedRewrite(sentence, cliches) {
   return null;
 }
 
+// Detección de Marcas de Agua Invisibles y Caracteres de Ancho Cero (Unicode Steganography)
+const INVISIBLE_CHARS = {
+  "\u200B": { name: "Zero Width Space (ZWSP)", hex: "U+200B", desc: "Espacio de ancho cero (frecuente en copiado de ChatGPT o firmas invisibles)" },
+  "\u200C": { name: "Zero Width Non-Joiner (ZWNJ)", hex: "U+200C", desc: "Separador de ancho cero" },
+  "\u200D": { name: "Zero Width Joiner (ZWJ)", hex: "U+200D", desc: "Unión de ancho cero" },
+  "\u2060": { name: "Word Joiner", hex: "U+2060", desc: "Unión de palabras invisible" },
+  "\uFEFF": { name: "Zero Width No-Break Space (BOM)", hex: "U+FEFF", desc: "Espacio invisible no separable" },
+  "\u00AD": { name: "Soft Hyphen (SHY)", hex: "U+00AD", desc: "Guion condicional invisible" },
+  "\u200E": { name: "Left-to-Right Mark (LRM)", hex: "U+200E", desc: "Marca direccional invisible" },
+  "\u200F": { name: "Right-to-Left Mark (RLM)", hex: "U+200F", desc: "Marca direccional invisible" }
+};
+
+function detectInvisibleWatermarks(text) {
+  if (!text) {
+    return {
+      hasWatermark: false,
+      totalInvisibleChars: 0,
+      detectedTypes: [],
+      steganographyDetected: false,
+      status: "clean",
+      message: "No se detectaron caracteres invisibles."
+    };
+  }
+
+  const counts = {};
+  let consecutiveRun = 0;
+  let maxConsecutive = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (INVISIBLE_CHARS[ch]) {
+      counts[ch] = (counts[ch] || 0) + 1;
+      consecutiveRun++;
+      if (consecutiveRun > maxConsecutive) maxConsecutive = consecutiveRun;
+    } else {
+      consecutiveRun = 0;
+    }
+  }
+
+  let totalChars = 0;
+  const detectedTypes = [];
+  for (const ch in counts) {
+    totalChars += counts[ch];
+    detectedTypes.push({
+      name: INVISIBLE_CHARS[ch].name,
+      hex: INVISIBLE_CHARS[ch].hex,
+      count: counts[ch],
+      desc: INVISIBLE_CHARS[ch].desc
+    });
+  }
+
+  const steganography = maxConsecutive >= 3 || totalChars >= 5;
+  let status = "clean";
+  let message = "No se detectaron caracteres invisibles ni marcas de agua Unicode de ancho cero.";
+
+  if (steganography) {
+    status = "critical";
+    message = `Se detectaron ${totalChars} caracteres invisibles de ancho cero con secuencias esteganográficas consecutivas.`;
+  } else if (totalChars > 0) {
+    status = "warning";
+    message = `Se identificaron ${totalChars} caracteres invisibles de ancho cero en el texto (posible artefacto de copiado de interfaz web o conversor).`;
+  }
+
+  return {
+    hasWatermark: totalChars > 0,
+    totalInvisibleChars: totalChars,
+    maxConsecutiveChain: maxConsecutive,
+    steganographyDetected: steganography,
+    status: status,
+    message: message,
+    detectedTypes: detectedTypes
+  };
+}
+
+function stripInvisibleCharacters(text) {
+  if (!text) return "";
+  let clean = text;
+  for (const ch in INVISIBLE_CHARS) {
+    clean = clean.split(ch).join("");
+  }
+  return clean;
+}
+
 /**
  * Función principal de análisis de documento
  */
@@ -208,8 +291,9 @@ function analyzeDocument(rawText) {
   let bodyText = rawText;
   let bibText = "";
   let hasBib = false;
-  if (window.ZeroIAAcademic && typeof window.ZeroIAAcademic.splitBibliography === "function") {
-    const bibSplit = window.ZeroIAAcademic.splitBibliography(rawText);
+  const academic = (typeof window !== "undefined" && window.ZeroIAAcademic) ? window.ZeroIAAcademic : (typeof ZeroIAAcademic !== "undefined" ? ZeroIAAcademic : null);
+  if (academic && typeof academic.splitBibliography === "function") {
+    const bibSplit = academic.splitBibliography(rawText);
     if (bibSplit.hasBibliography && extractWords(bibSplit.body).length > 0) {
       bodyText = bibSplit.body;
       bibText = bibSplit.bibliography;
@@ -364,125 +448,67 @@ function analyzeDocument(rawText) {
   const totalS = contentSentences.length || 1;
   const pctHigh = highRiskCount / totalS;
   const pctMed = mediumRiskCount / totalS;
-  let rawGlobal = (pctHigh * 0.70) + (pctMed * 0.30) + ((1.0 - Math.min(1.0, cv)) * 0.20);
 
-  if (meanPpl < 45.0) rawGlobal += 0.15;
-// Detección de Marcas de Agua Invisibles y Caracteres de Ancho Cero (Unicode Steganography)
-const INVISIBLE_CHARS = {
-  "\u200B": { name: "Zero Width Space (ZWSP)", hex: "U+200B", desc: "Espacio de ancho cero (firma común de ChatGPT o esteganografía)" },
-  "\u200C": { name: "Zero Width Non-Joiner (ZWNJ)", hex: "U+200C", desc: "Separador de ancho cero" },
-  "\u200D": { name: "Zero Width Joiner (ZWJ)", hex: "U+200D", desc: "Unión de ancho cero" },
-  "\u2060": { name: "Word Joiner", hex: "U+2060", desc: "Unión de palabras invisible" },
-  "\uFEFF": { name: "Zero Width No-Break Space (BOM)", hex: "U+FEFF", desc: "Espacio invisible no separable" },
-  "\u00AD": { name: "Soft Hyphen (SHY)", hex: "U+00AD", desc: "Guion invisible que aparece solo al final de línea" },
-  "\u200E": { name: "Left-to-Right Mark (LRM)", hex: "U+200E", desc: "Marca direccional invisible introducida por navegadores" },
-  "\u200F": { name: "Right-to-Left Mark (RLM)", hex: "U+200F", desc: "Marca direccional invisible" }
-};
+  // Paridad matemática estricta con core/detector.py:
+  // Monotonía de longitud (1.0 - min(1.0, cv))
+  const monotony = 1.0 - Math.min(1.0, cv);
 
-function detectInvisibleWatermarks(text) {
-  if (!text) {
-    return {
-      hasWatermark: false,
-      totalInvisibleChars: 0,
-      detectedTypes: [],
-      steganographyDetected: false,
-      status: "clean",
-      message: "Texto limpio a nivel de codificación."
-    };
+  // Densidad de clichés (cliche_sentences / totalS * 2.5)
+  const clicheSentencesCount = contentSentences.filter(s => {
+    return detectCliches(s.text).length > 0;
+  }).length;
+  const densityScore = Math.min(1.0, (clicheSentencesCount / totalS) * 2.5);
+
+  let rawGlobal = (pctHigh * 0.70) + (pctMed * 0.30) + (monotony * 0.20) + (densityScore * 0.20);
+
+  if (meanPpl < 45.0) {
+    rawGlobal += 0.20;
+  } else if (meanPpl > 80.0) {
+    rawGlobal -= 0.15;
   }
 
-  const counts = {};
-  let consecutiveRun = 0;
-  let maxConsecutive = 0;
-
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (INVISIBLE_CHARS[ch]) {
-      counts[ch] = (counts[ch] || 0) + 1;
-      consecutiveRun++;
-      if (consecutiveRun > maxConsecutive) maxConsecutive = consecutiveRun;
-    } else {
-      consecutiveRun = 0;
-    }
-  }
-
-  let totalChars = 0;
-  const detectedTypes = [];
-  for (const ch in counts) {
-    totalChars += counts[ch];
-    detectedTypes.push({
-      name: INVISIBLE_CHARS[ch].name,
-      hex: INVISIBLE_CHARS[ch].hex,
-      count: counts[ch],
-      desc: INVISIBLE_CHARS[ch].desc
-    });
-  }
-
-  const steganography = maxConsecutive >= 3 || totalChars >= 5;
-  let status = "clean";
-  let message = "No se detectaron caracteres invisibles ni marcas de agua Unicode de ancho cero.";
-
-  if (steganography) {
-    status = "critical";
-    message = `Se detectaron ${totalChars} caracteres invisibles de ancho cero con secuencias esteganográficas. Alta probabilidad de copia directa de chat de IA o inserción de marca oculta.`;
-  } else if (totalChars > 0) {
-    status = "warning";
-    message = `Se identificaron ${totalChars} caracteres invisibles de ancho cero en el texto (posible artefacto de copiado de interfaz web de IA).`;
-  }
-
-  return {
-    hasWatermark: totalChars > 0,
-    totalInvisibleChars: totalChars,
-    maxConsecutiveChain: maxConsecutive,
-    steganographyDetected: steganography,
-    status: status,
-    message: message,
-    detectedTypes: detectedTypes
-  };
-}
-
-function stripInvisibleCharacters(text) {
-  let clean = text;
-  for (const ch in INVISIBLE_CHARS) {
-    clean = clean.split(ch).join("");
-  }
-  return clean;
-}
-
-  const watermarkResult = detectInvisibleWatermarks(rawText);
-  if (watermarkResult.steganographyDetected) {
-    rawGlobal = Math.max(rawGlobal, 0.70);
-  } else if (watermarkResult.hasWatermark) {
-    rawGlobal += 0.15;
+  if (burstiness < 15.0) {
+    rawGlobal += 0.10;
+  } else if (burstiness > 35.0) {
+    rawGlobal -= 0.10;
   }
 
   const globalPercentage = Math.round(Math.max(0.0, Math.min(1.0, rawGlobal)) * 100);
 
-  let classification = "Texto predominantemente humano";
+  // Veredicto heurístico descriptivo (no calibrado, sin inferir autoría)
+  let classification = "Baja concentración de señales de estilo";
   let verdictColor = "green";
-  let verdictBadge = "🟢 ORIGINAL HUMANO";
-  let verdictSummary = `El documento presenta alta riqueza léxica, variabilidad rítmica natural (${burstiness} de ráfaga) y baja predictibilidad (${globalPercentage}%). Cumple con las características esperadas de redacción humana original.`;
+  let verdictBadge = "🟢 POCAS SEÑALES";
+  let verdictSummary = `El documento muestra diversidad léxica, variabilidad rítmica natural (${burstiness} de ráfaga) y baja presencia de fórmulas fijas de IA. Nota: La ausencia de señales no garantiza autoría humana, solo indica estilo variado según estas reglas heurísticas.`;
 
   if (globalPercentage >= 65) {
-    classification = "Alta probabilidad de IA";
+    classification = "Alta concentración de señales de estilo";
     verdictColor = "red";
-    verdictBadge = "🔴 ALTA PROBABILIDAD DE IA";
-    verdictSummary = `El análisis detectó una concentración elevada de patrones sintéticos (${globalPercentage}%), con predictibilidad léxica alta (perplejidad ${meanPpl}), cadencia uniforme y ${highRiskCount} oraciones críticas. Se sugiere una revisión profunda antes de su entrega.`;
+    verdictBadge = "🔴 ALTA CONCENTRACIÓN";
+    verdictSummary = `El análisis heurístico identificó una concentración elevada de patrones sintéticos (${globalPercentage}%), con baja perplejidad (${meanPpl}), cadencia uniforme y ${highRiskCount} oraciones críticas. Este índice es orientativo y no constituye una prueba concluyente de autoría.`;
   } else if (globalPercentage >= 35) {
-    classification = "Contenido mixto / Asistencia de IA";
+    classification = "Concentración media de señales de estilo";
     verdictColor = "yellow";
-    verdictBadge = "🟡 CONTENIDO MIXTO";
-    verdictSummary = `El texto muestra rasgos combinados (${globalPercentage}%): coexisten pasajes con ritmo natural humano y secciones con estructuras formulaicas de IA (${highRiskCount} oraciones en riesgo alto). Se recomienda verificar y humanizar las oraciones señaladas en el manuscrito.`;
+    verdictBadge = "🟡 CONCENTRACIÓN MEDIA";
+    verdictSummary = `El texto presenta rasgos combinados (${globalPercentage}%): coexisten pasajes con ritmo variado y secciones con estructuras sintácticas homogéneas o frases formulaicas (${highRiskCount} oraciones en riesgo alto). Se recomienda una revisión cualitativa.`;
   }
 
+  // Análisis forense independiente de marcas de agua (no altera artificialmente el score de estilo)
+  const watermarkResult = detectInvisibleWatermarks(rawText);
   if (watermarkResult.hasWatermark) {
-    verdictSummary += ` ⚠️ ALERTA DE MARCA OCULTA: Se identificaron ${watermarkResult.totalInvisibleChars} caracteres invisibles de ancho cero.`;
+    verdictSummary += ` ⚠️ AVISO: Se detectaron ${watermarkResult.totalInvisibleChars} caracteres invisibles de ancho cero.`;
   }
+
+  const academicReview = (typeof window !== "undefined" && window.ZeroIAAcademic && typeof window.ZeroIAAcademic.academicReview === "function")
+    ? window.ZeroIAAcademic.academicReview(rawText)
+    : (typeof ZeroIAAcademic !== "undefined" && typeof ZeroIAAcademic.academicReview === "function"
+      ? ZeroIAAcademic.academicReview(rawText)
+      : null);
 
   return {
-    academic_review: window.ZeroIAAcademic.academicReview(rawText),
+    academic_review: academicReview,
     watermark_analysis: watermarkResult,
-    score_kind: "ai_probability",
+    score_kind: "uncalibrated_heuristic",
     globalPercentage,
     classification,
     verdictColor,
@@ -502,11 +528,15 @@ function stripInvisibleCharacters(text) {
   };
 }
 
-// Exportar globalmente
-window.ZeroIADetector = {
+// Exportar globalmente tanto en navegadores como en entornos Node.js
+const rootEnv = typeof window !== "undefined" ? window : (typeof globalThis !== "undefined" ? globalThis : this);
+rootEnv.ZeroIADetector = {
   analyzeDocument,
   splitSentences,
   splitParagraphs,
   detectInvisibleWatermarks,
   stripInvisibleCharacters
 };
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = rootEnv.ZeroIADetector;
+}

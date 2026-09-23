@@ -20,3 +20,19 @@ assert.ok(ui.includes('${escapeHTML(s.suggestedRewrite)}'));
 console.log('Browser regressions passed: repeatability, Unicode, empty input, abbreviation, HTML escaping.');
 
 assert.ok(first.sentences.every(s => !s.suggestedRewrite || !s.suggestedRewrite.includes(',,')));
+assert.equal(first.score_kind, 'uncalibrated_heuristic');
+
+// Regresión de marcas de agua invisibles en JS
+assert.equal(typeof ZeroIADetector.detectInvisibleWatermarks, 'function');
+assert.equal(typeof ZeroIADetector.stripInvisibleCharacters, 'function');
+const dirty = 'Texto\u200B con\uFEFF marcas\u00AD.';
+const dirtyRes = ZeroIADetector.detectInvisibleWatermarks(dirty);
+assert.equal(dirtyRes.totalInvisibleChars, 3);
+assert.equal(ZeroIADetector.stripInvisibleCharacters(dirty), 'Texto con marcas.');
+
+// Regresión de aislamiento de bibliografía en JS
+const withBib = 'El sensor acústico registró valores normales durante el experimento.\n\nReferencias\nGómez, A. (2020). Métodos. Editorial Ciencia.';
+const resBib = ZeroIADetector.analyzeDocument(withBib);
+assert.ok(resBib.sentences.some(s => s.isBibliography));
+assert.equal(resBib.classification, 'Baja concentración de señales de estilo');
+

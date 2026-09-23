@@ -433,9 +433,9 @@ function renderResults(analysis) {
 
   if (verdictCard) {
     verdictCard.className = `executive-verdict-card verdict-${analysis.verdictColor}`;
-    verdictTitle.innerText = `Veredicto General: ${analysis.classification}`;
-    verdictSubtitle.innerText = `Probabilidad Global de IA: ${analysis.globalPercentage}% · ${analysis.totalWords} palabras analizadas`;
-    verdictPill.innerText = analysis.verdictBadge || (analysis.verdictColor === "red" ? "🔴 ALTA PROBABILIDAD IA" : analysis.verdictColor === "yellow" ? "🟡 CONTENIDO MIXTO" : "🟢 ORIGINAL HUMANO");
+    verdictTitle.innerText = `Veredicto de Estilo: ${analysis.classification}`;
+    verdictSubtitle.innerText = `Índice de señales: ${analysis.globalPercentage}/100 · ${analysis.totalWords} palabras evaluadas`;
+    verdictPill.innerText = analysis.verdictBadge || (analysis.verdictColor === "red" ? "🔴 ALTA CONCENTRACIÓN" : analysis.verdictColor === "yellow" ? "🟡 CONCENTRACIÓN MEDIA" : "🟢 POCAS SEÑALES");
     verdictPill.className = `tag-badge badge-${analysis.verdictColor}`;
     verdictBody.innerText = analysis.verdictSummary || (analysis.classification + " en base a métricas de predictibilidad y cadencia.");
     verdictIcon.innerText = analysis.verdictColor === "red" ? "⚠️" : analysis.verdictColor === "yellow" ? "⚖️" : "🛡️";
@@ -452,7 +452,7 @@ function renderResults(analysis) {
     wmShieldBox.className = `watermark-shield-box shield-${wm.status}`;
     if (wmIcon) wmIcon.innerText = wm.status === "critical" ? "🚨" : "⚠️";
     if (wmShieldText) {
-      wmShieldText.innerHTML = `<strong>ALERTA DE MARCAS OCULTAS:</strong> Se detectaron ${wm.totalInvisibleChars} caracteres invisibles de ancho cero (Zero-Width Chars). ${wm.message}`;
+      wmShieldText.innerHTML = `<strong>SEÑAL FORENSE:</strong> Se detectaron ${wm.totalInvisibleChars} caracteres invisibles de ancho cero / formato. ${wm.message} <em>(Nota: pueden deberse a esteganografía, copiado web o conversión de PDF).</em>`;
     }
     if (btnStripWm) btnStripWm.style.display = "flex";
   } else {
@@ -481,7 +481,7 @@ function renderResults(analysis) {
     span.className = `manuscript-sentence sentence-${s.riskLevel}`;
     span.dataset.index = idx;
     span.innerText = s.text + " ";
-    span.title = `Probabilidad IA: ${Math.round(s.aiScore * 100)}% | Perplejidad: ${s.perplexity}`;
+    span.title = `Índice de estilo: ${Math.round(s.aiScore * 100)}/100 | Perplejidad: ${s.perplexity}`;
 
     span.addEventListener("click", () => selectSentence(idx));
     pEl.appendChild(span);
@@ -516,7 +516,7 @@ function showSentenceDetail(s) {
 
   let html = `
     <div style="margin-bottom: 14px;">
-      <span class="tag-badge ${badgeClass}">${pct}% Probabilidad IA · ${s.riskLevel === "high" ? "ALTO RIESGO" : s.riskLevel === "medium" ? "RIESGO MEDIO" : "HUMANO"}</span>
+      <span class="tag-badge ${badgeClass}">${pct}/100 Concentración de Señales · ${s.riskLevel === "high" ? "ALTA CONCENTRACIÓN" : s.riskLevel === "medium" ? "CONCENTRACIÓN MEDIA" : "POCAS SEÑALES"}</span>
       <span style="font-size: 0.8rem; color: var(--text-secondary); margin-left: 8px;">Perplejidad: <b>${s.perplexity}</b></span>
     </div>
     <div style="font-size: 0.95rem; font-style: italic; color: var(--text-primary); margin-bottom: 12px; padding: 10px; background: var(--bg-surface-elevated); border-radius: 8px;">
@@ -635,9 +635,10 @@ newAnalysisBtn.addEventListener("click", () => {
 downloadReportBtn.addEventListener("click", () => {
   if (!currentAnalysis) return;
 
-  let report = `# Auditoría de Huellas de IA - Zero-IA\n\n`;
-  report += `- **Probabilidad Global de IA:** ${currentAnalysis.globalPercentage}%\n`;
-  report += `- **Veredicto General:** ${currentAnalysis.classification}\n`;
+  let report = `# Auditoría de Estilo y Señales - Zero-IA\n\n`;
+  report += `- **Índice Global de Señales:** ${currentAnalysis.globalPercentage}/100\n`;
+  report += `- **Veredicto de Estilo:** ${currentAnalysis.classification}\n`;
+  report += `- **Aviso Metodológico:** Este índice describe heurísticas superficiales de estilo y no constituye un dictamen concluyente de autoría.\n`;
   if (currentAnalysis.verdictSummary) {
     report += `- **Dictamen:** ${currentAnalysis.verdictSummary}\n`;
   }
@@ -658,7 +659,7 @@ downloadReportBtn.addEventListener("click", () => {
   currentAnalysis.sentences.forEach(s => {
     if (s.riskLevel !== "low") {
       report += `### [${s.riskLevel.toUpperCase()}] "${escapeHTML(s.text)}"\n`;
-      report += `- **Probabilidad IA:** ${Math.round(s.aiScore * 100)}% | **Perplejidad:** ${s.perplexity}\n`;
+      report += `- **Índice de Estilo:** ${Math.round(s.aiScore * 100)}/100 | **Perplejidad:** ${s.perplexity}\n`;
       s.reasons.forEach(r => { report += `- Diagnóstico: ${r}\n`; });
       if (s.suggestedRewrite) {
         report += `- Propuesta de reescritura: "${s.suggestedRewrite}"\n`;

@@ -198,44 +198,39 @@ class AIDetector:
         elif burstiness > 35.0:
             raw_global_score -= 0.10
 
-        # 6. Detección de marcas de agua invisibles y caracteres de ancho cero
+        # 6. Detección forense independiente de marcas de agua invisibles (no altera artificialmente el score de estilo)
         from core.watermark_detector import detect_invisible_watermarks
         watermark_result = detect_invisible_watermarks(raw_text)
-        if watermark_result["steganography_detected"]:
-            raw_global_score = max(raw_global_score, 0.70)
-        elif watermark_result["has_watermark"]:
-            raw_global_score += 0.15
 
         global_ai_score = round(max(0.0, min(1.0, raw_global_score)) * 100, 1)
 
-        # 7. Veredicto General Ejecutivo
+        # 7. Veredicto Heurístico Descriptivo (no calibrado)
         if global_ai_score >= 65.0:
-            classification = "Alta probabilidad de IA"
-            verdict_badge = "🔴 ALTA PROBABILIDAD DE IA"
+            classification = "Alta concentración de señales de estilo"
+            verdict_badge = "🔴 ALTA CONCENTRACIÓN"
             verdict_summary = (
-                f"El análisis detectó una concentración elevada de patrones sintéticos ({global_ai_score}%), "
-                f"con predictibilidad léxica alta (perplejidad {mean_ppl:.1f}), cadencia uniforme y {high_risk_count} oraciones críticas. "
-                "Se sugiere una revisión y reescritura profunda antes de su entrega formal."
+                f"El análisis heurístico identificó una concentración elevada de patrones sintéticos ({global_ai_score}%), "
+                f"con baja perplejidad ({mean_ppl:.1f}), cadencia uniforme y {high_risk_count} oraciones críticas. "
+                "Este índice es orientativo y no constituye una prueba concluyente de autoría."
             )
         elif global_ai_score >= 35.0:
-            classification = "Contenido mixto / Asistencia de IA"
-            verdict_badge = "🟡 CONTENIDO MIXTO"
+            classification = "Concentración media de señales de estilo"
+            verdict_badge = "🟡 CONCENTRACIÓN MEDIA"
             verdict_summary = (
-                f"El texto muestra rasgos combinados ({global_ai_score}%): coexisten pasajes con ritmo natural humano "
-                f"y secciones con estructuras formulaicas de IA ({high_risk_count} oraciones en riesgo alto). "
-                "Se recomienda verificar y humanizar las oraciones señaladas en el manuscrito."
+                f"El texto presenta una combinación de pasajes con ritmo variado y secciones con estructuras sintácticas homogéneas o frases formulaicas ({global_ai_score}%). "
+                "Se recomienda una revisión cualitativa de las oraciones señaladas."
             )
         else:
-            classification = "Texto predominantemente humano"
-            verdict_badge = "🟢 ORIGINAL HUMANO"
+            classification = "Baja concentración de señales de estilo"
+            verdict_badge = "🟢 POCAS SEÑALES"
             verdict_summary = (
-                f"El documento presenta alta riqueza léxica, variabilidad rítmica natural ({burstiness:.1f} de ráfaga) "
-                f"y baja predictibilidad ({global_ai_score}%). "
-                "Cumple con las características esperadas de redacción humana original."
+                f"El documento muestra diversidad léxica, variabilidad rítmica natural ({burstiness:.1f} de ráfaga) "
+                f"y baja presencia de fórmulas fijas de IA ({global_ai_score}%). "
+                "Nota: La ausencia de señales no garantiza autoría humana, solo indica estilo variado según estas reglas heurísticas."
             )
 
         if watermark_result["has_watermark"]:
-            verdict_summary += f" ⚠️ ALERTA: Se detectaron {watermark_result['total_invisible_chars']} caracteres invisibles / marcas de agua de ancho cero."
+            verdict_summary += f" ⚠️ AVISO: Se detectaron {watermark_result['total_invisible_chars']} caracteres invisibles de ancho cero."
 
         return {
             "academic_review": academic_review(raw_text),

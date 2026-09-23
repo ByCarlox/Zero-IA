@@ -47,7 +47,7 @@ class TestDetectorAndHumanizer(unittest.TestCase):
         )
         result = self.detector.analyze_document(chatgpt_text)
         self.assertGreater(result["global_ai_percentage"], 50.0)
-        self.assertIn("ALTA PROBABILIDAD", result["verdict_badge"])
+        self.assertIn("ALTA CONCENTRACIÓN", result["verdict_badge"])
         self.assertTrue(result["high_risk_sentences"] >= 2)
 
     def test_detector_human_sample(self):
@@ -58,7 +58,7 @@ class TestDetectorAndHumanizer(unittest.TestCase):
         )
         result = self.detector.analyze_document(human_text)
         self.assertLess(result["global_ai_percentage"], 40.0)
-        self.assertIn("ORIGINAL HUMANO", result["verdict_badge"])
+        self.assertIn("POCAS SEÑALES", result["verdict_badge"])
 
     def test_detector_bibliography_isolation(self):
         text_with_bib = (
