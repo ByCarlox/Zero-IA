@@ -163,19 +163,19 @@ function extractDOI(text) {
 function getFindingBadge(code) {
   switch (code) {
     case 'missing_reference':
-      return '🔴 Cita sin bibliografía';
+      return 'Cita sin bibliografía';
     case 'not_cited':
-      return 'ℹ️ Entrada no citada en cuerpo';
+      return 'Entrada no citada en cuerpo';
     case 'unparsed_reference':
-      return '⚠️ Formato atípico';
+      return 'Formato atípico';
     case 'future_year':
-      return '⚠️ Año posterior al actual';
+      return 'Año posterior al actual';
     case 'invalid_doi':
-      return '⚠️ Sintaxis DOI atípica';
+      return 'Sintaxis DOI atípica';
     case 'ambiguous_reference':
-      return '⚠️ Cita ambigua (múltiples entradas)';
+      return 'Cita ambigua (múltiples entradas)';
     case 'unsupported_range':
-      return '⚠️ Rango numérico no interpretable';
+      return 'Rango numérico no interpretable';
     default:
       return `⚠️ ${code}`;
   }
@@ -270,12 +270,12 @@ function renderAcademicReview(review) {
 
   const html = `
     <div class="academic-cards-container">
-      <!-- Tarjeta 1: Legibilidad Flesch-Szigriszt (INFLESZ) -->
+      <!-- Tarjeta 1: Legibilidad -->
       <div class="academic-card">
         <div class="academic-card-header">
           <div class="academic-card-title">
-            <span class="academic-icon">📖</span>
-            <strong>Legibilidad Flesch-Szigriszt (INFLESZ)</strong>
+            <span class="academic-icon">01</span>
+            <strong>Legibilidad</strong>
           </div>
           <span class="inflesz-badge ${rBadgeClass}">${r.label || 'No evaluable'}</span>
         </div>
@@ -311,7 +311,7 @@ function renderAcademicReview(review) {
 
         ${r.short_sample ? `
           <div class="academic-alert alert-warning">
-            ⚠️ Muestra breve (&lt;100 palabras): las métricas estadísticas de estilo presentan alta variabilidad.
+            Muestra breve (&lt;100 palabras): las métricas estadísticas de estilo presentan alta variabilidad.
           </div>
         ` : ''}
 
@@ -320,15 +320,15 @@ function renderAcademicReview(review) {
         </div>
       </div>
 
-      <!-- Tarjeta 2: Coherencia de Citas y Bibliografía -->
+      <!-- Tarjeta 2: Citas y bibliografía -->
       <div class="academic-card">
         <div class="academic-card-header">
           <div class="academic-card-title">
-            <span class="academic-icon">📚</span>
-            <strong>Coherencia de Citas y Bibliografía</strong>
+            <span class="academic-icon">02</span>
+            <strong>Citas y bibliografía</strong>
           </div>
           <span class="inflesz-badge ${c.has_bibliography ? 'badge-green' : 'badge-amber'}">
-            ${c.has_bibliography ? 'Bibliografía aislada' : 'Sin encabezado'}
+            ${c.has_bibliography ? 'Sección detectada' : 'Sin bibliografía'}
           </span>
         </div>
 
@@ -342,13 +342,13 @@ function renderAcademicReview(review) {
 
         ${!c.has_bibliography ? `
           <div class="academic-alert alert-info">
-            ℹ️ No se detectó un encabezado de bibliografía (ej. <em>"Referencias"</em> o <em>"Bibliografía"</em>). Para cotejar la correspondencia de citas, incluya la sección correspondiente.
+            No se detectó un encabezado de bibliografía (ej. <em>"Referencias"</em> o <em>"Bibliografía"</em>). Para cotejar la correspondencia de citas, incluya la sección correspondiente.
           </div>
         ` : ''}
 
         ${(c.findings && c.findings.length > 0) ? `
           <div class="findings-list">
-            <div class="findings-title">Discrepancias de consistencia interna:</div>
+            <div class="findings-title">Observaciones para revisar</div>
             ${c.findings.map(f => `
               <div class="finding-item finding-${f.code}">
                 <div class="finding-code-badge">${getFindingBadge(f.code)}</div>
@@ -368,7 +368,7 @@ function renderAcademicReview(review) {
           <div class="doi-section-block">
             <div class="doi-section-header">
               <span>Identificadores DOI detectados (${refsWithDoi.length})</span>
-              <span style="font-size: 0.72rem; color: var(--text-tertiary);">Resolución vía Crossref REST API</span>
+              <span style="font-size: 0.72rem; color: var(--text-tertiary);">Consulta externa opcional</span>
             </div>
             ${refsWithDoi.map(item => `
               <div class="doi-item-card" data-doi-item="${item.index}">
@@ -417,7 +417,7 @@ function renderResults(analysis) {
   renderAcademicReview(analysis.academic_review);
 
   // 1. Métricas Principales
-  globalPercentageEl.innerText = `${analysis.globalPercentage}%`;
+  globalPercentageEl.innerText = `${analysis.globalPercentage}/100`;
   globalPercentageEl.style.color = analysis.verdictColor === "red" ? "var(--color-danger-border)" : analysis.verdictColor === "yellow" ? "var(--color-warning-border)" : "var(--color-success-border)";
 
   verdictBadgeEl.innerText = analysis.classification;
@@ -438,12 +438,12 @@ function renderResults(analysis) {
 
   if (verdictCard) {
     verdictCard.className = `executive-verdict-card verdict-${analysis.verdictColor}`;
-    verdictTitle.innerText = `Veredicto de Estilo: ${analysis.classification}`;
+    verdictTitle.innerText = "Resumen de estilo";
     verdictSubtitle.innerText = `Índice de señales: ${analysis.globalPercentage}/100 · ${analysis.totalWords} palabras evaluadas`;
-    verdictPill.innerText = analysis.verdictBadge || (analysis.verdictColor === "red" ? "🔴 ALTA CONCENTRACIÓN" : analysis.verdictColor === "yellow" ? "🟡 CONCENTRACIÓN MEDIA" : "🟢 POCAS SEÑALES");
+    verdictPill.innerText = (analysis.verdictColor === "red" ? "Concentración alta" : analysis.verdictColor === "yellow" ? "Concentración media" : "Concentración baja");
     verdictPill.className = `tag-badge badge-${analysis.verdictColor}`;
-    verdictBody.innerText = analysis.verdictSummary || (analysis.classification + " en base a métricas de predictibilidad y cadencia.");
-    verdictIcon.innerText = analysis.verdictColor === "red" ? "⚠️" : analysis.verdictColor === "yellow" ? "⚖️" : "🛡️";
+    verdictBody.innerText = `${analysis.highRiskSentences} de ${analysis.totalSentences} frases requieren una revisión prioritaria según las reglas de estilo. Selecciona una frase del manuscrito para consultar la observación y sus alternativas. Este índice orienta la revisión; no determina la autoría del texto.`;
+    verdictIcon.innerText = analysis.verdictColor === "red" ? "!" : analysis.verdictColor === "yellow" ? "—" : "✓";
   }
 
   // 1.2 Escudo de Marcas de Agua Ocultas & Caracteres de Ancho Cero
@@ -455,16 +455,16 @@ function renderResults(analysis) {
   const wm = analysis.watermark_analysis;
   if (wm && wm.hasWatermark) {
     wmShieldBox.className = `watermark-shield-box shield-${wm.status}`;
-    if (wmIcon) wmIcon.innerText = wm.status === "critical" ? "🚨" : "⚠️";
+    if (wmIcon) wmIcon.innerText = "!";
     if (wmShieldText) {
-      wmShieldText.innerHTML = `<strong>SEÑAL FORENSE:</strong> Se detectaron ${wm.totalInvisibleChars} caracteres invisibles de ancho cero / formato. ${wm.message} <em>(Nota: pueden deberse a esteganografía, copiado web o conversión de PDF).</em>`;
+      wmShieldText.innerHTML = `<strong>Revisar formato:</strong> Se detectaron ${wm.totalInvisibleChars} caracteres invisibles de ancho cero / formato. ${wm.message} <em>(Nota: pueden deberse a esteganografía, copiado web o conversión de PDF).</em>`;
     }
     if (btnStripWm) btnStripWm.style.display = "flex";
   } else {
     wmShieldBox.className = "watermark-shield-box shield-clean";
-    if (wmIcon) wmIcon.innerText = "🔒";
+    if (wmIcon) wmIcon.innerText = "✓";
     if (wmShieldText) {
-      wmShieldText.innerText = "No se detectaron marcas de agua Unicode, esteganografía ni caracteres invisibles de ancho cero.";
+      wmShieldText.innerText = "No se detectaron caracteres invisibles de los tipos revisados.";
     }
     if (btnStripWm) btnStripWm.style.display = "none";
   }
@@ -486,8 +486,17 @@ function renderResults(analysis) {
     span.className = `manuscript-sentence sentence-${s.riskLevel}`;
     span.dataset.index = idx;
     span.innerText = s.text + " ";
-    span.title = `Índice de estilo: ${Math.round(s.aiScore * 100)}/100 | Perplejidad: ${s.perplexity}`;
+    span.title = `Índice de estilo: ${Math.round(s.aiScore * 100)}/100 | Índice léxico: ${s.perplexity}`;
 
+    span.tabIndex = 0;
+    span.setAttribute("role", "button");
+    span.setAttribute("aria-label", `Revisar frase ${idx + 1}: ${s.text}`);
+    span.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        selectSentence(idx);
+      }
+    });
     span.addEventListener("click", () => selectSentence(idx));
     pEl.appendChild(span);
   });
@@ -521,21 +530,21 @@ function showSentenceDetail(s) {
 
   let html = `
     <div style="margin-bottom: 14px;">
-      <span class="tag-badge ${badgeClass}">${pct}/100 Concentración de Señales · ${s.riskLevel === "high" ? "ALTA CONCENTRACIÓN" : s.riskLevel === "medium" ? "CONCENTRACIÓN MEDIA" : "POCAS SEÑALES"}</span>
-      <span style="font-size: 0.8rem; color: var(--text-secondary); margin-left: 8px;">Perplejidad: <b>${s.perplexity}</b></span>
+      <span class="tag-badge ${badgeClass}">${pct}/100 señales · ${s.riskLevel === "high" ? "Prioridad alta" : s.riskLevel === "medium" ? "Prioridad media" : "Prioridad baja"}</span>
+      <span style="font-size: 0.8rem; color: var(--text-secondary); margin-left: 8px;">Índice léxico: <b>${s.perplexity}</b></span>
     </div>
     <div style="font-size: 0.95rem; font-style: italic; color: var(--text-primary); margin-bottom: 12px; padding: 10px; background: var(--bg-surface-elevated); border-radius: 8px;">
       "${escapeHTML(s.text)}"
     </div>
-    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px;">Diagnóstico y Patrones de IA:</div>
+    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px;">Qué se observa</div>
   `;
 
   s.reasons.forEach(r => {
-    html += `<div style="font-size: 0.85rem; color: var(--color-danger-text); margin-bottom: 4px;">• ${escapeHTML(r)}</div>`;
+    html += `<div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">• ${escapeHTML(r)}</div>`;
   });
 
   if (s.tips.length > 0) {
-    html += `<div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-top: 12px; margin-bottom: 6px;">Sugerencias de Humanización:</div>`;
+    html += `<div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-top: 12px; margin-bottom: 6px;">Cómo mejorarlo</div>`;
     s.tips.forEach(t => {
       html += `<div style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 4px;">✓ ${escapeHTML(t)}</div>`;
     });
@@ -543,7 +552,7 @@ function showSentenceDetail(s) {
 
   if (s.suggestedRewrite) {
     html += `
-      <div style="font-size: 0.8rem; font-weight: 700; color: var(--color-success-text); text-transform: uppercase; margin-top: 12px;">Propuesta de Reescritura Humana:</div>
+      <div style="font-size: 0.8rem; font-weight: 700; color: var(--color-success-text); text-transform: uppercase; margin-top: 12px;">Alternativa de redacción</div>
       <div class="diff-box">"${escapeHTML(s.suggestedRewrite)}"</div>
       <button class="btn-primary" style="width: 100%; margin-top: 8px;" id="copySuggestionBtn">
         Copiar Sugerencia
@@ -571,30 +580,33 @@ function renderInspectorList(sentences) {
   if (flagged.length === 0) {
     inspectorContent.innerHTML = `
       <div style="text-align: center; padding: 24px 12px; color: var(--color-success-text);">
-        <div style="font-size: 1.8rem; margin-bottom: 8px;">✨</div>
-        <div style="font-weight: 600;">Texto Limpio de Huellas de IA</div>
-        <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">No se identificaron oraciones con patrones típicos de LLMs ni predictibilidad artificial.</div>
+        <div class="empty-state-mark">✓</div>
+        <div style="font-weight: 600;">Sin observaciones prioritarias</div>
+        <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">Puedes seleccionar cualquier frase para revisar sus indicadores. Este resultado no determina su autoría.</div>
       </div>
     `;
     return;
   }
 
-  let html = `<div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px;">Haz clic en cualquier frase del documento para inspeccionarla o revisa las ${flagged.length} oraciones señaladas:</div>`;
+  let html = `<div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px;">Haz clic en cualquier frase del documento para inspeccionarla o revisa ${flagged.length === 1 ? "la oración señalada" : `las ${flagged.length} oraciones señaladas`}:</div>`;
 
   flagged.forEach((s) => {
     const badgeClass = s.riskLevel === "high" ? "badge-red" : "badge-yellow";
     html += `
-      <div class="humanize-card" onclick="selectSentence(${s.globalIdx})" style="cursor: pointer;">
+      <button type="button" class="humanize-card" data-sentence-index="${s.globalIdx}">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <span class="tag-badge ${badgeClass}">${Math.round(s.aiScore * 100)}% IA</span>
-          <span style="font-size: 0.75rem; color: var(--text-secondary);">Perplejidad: ${s.perplexity}</span>
+          <span class="tag-badge ${badgeClass}">${Math.round(s.aiScore * 100)}/100 · señales</span>
+          <span style="font-size: 0.75rem; color: var(--text-secondary);">Índice léxico: ${s.perplexity}</span>
         </div>
-        <div style="font-size: 0.88rem; color: var(--text-primary); line-height: 1.4;">"${escapeHTML(s.text.slice(0, 90))}..."</div>
-      </div>
+        <div style="font-size: 0.88rem; color: var(--text-primary); line-height: 1.4;">"${escapeHTML(s.text.slice(0, 90))}${s.text.length > 90 ? "…" : ""}"</div>
+      </button>
     `;
   });
 
   inspectorContent.innerHTML = html;
+  inspectorContent.querySelectorAll("[data-sentence-index]").forEach(button => {
+    button.addEventListener("click", () => selectSentence(Number(button.dataset.sentenceIndex)));
+  });
 }
 
 // Tabs del panel lateral
@@ -665,7 +677,7 @@ downloadReportBtn.addEventListener("click", () => {
   currentAnalysis.sentences.forEach(s => {
     if (s.riskLevel !== "low") {
       report += `### [${s.riskLevel.toUpperCase()}] "${escapeHTML(s.text)}"\n`;
-      report += `- **Índice de Estilo:** ${Math.round(s.aiScore * 100)}/100 | **Perplejidad:** ${s.perplexity}\n`;
+      report += `- **Índice de Estilo:** ${Math.round(s.aiScore * 100)}/100 | **Índice léxico:** ${s.perplexity}\n`;
       s.reasons.forEach(r => { report += `- Diagnóstico: ${r}\n`; });
       if (s.suggestedRewrite) {
         report += `- Propuesta de reescritura: "${s.suggestedRewrite}"\n`;

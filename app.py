@@ -266,6 +266,31 @@ st.markdown("""
         padding: 0.6rem 1.2rem;
         transition: all 0.2s ease;
     }
+
+    /* Consistencia con la versión web: tipografía, color y adaptación móvil. */
+    .block-container { max-width: 1320px; }
+    .brand-icon { background: #286a59; box-shadow: none; font-weight: 600; }
+    .status-dot { background: #4e8068; box-shadow: none; }
+    .top-navbar, .input-section-card, .metric-box, .document-sheet { border-radius: 12px; box-shadow: none; }
+    .metric-label, .chip-badge { text-transform: none; letter-spacing: 0; }
+    .metric-value { font-weight: 550; line-height: 1.4; }
+    .metric-desc { line-height: 1.65; }
+    .metric-box::before { height: 2px; }
+    .border-primary::before { background: #286a59; }
+    .border-success::before { background: #4e8068; }
+    .border-warning::before { background: #98712f; }
+    .border-danger::before { background: #b66455; }
+    .document-sheet { line-height: 1.95; }
+    .action-card { box-shadow: none; }
+    @media (max-width: 800px) {
+        .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .top-navbar { flex-wrap: wrap; gap: 16px; }
+        .document-sheet { padding: 24px; }
+    }
+    @media (max-width: 480px) {
+        .metric-box { padding: 14px; }
+        .metric-value { font-size: 1.6rem; }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -284,7 +309,7 @@ st.markdown("""
         <div class="brand-icon">Z</div>
         <div>
             <div class="brand-title">Zero-IA</div>
-            <div class="brand-sub">Academic Footprint Validator & Content Humanizer</div>
+            <div class="brand-sub">Revisión académica · Estilo y referencias</div>
         </div>
     </div>
     <div class="status-badge">
@@ -295,8 +320,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Sección de Carga con diseño card
-with st.expander("📂 Ingesta de Documentos (Word / PDF / Texto)", expanded=("analysis" not in st.session_state)):
-    tab_doc, tab_paste = st.tabs(["📄 Cargar Archivo .docx / .pdf", "✏️ Pegar Manuscrito"])
+with st.expander("Documento para revisar", expanded=("analysis" not in st.session_state)):
+    tab_doc, tab_paste = st.tabs(["Adjuntar documento", "Pegar texto"])
 
     doc_text = ""
     doc_label = "Manuscrito Académico"
@@ -384,22 +409,22 @@ if "analysis" in st.session_state:
     st.markdown(f"""
     <div class="metric-grid">
         <div class="metric-box {badge_style}">
-            <div class="metric-label">Probabilidad de IA</div>
-            <div class="metric-value" style="color: {verdict_color};">{ai_score}%</div>
+            <div class="metric-label">Señales de estilo</div>
+            <div class="metric-value" style="color: {verdict_color};">{ai_score}/100</div>
             <div class="metric-desc"><b>{res.get('classification', verdict_title)}</b></div>
         </div>
         <div class="metric-box border-primary">
-            <div class="metric-label">Perplejidad Media</div>
+            <div class="metric-label">Índice léxico</div>
             <div class="metric-value">{res['perplexity_metrics']['mean_perplexity']}</div>
-            <div class="metric-desc">Predictibilidad léxica</div>
+            <div class="metric-desc">Estimación heurística</div>
         </div>
         <div class="metric-box border-primary">
-            <div class="metric-label">Ráfaga (Burstiness)</div>
+            <div class="metric-label">Variación entre frases</div>
             <div class="metric-value">{res['perplexity_metrics']['burstiness']}</div>
-            <div class="metric-desc">Variabilidad rítmica humana</div>
+            <div class="metric-desc">Dispersión del índice léxico</div>
         </div>
         <div class="metric-box {badge_style}">
-            <div class="metric-label">Oraciones Señaladas</div>
+            <div class="metric-label">Frases prioritarias</div>
             <div class="metric-value">{res['high_risk_sentences']} <span style="font-size: 1.1rem; font-weight:500; color:#64748b;">/ {res['total_sentences']}</span></div>
             <div class="metric-desc">{round((res['high_risk_sentences']/max(1, res['total_sentences']))*100, 1)}% oraciones en riesgo alto</div>
         </div>
@@ -516,7 +541,7 @@ if "analysis" in st.session_state:
             )
 
     with col_right:
-        tab_suggestions, tab_editor = st.tabs(["💡 Plan de Mitigación de Huellas", "✍️ Editor de Humanización en Vivo"])
+        tab_suggestions, tab_editor = st.tabs(["Observaciones", "Editor"])
 
         with tab_suggestions:
             filter_mode = st.segmented_control(
@@ -546,18 +571,18 @@ if "analysis" in st.session_state:
 
                         st.markdown(f'<div class="diff-original">"{escape(s["text"])}"</div>', unsafe_allow_html=True)
 
-                        st.markdown("<div style='font-size: 0.78rem; font-weight:700; color:#475569; text-transform:uppercase;'>Diagnóstico Forense:</div>", unsafe_allow_html=True)
+                        st.markdown("<div style='font-size: 0.78rem; font-weight:700; color:#475569; text-transform:uppercase;'>Qué se observa</div>", unsafe_allow_html=True)
                         for r in s["reasons"]:
                             st.markdown(f"<div style='font-size: 0.84rem; color: #dc2626;'>• {escape(r)}</div>", unsafe_allow_html=True)
 
                         sugg = s.get("suggestions", {})
                         if sugg.get("tips"):
-                            st.markdown("<div style='font-size: 0.78rem; font-weight:700; color:#475569; margin-top:8px; text-transform:uppercase;'>Estrategia para Eliminar la Huella:</div>", unsafe_allow_html=True)
+                            st.markdown("<div style='font-size: 0.78rem; font-weight:700; color:#475569; margin-top:8px; text-transform:uppercase;'>Cómo mejorarlo</div>", unsafe_allow_html=True)
                             for t in sugg["tips"]:
                                 st.markdown(f"<div style='font-size: 0.84rem; color: #1e293b;'>✓ {escape(t)}</div>", unsafe_allow_html=True)
 
                         if sugg.get("suggested_rewrite"):
-                            st.markdown("<div style='font-size: 0.78rem; font-weight:700; color:#059669; margin-top:8px; text-transform:uppercase;'>Propuesta de Reescritura Humana:</div>", unsafe_allow_html=True)
+                            st.markdown("<div style='font-size: 0.78rem; font-weight:700; color:#059669; margin-top:8px; text-transform:uppercase;'>Alternativa de redacción</div>", unsafe_allow_html=True)
                             st.markdown(f'<div class="diff-suggestion">"{escape(sugg["suggested_rewrite"])}"</div>', unsafe_allow_html=True)
 
         with tab_editor:
