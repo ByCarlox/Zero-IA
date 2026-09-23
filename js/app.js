@@ -241,6 +241,9 @@ window.copySuggestion = function(encodedText) {
   });
 };
 
+// Exponer selectSentence globalmente para eventos onclick
+window.selectSentence = selectSentence;
+
 function renderInspectorList(sentences) {
   const flagged = sentences.filter(s => s.riskLevel !== "low");
   if (flagged.length === 0) {
@@ -259,7 +262,7 @@ function renderInspectorList(sentences) {
   flagged.forEach((s) => {
     const badgeClass = s.riskLevel === "high" ? "badge-red" : "badge-yellow";
     html += `
-      <div class="humanize-card" onclick="selectSentence(${s.sentenceIdx})" style="cursor: pointer;">
+      <div class="humanize-card" onclick="selectSentence(${s.globalIdx})" style="cursor: pointer;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
           <span class="tag-badge ${badgeClass}">${Math.round(s.aiScore * 100)}% IA</span>
           <span style="font-size: 0.75rem; color: var(--text-secondary);">PPL: ${s.perplexity}</span>

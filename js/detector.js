@@ -298,6 +298,7 @@ function analyzeDocument(rawText) {
     const rewrite = generateHumanizedRewrite(sText, cliches);
 
     return {
+      globalIdx: idx,
       paragraphIdx: item.paragraphIdx,
       sentenceIdx: item.sentenceIdx,
       text: sText,
