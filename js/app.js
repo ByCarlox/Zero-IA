@@ -9,6 +9,7 @@ function escapeHTML(value) {
 let currentAnalysis = null;
 let currentRawText = "";
 let selectedSentenceIdx = null;
+let analysisInProgress = false;
 
 // Elementos DOM
 const promptTextarea = document.getElementById("promptTextarea");
@@ -117,32 +118,36 @@ sampleBtn.addEventListener("click", () => {
 sendBtn.addEventListener("click", startAnalysis);
 
 function startAnalysis() {
+  if (analysisInProgress) return;
   const text = promptTextarea.value.trim();
   if (!text || text.length < 20) {
     alert("Introduce un texto con al menos 20 caracteres para auditar.");
     return;
   }
 
-  currentRawText = text;
+  analysisInProgress = true;
+  const buttonContent = sendBtn.innerHTML;
   sendBtn.innerHTML = `<span style="font-size:0.8rem;">...</span>`;
   sendBtn.disabled = true;
 
   setTimeout(() => {
-    currentAnalysis = window.ZeroIADetector.analyzeDocument(currentRawText);
-    if (currentAnalysis.error) {
-      alert(currentAnalysis.error);
-      sendBtn.disabled = false;
-      sendBtn.textContent = "Analizar";
-      return;
+    try {
+      const nextAnalysis = window.ZeroIADetector.analyzeDocument(text);
+      if (nextAnalysis.error) throw new Error(nextAnalysis.error);
+      currentRawText = text;
+      renderResults(nextAnalysis);
+      currentAnalysis = nextAnalysis;
+      heroContainer.style.display = "none";
+      resultsContainer.style.display = "block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      console.error("No se pudo completar el análisis:", err);
+      alert("No se pudo completar el análisis. Tu texto se conserva; vuelve a intentarlo.\n" + err.message);
+    } finally {
+      sendBtn.innerHTML = buttonContent;
+      sendBtn.disabled = promptTextarea.value.trim().length === 0;
+      analysisInProgress = false;
     }
-    renderResults(currentAnalysis);
-
-    heroContainer.style.display = "none";
-    resultsContainer.style.display = "block";
-    window.scrollTo({ top: 0, behavior: "smooth" });
-
-    sendBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
-    sendBtn.disabled = false;
   }, 100);
 }
 
@@ -626,6 +631,7 @@ newAnalysisBtn.addEventListener("click", () => {
   resultsContainer.style.display = "none";
   heroContainer.style.display = "flex";
   promptTextarea.value = "";
+  sendBtn.disabled = true;
   fileInput.value = "";
   filePill.style.display = "none";
   window.scrollTo({ top: 0, behavior: "smooth" });

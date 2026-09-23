@@ -36,3 +36,52 @@ const resBib = ZeroIADetector.analyzeDocument(withBib);
 assert.ok(resBib.sentences.some(s => s.isBibliography));
 assert.equal(resBib.classification, 'Baja concentración de señales de estilo');
 
+// Los destinos DOM del controlador deben existir en la página real.
+const html = fs.readFileSync('index.html', 'utf8');
+for (const [, id] of ui.matchAll(/document\.getElementById\("([^"]+)"\)/g)) {
+  assert.ok(html.includes(`id="${id}"`) || ui.includes(`id="${id}"`), `Falta el elemento de interfaz ${id}`);
+}
+
+// Una excepción del motor o del render no debe bloquear futuros análisis.
+const startSource = ui.slice(ui.indexOf('function startAnalysis()'), ui.indexOf('function extractDOI('));
+for (const failure of ['engine', 'render', 'validation']) {
+  const callbacks = [], alerts = [];
+  let shouldFail = true;
+  const context = vm.createContext({
+    analysisInProgress: false,
+    promptTextarea: { value: sample },
+    sendBtn: { innerHTML: 'Analizar', disabled: false },
+    heroContainer: { style: { display: 'flex' } },
+    resultsContainer: { style: { display: 'none' } },
+    currentRawText: '', currentAnalysis: null,
+    setTimeout: callback => callbacks.push(callback),
+    alert: message => alerts.push(message),
+    console: { error() {} },
+    window: { scrollTo() {}, ZeroIADetector: { analyzeDocument() {
+      if (shouldFail && failure === 'engine') throw new Error('Fallo simulado');
+      if (shouldFail && failure === 'validation') return { error: 'Sin palabras' };
+      return first;
+    } } },
+    renderResults() {
+      if (shouldFail && failure === 'render') throw new Error('Fallo simulado');
+    }
+  });
+  vm.runInContext(startSource, context);
+  context.startAnalysis();
+  context.startAnalysis();
+  assert.equal(callbacks.length, 1, 'No duplicar análisis en curso');
+  callbacks.shift()();
+  assert.equal(alerts.length, 1);
+  assert.equal(context.sendBtn.disabled, false);
+  assert.equal(context.sendBtn.innerHTML, 'Analizar');
+  assert.equal(context.analysisInProgress, false);
+  assert.equal(context.promptTextarea.value, sample);
+  assert.equal(context.heroContainer.style.display, 'flex');
+  shouldFail = false;
+  context.startAnalysis();
+  callbacks.shift()();
+  assert.equal(context.resultsContainer.style.display, 'block');
+  assert.equal(context.currentAnalysis, first);
+  assert.equal(context.sendBtn.disabled, false);
+}
+console.log('UI regressions passed: DOM targets, error recovery, retry, duplicate analysis.');
