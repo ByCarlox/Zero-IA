@@ -1,5 +1,5 @@
 # Web Interface & Visuals
-streamlit>=1.30.0
+streamlit>=1.40.0
 plotly>=5.18.0
 
 # Document Processing (Word & PDF)

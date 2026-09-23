@@ -13,20 +13,20 @@ const ABBREVIATIONS = [
 
 // Clichés y muletillas de LLMs (Español)
 const LLM_PATTERNS_ES = [
-  { regex: /\ben el ámbito de\b/gi, match: "en el ámbito de", advice: "Frase cliché de ChatGPT. Sustitúyela por 'En' o 'Dentro de'." },
+  { regex: /\ben el ámbito de\b/gi, match: "en el ámbito de", advice: "Expresión frecuente; revisar su precisión. Sustitúyela por 'En' o 'Dentro de'." },
   { regex: /\ben el panorama actual\b/gi, match: "en el panorama actual", advice: "Fórmula de relleno. Usa 'Actualmente' o 'Hoy en día'." },
-  { regex: /\ben la era digital\b/gi, match: "en la era digital", advice: "Cliché recurrente de IA. Sé más específico o elimínalo." },
-  { regex: /\ba lo largo de la historia\b/gi, match: "a lo largo de la historia", advice: "Apertura genérica de LLM. Comienza directamente con el objeto de estudio." },
-  { regex: /\bes importante destacar que\b/gi, match: "es importante destacar que", advice: "Muletilla sintética. Usa 'Conviene notar que' o 'Nótese que'." },
+  { regex: /\ben la era digital\b/gi, match: "en la era digital", advice: "Expresión genérica. Sé más específico o elimínalo." },
+  { regex: /\ba lo largo de la historia\b/gi, match: "a lo largo de la historia", advice: "Apertura genérica. Comienza directamente con el objeto de estudio." },
+  { regex: /\bes importante destacar que\b/gi, match: "es importante destacar que", advice: "Expresión introductoria. Usa 'Conviene notar que' o 'Nótese que'." },
   { regex: /\bes fundamental señalar que\b/gi, match: "es fundamental señalar que", advice: "Poco natural. Elimínalo o usa 'Debe considerarse que'." },
   { regex: /\bcabe destacar que\b/gi, match: "cabe destacar que", advice: "Marcador de relleno. Cámbialo por 'Particularmente,' o 'Específicamente,'." },
-  { regex: /\bcabe mencionar que\b/gi, match: "cabe mencionar que", advice: "Conector sobreutilizado en IA. Usa 'Asimismo,' o reestructura la frase." },
+  { regex: /\bcabe mencionar que\b/gi, match: "cabe mencionar que", advice: "Conector frecuente. Usa 'Asimismo,' o reestructura la frase." },
   { regex: /\bes crucial recordar que\b/gi, match: "es crucial recordar que", advice: "Típica solemnidad artificial. Usa 'Importa recordar que'." },
   { regex: /\bes menester señalar\b/gi, match: "es menester señalar", advice: "Formalismo arcaico frecuente en respuestas de ChatGPT." },
   { regex: /\ben conclusión[,:]?\b/gi, match: "en conclusión", advice: "Conclusión de plantilla. Usa 'Por consiguiente,' o 'En suma,'." },
   { regex: /\ben resumen[,:]?\b/gi, match: "en resumen", advice: "Fórmula fija. Usa 'En síntesis,' o 'De este modo,'." },
   { regex: /\bjuega un papel fundamental\b/gi, match: "juega un papel fundamental", advice: "Metáfora trillada de IA. Usa 'influye decisivamente' o 'es determinante'." },
-  { regex: /\bdesempeña un papel crucial\b/gi, match: "desempeña un papel crucial", advice: "Expresión predilecta de LLM. Usa 'resulta clave' o 'es central'." },
+  { regex: /\bdesempeña un papel crucial\b/gi, match: "desempeña un papel crucial", advice: "Expresión formulaica. Usa 'resulta clave' o 'es central'." },
   { regex: /\bes un testimonio de\b/gi, match: "es un testimonio de", advice: "Traducción literal de 'a testament to'. Usa 'evidencia' o 'demuestra'." },
   { regex: /\bun tapiz de\b/gi, match: "un tapiz de", advice: "Traducción literal de 'a rich tapestry'. Sustitúyelo por 'un conjunto de'." },
   { regex: /\buna piedra angular\b/gi, match: "una piedra angular", advice: "Metáfora fija de IA. Usa 'un pilar esencial' o 'la base'." },
@@ -40,7 +40,7 @@ const LLM_PATTERNS_EN = [
   { regex: /\bit is crucial to\b/gi, match: "it is crucial to", advice: "High frequency in AI. Rephrase with direct active verbs." },
   { regex: /\bdelve into\b/gi, match: "delve into", advice: "Overused hallmark of ChatGPT. Use 'examine', 'analyze' or 'investigate'." },
   { regex: /\ba testament to\b/gi, match: "a testament to", advice: "Generic LLM metaphor. Use 'evidence of' or 'demonstrates'." },
-  { regex: /\brich tapestry\b/gi, match: "rich tapestry", advice: "Unmistakable AI phrasing. Use 'complex system' or 'diverse array'." },
+  { regex: /\brich tapestry\b/gi, match: "rich tapestry", advice: "Formulaic expression; not evidence of authorship. Use 'complex system' or 'diverse array'." },
   { regex: /\bplays a pivotal role\b/gi, match: "plays a pivotal role", advice: "Formulaic AI expression. Use 'is central to' or 'drives'." }
 ];
 
@@ -83,7 +83,7 @@ function splitSentences(text) {
   // Proteger abreviaturas
   ABBREVIATIONS.forEach(abbr => {
     const reg = new RegExp(`\\b${abbr}\\.`, "gi");
-    protectedText = protectedText.replace(reg, `${abbr}___DOT___`);
+    protectedText = protectedText.replace(reg, m => m.slice(0, -1) + "___DOT___");
   });
 
   // Proteger decimales (ej 3.14)
@@ -101,7 +101,7 @@ function splitSentences(text) {
  * Extrae palabras en minúsculas
  */
 function extractWords(text) {
-  const matches = text.toLowerCase().match(/\b[a-záéíóúñ0-9]+\b/gi);
+  const matches = text.toLowerCase().match(/[a-záéíóúüñ0-9]+/gi);
   return matches || [];
 }
 
@@ -154,6 +154,7 @@ function detectCliches(sentence) {
   const allPatterns = [...LLM_PATTERNS_ES, ...LLM_PATTERNS_EN];
 
   allPatterns.forEach(item => {
+    item.regex.lastIndex = 0; // Global regexes otherwise retain state across calls.
     if (item.regex.test(sentence)) {
       found.push({
         match: item.match,
@@ -183,10 +184,11 @@ function generateHumanizedRewrite(sentence, cliches) {
     const key = c.match.toLowerCase();
     if (REPLACEMENTS_MAP[key]) {
       const reg = new RegExp(key, "gi");
-      rewritten = rewritten.replace(reg, REPLACEMENTS_MAP[key]);
+      rewritten = rewritten.replace(reg, (match, offset) => offset === 0 ? REPLACEMENTS_MAP[key] : REPLACEMENTS_MAP[key].toLowerCase());
     }
   });
 
+  rewritten = rewritten.replace(/,\s*,/g, ",");
   if (rewritten !== sentence) {
     // Asegurar mayúscula al inicio
     return rewritten.charAt(0).toUpperCase() + rewritten.slice(1);
@@ -198,7 +200,7 @@ function generateHumanizedRewrite(sentence, cliches) {
  * Función principal de análisis de documento
  */
 function analyzeDocument(rawText) {
-  if (!rawText || rawText.trim().length === 0) {
+  if (!rawText || extractWords(rawText).length === 0) {
     return { error: "El documento está vacío." };
   }
 
@@ -270,7 +272,7 @@ function analyzeDocument(rawText) {
 
     if (meanLen > 0 && Math.abs(wLen - meanLen) < 3 && wLen > 12) {
       score += 0.15;
-      reasons.push("Cadencia simétrica uniforme: ritmo característico de LLM.");
+      reasons.push("Longitud próxima a la media; no demuestra autoría.");
     }
 
     score = Math.max(0.0, Math.min(1.0, score));
@@ -285,7 +287,7 @@ function analyzeDocument(rawText) {
     } else {
       riskLevel = "low";
       if (reasons.length === 0) {
-        reasons.push("Estilo orgánico y variado consistente con autoría humana.");
+        reasons.push("No se observaron señales destacadas con estas reglas.");
       }
     }
 
@@ -293,7 +295,7 @@ function analyzeDocument(rawText) {
     const tips = [];
     cliches.forEach(c => tips.push(c.advice));
     if (wLen > 32) tips.push("Oración muy densa. Divídela para crear cadencia.");
-    if (ppl < 40) tips.push("Añade terminología técnica precisa o citas para elevar la sorpresa léxica.");
+    if (ppl < 40) tips.push("Revisa claridad y precisión; añade citas únicamente cuando respalden una afirmación.");
 
     const rewrite = generateHumanizedRewrite(sText, cliches);
 
@@ -322,17 +324,19 @@ function analyzeDocument(rawText) {
 
   const globalPercentage = Math.round(Math.max(0.0, Math.min(1.0, rawGlobal)) * 100);
 
-  let classification = "Alta probabilidad de redacción humana";
+  let classification = "Baja concentración de señales de estilo";
   let verdictColor = "green";
   if (globalPercentage >= 65) {
-    classification = "Alta probabilidad de texto generado por IA";
+    classification = "Alta concentración de señales de estilo";
     verdictColor = "red";
   } else if (globalPercentage >= 35) {
-    classification = "Texto mixto / Posible asistencia de IA detectada";
+    classification = "Concentración media de señales de estilo";
     verdictColor = "yellow";
   }
 
   return {
+    academic_review: window.ZeroIAAcademic.academicReview(rawText),
+    score_kind: "uncalibrated_heuristic",
     globalPercentage,
     classification,
     verdictColor,

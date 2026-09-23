@@ -687,3 +687,8 @@ body {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+.academic-review-card { margin: 1rem 0 1.5rem; padding: 1rem; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--bg-surface); }
+.academic-review-card summary { cursor: pointer; font-weight: 600; }
+#academicReview { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; font-size: .9rem; margin-top: 1rem; }
+@media print { .academic-review-card { break-inside: auto; } }

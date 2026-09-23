@@ -36,6 +36,15 @@ class TestTokenizerAndParser(unittest.TestCase):
         self.assertEqual(len(result["paragraphs"]), 2)
         self.assertIn("Introducción al proyecto", result["full_text"])
 
+    def test_docx_table_preserves_order(self):
+        document = docx.Document()
+        document.add_paragraph("Antes")
+        document.add_table(rows=1, cols=1).cell(0, 0).text = "Tabla"
+        document.add_paragraph("Después")
+        stream = io.BytesIO()
+        document.save(stream)
+        self.assertEqual(extract_from_docx(stream.getvalue())["paragraphs"], ["Antes", "Tabla", "Después"])
+
     def test_extract_from_txt(self):
         raw_bytes = "Este es un texto simple de prueba.\n\nSegundo bloque.".encode("utf-8")
         result = extract_from_txt(raw_bytes)

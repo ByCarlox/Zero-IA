@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Zero-IA · Validador y Auditor de Huellas de IA</title>
-  <meta name="description" content="Plataforma de alta precisión para auditar, detectar y humanizar huellas de IA en documentos académicos (Word y PDF).">
+  <meta name="description" content="Revisión orientativa de estilo, legibilidad en español y coherencia bibliográfica.">
   
   <!-- Tipografías de Google -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -44,8 +44,8 @@
     <!-- Vista Inicial: Estilo Gemini / ChatGPT -->
     <section class="hero-container" id="heroContainer">
       <div class="hero-sparkle-lg">✦</div>
-      <h1 class="hero-title">Auditoría Inteligente de Huellas de IA</h1>
-      <p class="hero-subtitle">Valida la autoría de tu TFM o manuscrito. Detecta patrones sintéticos, perplejidad y huellas de ChatGPT en segundos.</p>
+      <h1 class="hero-title">Revisión de documentos académicos</h1>
+      <p class="hero-subtitle">Revisa claridad, estilo y coherencia de citas de tu manuscrito. Los resultados no certifican autoría ni calidad académica.</p>
 
       <!-- Input Box Flotante -->
       <div class="gemini-prompt-box">
@@ -81,7 +81,7 @@
       <!-- Barra Superior de Estadísticas -->
       <div class="top-stats-bar">
         <div class="stat-card primary">
-          <div class="stat-title">Probabilidad Global de IA</div>
+          <div class="stat-title">Índice de estilo · no es probabilidad</div>
           <div class="stat-metric-hero">
             <span id="globalPercentage">0%</span>
           </div>
@@ -89,9 +89,9 @@
         </div>
 
         <div class="stat-card">
-          <div class="stat-title">Perplejidad Media</div>
+          <div class="stat-title">Índice léxico aproximado</div>
           <div class="stat-metric-hero" id="meanPerplexity">0.0</div>
-          <div style="font-size: 0.78rem; color: var(--text-secondary);">Sorpresa estadística léxica</div>
+          <div style="font-size: 0.78rem; color: var(--text-secondary);">Heurística; no es perplejidad de un modelo</div>
         </div>
 
         <div class="stat-card">
@@ -109,6 +109,10 @@
         </div>
       </div>
 
+      <details open class="academic-review-card">
+        <summary>Legibilidad y coherencia de citas</summary>
+        <div id="academicReview" role="status"></div>
+      </details>
       <!-- Canvas Split View: Manuscrito a la Izquierda | Inspector a la Derecha -->
       <div class="canvas-grid">
         
@@ -130,7 +134,7 @@
 
           <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
             <button class="btn-secondary" id="newAnalysisBtn">← Nuevo Análisis</button>
-            <button class="btn-secondary" id="downloadReportBtn">📑 Descargar Dictamen (.md)</button>
+            <button class="btn-secondary" id="downloadReportBtn">📑 Descargar Informe (.md)</button>
             <button class="btn-secondary" id="printReportBtn">🖨️ Imprimir / Guardar PDF</button>
           </div>
         </div>
@@ -138,7 +142,7 @@
         <!-- Columna Derecha: Inspector & Humanizador -->
         <aside class="inspector-panel">
           <div class="panel-header">
-            <div class="panel-title">Asistente de Mitigación</div>
+            <div class="panel-title">Revisión editorial</div>
           </div>
 
           <div class="tab-nav">
@@ -156,16 +160,16 @@
           <!-- Pestaña 2: Editor en Vivo -->
           <div id="tabEditor" style="display: none;">
             <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 8px;">
-              Edita tu manuscrito aplicando las recomendaciones y recalcula la probabilidad de IA al instante:
+              Edita tu manuscrito aplicando las recomendaciones y recalcula los indicadores de estilo al instante:
             </p>
             <div style="margin-bottom: 8px;">
               <button class="btn-secondary" id="autoCleanBtn" style="width: 100%; font-size: 0.82rem; padding: 6px 10px;">
-                ✨ Limpieza Rápida de Clichés (Humanizar)
+                ✨ Proponer cambios de expresiones
               </button>
             </div>
             <textarea id="liveEditorText" style="width: 100%; height: 340px; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; color: var(--text-primary); font-family: var(--font-family); font-size: 0.95rem; padding: 12px; resize: none; outline: none; line-height: 1.6;"></textarea>
             <button class="btn-primary" id="recalculateBtn" style="width: 100%; margin-top: 12px;">
-              🔄 Recalcular % de IA
+              🔄 Recalcular indicadores
             </button>
           </div>
         </aside>
@@ -184,18 +188,19 @@
           <b>Zero-IA</b> es una herramienta técnica orientativa para asistencia en redacción y auditoría de estilo basada en modelos probabilísticos y heurísticos de procesamiento del lenguaje natural (NLP). Sus índices y diagnósticos reflejan grados de predictibilidad estadística y <b>no constituyen una prueba jurídica ni concluyente de autoría</b>, no debiendo reemplazar la valoración cualitativa de comités de ética, docentes o tribunales evaluadores.
         </p>
         <p class="disclaimer-text" style="margin-top: 6px;">
-          <b>Garantía de Privacidad:</b> El análisis se ejecuta 100% en el entorno local de su navegador web (<i>Client-Side Execution</i>). Ningún texto, archivo ni dato confidencial es transmitido, indexado o almacenado en servidores externos.
+          <b>Garantía de Privacidad:</b> El análisis se ejecuta 100% en el entorno local de su navegador web (<i>Client-Side Execution</i>). La aplicación no envía el documento a un servicio de análisis. Carga fuentes y bibliotecas desde servicios externos (CDN); requiere conexión para cargarlos.
         </p>
       </div>
       <div class="footer-bottom">
         <span>Zero-IA · Open Source Academic Tool</span>
-        <span>Licencia MIT</span>
+        <span>Proyecto académico</span>
       </div>
     </footer>
 
   </main>
 
   <!-- Scripts de la Aplicación -->
+  <script src="js/academic-review.js"></script>
   <script src="js/detector.js"></script>
   <script src="js/document-parser.js"></script>
   <script src="js/app.js"></script>

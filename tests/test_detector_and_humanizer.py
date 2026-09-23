@@ -35,6 +35,7 @@ class TestDetectorAndHumanizer(unittest.TestCase):
         self.assertEqual(suggestions["risk_level"], "high")
         self.assertTrue(len(suggestions["tips"]) > 0)
         self.assertIsNotNone(suggestions["suggested_rewrite"])
+        self.assertNotIn(",,", suggestions["suggested_rewrite"])
         # La sugerencia debe haber limpiado o reemplazado el cliché
         self.assertNotIn("en conclusión,", suggestions["suggested_rewrite"].lower())
 
@@ -46,7 +47,7 @@ class TestDetectorAndHumanizer(unittest.TestCase):
         )
         result = self.detector.analyze_document(chatgpt_text)
         self.assertGreater(result["global_ai_percentage"], 50.0)
-        self.assertIn("ALERTA IA", result["verdict_badge"])
+        self.assertIn("REVISIÓN PRIORITARIA", result["verdict_badge"])
         self.assertTrue(result["high_risk_sentences"] >= 2)
 
     def test_detector_human_sample(self):
@@ -57,7 +58,7 @@ class TestDetectorAndHumanizer(unittest.TestCase):
         )
         result = self.detector.analyze_document(human_text)
         self.assertLess(result["global_ai_percentage"], 40.0)
-        self.assertIn("HUMANO", result["verdict_badge"])
+        self.assertIn("POCAS SEÑALES", result["verdict_badge"])
 
 
 if __name__ == "__main__":

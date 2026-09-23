@@ -63,7 +63,7 @@ def generate_suggestions_for_sentence(
                 if rep:
                     # Reemplazar con mayúscula si estaba al inicio
                     pattern = re.compile(re.escape(match_text), re.IGNORECASE)
-                    modified_sentence = pattern.sub(rep, modified_sentence)
+                    modified_sentence = pattern.sub(lambda m: rep if m.start() == 0 else rep.lower(), modified_sentence)
                 else:
                     # Si el reemplazo es vacío, quitarlo
                     pattern = re.compile(re.escape(match_text) + r"\s*", re.IGNORECASE)
@@ -78,7 +78,9 @@ def generate_suggestions_for_sentence(
 
     # 3. Sugerencias basadas en Perplejidad
     if perplexity < 40:
-        tips.append("Predictibilidad muy alta (perplejidad baja): añade terminología técnica específica, ejemplos concretos o cita la fuente para romper el patrón estadístico.")
+        tips.append("Revisa claridad y precisión. Añade ejemplos o fuentes solo cuando sean pertinentes y verificables; no para modificar el índice.")
+
+    modified_sentence = re.sub(r",\s*,", ",", modified_sentence)
 
     # Si hubo modificación de clichés, ofrecerla como candidato de reescritura
     if modified_sentence != sentence:

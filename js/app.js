@@ -1,3 +1,7 @@
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 /**
  * Zero-IA: Controlador de Interfaz de Usuario estilo Gemini & ChatGPT
  */
@@ -77,6 +81,7 @@ fileInput.addEventListener("change", async (e) => {
     attachBtn.disabled = true;
 
     const extractedText = await window.ZeroIAParser.extractTextFromFile(file);
+    if (!extractedText.trim()) throw new Error("No se extrajo texto. Un PDF escaneado necesita OCR previo.");
     promptTextarea.value = extractedText;
     currentRawText = extractedText;
 
@@ -124,6 +129,12 @@ function startAnalysis() {
 
   setTimeout(() => {
     currentAnalysis = window.ZeroIADetector.analyzeDocument(currentRawText);
+    if (currentAnalysis.error) {
+      alert(currentAnalysis.error);
+      sendBtn.disabled = false;
+      sendBtn.textContent = "Analizar";
+      return;
+    }
     renderResults(currentAnalysis);
 
     heroContainer.style.display = "none";
@@ -137,8 +148,10 @@ function startAnalysis() {
 
 // Renderizado de Resultados
 function renderResults(analysis) {
+  if (analysis.error) { alert(analysis.error); return; }
+  document.getElementById("academicReview").textContent = window.ZeroIAAcademic.summary(analysis.academic_review);
   // 1. Métricas Principales
-  globalPercentageEl.innerText = `${analysis.globalPercentage}%`;
+  globalPercentageEl.innerText = `${analysis.globalPercentage}/100`;
   globalPercentageEl.style.color = analysis.verdictColor === "red" ? "var(--color-danger-border)" : analysis.verdictColor === "yellow" ? "var(--color-warning-border)" : "var(--color-success-border)";
 
   verdictBadgeEl.innerText = analysis.classification;
@@ -166,7 +179,7 @@ function renderResults(analysis) {
     span.className = `manuscript-sentence sentence-${s.riskLevel}`;
     span.dataset.index = idx;
     span.innerText = s.text + " ";
-    span.title = `Riesgo: ${Math.round(s.aiScore * 100)}% IA | PPL: ${s.perplexity}`;
+    span.title = `Riesgo: ${Math.round(s.aiScore * 100)}/100 · estilo | Índice léxico: ${s.perplexity}`;
 
     span.addEventListener("click", () => selectSentence(idx));
     pEl.appendChild(span);
@@ -201,37 +214,39 @@ function showSentenceDetail(s) {
 
   let html = `
     <div style="margin-bottom: 14px;">
-      <span class="tag-badge ${badgeClass}">${pct}% IA · ${s.riskLevel.toUpperCase()}</span>
-      <span style="font-size: 0.8rem; color: var(--text-secondary); margin-left: 8px;">Perplejidad: <b>${s.perplexity}</b></span>
+      <span class="tag-badge ${badgeClass}">${pct}/100 · estilo · ${s.riskLevel.toUpperCase()}</span>
+      <span style="font-size: 0.8rem; color: var(--text-secondary); margin-left: 8px;">Índice léxico aproximado: <b>${s.perplexity}</b></span>
     </div>
     <div style="font-size: 0.95rem; font-style: italic; color: var(--text-primary); margin-bottom: 12px; padding: 10px; background: var(--bg-surface-elevated); border-radius: 8px;">
-      "${s.text}"
+      "${escapeHTML(s.text)}"
     </div>
-    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px;">Diagnóstico Forense:</div>
+    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px;">Observaciones de estilo:</div>
   `;
 
   s.reasons.forEach(r => {
-    html += `<div style="font-size: 0.85rem; color: var(--color-danger-text); margin-bottom: 4px;">• ${r}</div>`;
+    html += `<div style="font-size: 0.85rem; color: var(--color-danger-text); margin-bottom: 4px;">• ${escapeHTML(r)}</div>`;
   });
 
   if (s.tips.length > 0) {
-    html += `<div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-top: 12px; margin-bottom: 6px;">Cómo Eliminar la Huella:</div>`;
+    html += `<div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-top: 12px; margin-bottom: 6px;">Recomendaciones editoriales:</div>`;
     s.tips.forEach(t => {
-      html += `<div style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 4px;">✓ ${t}</div>`;
+      html += `<div style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 4px;">✓ ${escapeHTML(t)}</div>`;
     });
   }
 
   if (s.suggestedRewrite) {
     html += `
-      <div style="font-size: 0.8rem; font-weight: 700; color: var(--color-success-text); text-transform: uppercase; margin-top: 12px;">Sugerencia de Reescritura Humana:</div>
-      <div class="diff-box">"${s.suggestedRewrite}"</div>
-      <button class="btn-primary" style="width: 100%; margin-top: 8px;" onclick="copySuggestion('${encodeURIComponent(s.suggestedRewrite)}')">
+      <div style="font-size: 0.8rem; font-weight: 700; color: var(--color-success-text); text-transform: uppercase; margin-top: 12px;">Alternativa editorial:</div>
+      <div class="diff-box">"${escapeHTML(s.suggestedRewrite)}"</div>
+      <button class="btn-primary" style="width: 100%; margin-top: 8px;" id="copySuggestionBtn">
         Copiar Sugerencia
       </button>
     `;
   }
 
   inspectorContent.innerHTML = html;
+  const copyButton = document.getElementById("copySuggestionBtn");
+  if (copyButton) copyButton.addEventListener("click", () => navigator.clipboard.writeText(s.suggestedRewrite));
 }
 
 window.copySuggestion = function(encodedText) {
@@ -250,7 +265,7 @@ function renderInspectorList(sentences) {
     inspectorContent.innerHTML = `
       <div style="text-align: center; padding: 24px 12px; color: var(--color-success-text);">
         <div style="font-size: 1.8rem; margin-bottom: 8px;">✨</div>
-        <div style="font-weight: 600;">Estilo Orgánico & Humano</div>
+        <div style="font-weight: 600;">Pocas señales de estilo</div>
         <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">No se identificaron oraciones con patrones típicos de LLMs.</div>
       </div>
     `;
@@ -264,10 +279,10 @@ function renderInspectorList(sentences) {
     html += `
       <div class="humanize-card" onclick="selectSentence(${s.globalIdx})" style="cursor: pointer;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <span class="tag-badge ${badgeClass}">${Math.round(s.aiScore * 100)}% IA</span>
-          <span style="font-size: 0.75rem; color: var(--text-secondary);">PPL: ${s.perplexity}</span>
+          <span class="tag-badge ${badgeClass}">${Math.round(s.aiScore * 100)}/100 · estilo</span>
+          <span style="font-size: 0.75rem; color: var(--text-secondary);">Índice léxico: ${s.perplexity}</span>
         </div>
-        <div style="font-size: 0.88rem; color: var(--text-primary); line-height: 1.4;">"${s.text.slice(0, 90)}..."</div>
+        <div style="font-size: 0.88rem; color: var(--text-primary); line-height: 1.4;">"${escapeHTML(s.text.slice(0, 90))}..."</div>
       </div>
     `;
   });
@@ -297,8 +312,10 @@ recalculateBtn.addEventListener("click", () => {
   const updatedText = liveEditorText.value.trim();
   if (!updatedText) return;
 
+  const nextAnalysis = window.ZeroIADetector.analyzeDocument(updatedText);
+  if (nextAnalysis.error) { alert(nextAnalysis.error); return; }
   currentRawText = updatedText;
-  currentAnalysis = window.ZeroIADetector.analyzeDocument(currentRawText);
+  currentAnalysis = nextAnalysis;
   renderResults(currentAnalysis);
 });
 
@@ -317,17 +334,18 @@ downloadReportBtn.addEventListener("click", () => {
   if (!currentAnalysis) return;
 
   let report = `# Auditoría de Huellas de IA - Zero-IA\n\n`;
-  report += `- **Probabilidad Global de IA:** ${currentAnalysis.globalPercentage}%\n`;
+  report += `- **Índice heurístico de estilo (no es probabilidad):** ${currentAnalysis.globalPercentage}/100\n`;
   report += `- **Veredicto:** ${currentAnalysis.classification}\n`;
-  report += `- **Perplejidad Media:** ${currentAnalysis.meanPerplexity}\n`;
+  report += `- **Índice léxico aproximado Media:** ${currentAnalysis.meanPerplexity}\n`;
   report += `- **Ráfaga (Burstiness):** ${currentAnalysis.burstiness}\n`;
   report += `- **Palabras:** ${currentAnalysis.totalWords} | **Oraciones:** ${currentAnalysis.totalSentences}\n\n`;
+  report += window.ZeroIAAcademic.summary(currentAnalysis.academic_review) + "\n\n";
   report += `## Detalle de Oraciones Señaladas\n\n`;
 
   currentAnalysis.sentences.forEach(s => {
     if (s.riskLevel !== "low") {
-      report += `### [${s.riskLevel.toUpperCase()}] "${s.text}"\n`;
-      report += `- **IA:** ${Math.round(s.aiScore * 100)}% | **Perplejidad:** ${s.perplexity}\n`;
+      report += `### [${s.riskLevel.toUpperCase()}] "${escapeHTML(s.text)}"\n`;
+      report += `- **Estilo (no probabilidad):** ${Math.round(s.aiScore * 100)}% | **Índice léxico aproximado:** ${s.perplexity}\n`;
       s.reasons.forEach(r => { report += `- Diagnóstico: ${r}\n`; });
       if (s.suggestedRewrite) {
         report += `- Propuesta de reescritura: "${s.suggestedRewrite}"\n`;
@@ -386,14 +404,14 @@ if (autoCleanBtn) {
     Object.keys(REPLACEMENTS_MAP).forEach(cliche => {
       const reg = new RegExp(cliche, "gi");
       if (reg.test(text)) {
-        text = text.replace(reg, REPLACEMENTS_MAP[cliche]);
+        text = text.replace(reg, (match, offset) => offset === 0 ? REPLACEMENTS_MAP[cliche] : REPLACEMENTS_MAP[cliche].toLowerCase());
         count++;
       }
     });
 
-    liveEditorText.value = text;
+    liveEditorText.value = text.replace(/,\s*,/g, ",");
     if (count > 0) {
-      alert(`✨ Se sustituyeron ${count} muletillas de IA por alternativas académicas. Pulsa "Recalcular % de IA" para ver el nuevo resultado.`);
+      alert(`✨ Se sustituyeron ${count} muletillas de IA por alternativas académicas. Pulsa "Recalcular estilo" para ver el nuevo resultado.`);
     } else {
       alert("No se encontraron muletillas automáticas directas. Prueba a reescribir manualmente las frases marcadas.");
     }

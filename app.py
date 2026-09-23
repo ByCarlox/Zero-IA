@@ -1,3 +1,5 @@
+from html import escape
+from core.academic_review import academic_summary
 """
 Zero-IA: Plataforma Avanzada de Auditoría, Detección y Mitigación de Huellas de IA
 Diseño de alto nivel para Evaluación Académica, TFM y Publicaciones Científicas.
@@ -270,7 +272,7 @@ st.markdown("""
 
 @st.cache_resource
 def get_detector():
-    return AIDetector(use_transformers=True, model_name="gpt2")
+    return AIDetector(use_transformers=False, model_name="gpt2")
 
 
 detector = get_detector()
@@ -287,7 +289,7 @@ st.markdown("""
     </div>
     <div class="status-badge">
         <div class="status-dot"></div>
-        Motor Neuronal & Estilométrico Activo (Local)
+        Motor heurístico de estilo · no certifica autoría
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -352,38 +354,44 @@ with st.expander("📂 Ingesta de Documentos (Word / PDF / Texto)", expanded=("a
 # Render de Resultados
 if "analysis" in st.session_state:
     res = st.session_state["analysis"]
+    if res.get("error"):
+        st.warning(res["error"])
+        st.stop()
+    st.info("Índice heurístico sin calibración: no representa una probabilidad de autoría por IA.")
+    with st.expander("Legibilidad y coherencia de citas", expanded=True):
+        st.text(academic_summary(res["academic_review"]))
     ai_score = res["global_ai_percentage"]
     d_title = st.session_state.get("doc_name", "Documento")
 
     # Clasificación y Estilos
-    if ai_score >= 60:
+    if ai_score >= 65:
         badge_style = "border-danger"
         verdict_color = "#dc2626"
-        verdict_title = "Alta Huella de IA Detectada"
-        verdict_desc = "El texto muestra baja perplejidad y monotonía típica de ChatGPT."
-    elif ai_score >= 30:
+        verdict_title = "Alta concentración de señales de estilo"
+        verdict_desc = "Varias reglas de estilo se activaron; revisar su pertinencia."
+    elif ai_score >= 35:
         badge_style = "border-warning"
         verdict_color = "#d97706"
-        verdict_title = "Contenido Mixto / Posible Asistencia"
-        verdict_desc = "Se identificaron secciones u oraciones con patrones sintéticos."
+        verdict_title = "Concentración media de señales de estilo"
+        verdict_desc = "Algunas reglas de estilo se activaron."
     else:
         badge_style = "border-success"
         verdict_color = "#10b981"
-        verdict_title = "Autoría Natural / Humana"
-        verdict_desc = "El ritmo, perplejidad y léxico son consistentes con redacción humana."
+        verdict_title = "Baja concentración de señales de estilo"
+        verdict_desc = "Pocas señales según estas reglas; no permite inferir autoría."
 
     # 4 Tarjetas de Métricas Principales
     st.markdown(f"""
     <div class="metric-grid">
         <div class="metric-box {badge_style}">
-            <div class="metric-label">Probabilidad Global de IA</div>
-            <div class="metric-value" style="color: {verdict_color};">{ai_score}%</div>
+            <div class="metric-label">Índice de estilo · no probabilidad</div>
+            <div class="metric-value" style="color: {verdict_color};">{ai_score}/100</div>
             <div class="metric-desc"><b>{verdict_title}</b></div>
         </div>
         <div class="metric-box border-primary">
-            <div class="metric-label">Perplejidad Media</div>
+            <div class="metric-label">Índice léxico medio</div>
             <div class="metric-value">{res['perplexity_metrics']['mean_perplexity']}</div>
-            <div class="metric-desc">Predecibilidad estadística (GPTZero PPL)</div>
+            <div class="metric-desc">Aproximación heurística; no perplejidad neuronal</div>
         </div>
         <div class="metric-box border-primary">
             <div class="metric-label">Ráfaga (Burstiness)</div>
@@ -398,9 +406,9 @@ if "analysis" in st.session_state:
     </div>
     """, unsafe_allow_html=True)
 
-    # Gráfico interactivo estilizado de Ráfaga / Perplejidad por Oración
+    # Gráfico interactivo estilizado de Ráfaga / Índice léxico por Oración
     if res["sentences"] and len(res["sentences"]) > 1:
-        with st.expander("📈 Curva de Ráfaga y Perplejidad Oración por Oración", expanded=False):
+        with st.expander("📈 Curva de Ráfaga y Índice léxico Oración por Oración", expanded=False):
             sent_nums = [f"O{i+1}" for i in range(len(res["sentences"]))]
             ppls = [s["perplexity"] for s in res["sentences"]]
             bar_colors = ["#ef4444" if s["risk_level"] == "high" else "#f59e0b" if s["risk_level"] == "medium" else "#10b981" for s in res["sentences"]]
@@ -410,11 +418,9 @@ if "analysis" in st.session_state:
                 x=sent_nums,
                 y=ppls,
                 marker=dict(color=bar_colors, opacity=0.85, line=dict(width=1, color="#e2e8f0")),
-                name="Perplejidad",
-                hovertemplate="Oración %{x}<br>Perplejidad: %{y}<extra></extra>"
+                name="Índice léxico",
+                hovertemplate="Oración %{x}<br>Índice léxico: %{y}<extra></extra>"
             ))
-            fig.add_hline(y=40, line_dash="dash", line_color="#ef4444", annotation_text="Umbral Predecible (<40)", annotation_position="top left")
-            fig.add_hline(y=70, line_dash="dash", line_color="#10b981", annotation_text="Umbral Humano (>70)", annotation_position="bottom left")
             fig.update_layout(
                 paper_bgcolor="#ffffff",
                 plot_bgcolor="#fafafa",
@@ -446,9 +452,9 @@ if "analysis" in st.session_state:
 
             r_level = s["risk_level"]
             cls = "hl-critical" if r_level == "high" else "hl-warning" if r_level == "medium" else "hl-clean"
-            info = f"IA: {int(s['ai_score']*100)}% | PPL: {s['perplexity']} | {' ; '.join(s['reasons'])}"
+            info = f"Estilo: {int(s['ai_score']*100)}% | PPL: {s['perplexity']} | {' ; '.join(s['reasons'])}"
 
-            doc_html += f"<span class='{cls}' title='{info}'>{s['text']}</span> "
+            doc_html += f"<span class='{cls}' title='{escape(info, quote=True)}'>{escape(s['text'])}</span> "
 
         doc_html += "</p>"
 
@@ -500,29 +506,29 @@ if "analysis" in st.session_state:
 
                 for idx, s in enumerate(flagged_list):
                     c_badge = "chip-red" if s["risk_level"] == "high" else "chip-yellow"
-                    c_title = f"{int(s['ai_score']*100)}% IA"
+                    c_title = f"{int(s['ai_score']*100)}/100 estilo"
 
                     with st.expander(f"Frase #{s['sentence_idx']+1} (Párrafo {s['paragraph_idx']+1}) · {c_title}", expanded=(idx == 0)):
-                        st.markdown(f"<span class='chip-badge {c_badge}'>{c_title}</span> <span style='font-size: 0.8rem; color:#64748b; margin-left:8px;'>Perplejidad: <b>{s['perplexity']}</b> · Longitud: <b>{s['word_count']} palabras</b></span>", unsafe_allow_html=True)
+                        st.markdown(f"<span class='chip-badge {c_badge}'>{c_title}</span> <span style='font-size: 0.8rem; color:#64748b; margin-left:8px;'>Índice léxico: <b>{s['perplexity']}</b> · Longitud: <b>{s['word_count']} palabras</b></span>", unsafe_allow_html=True)
 
-                        st.markdown(f'<div class="diff-original">"{s["text"]}"</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="diff-original">"{escape(s["text"])}"</div>', unsafe_allow_html=True)
 
                         st.markdown("<div style='font-size: 0.78rem; font-weight:700; color:#475569; text-transform:uppercase;'>Diagnóstico Forense:</div>", unsafe_allow_html=True)
                         for r in s["reasons"]:
-                            st.markdown(f"<div style='font-size: 0.84rem; color: #dc2626;'>• {r}</div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='font-size: 0.84rem; color: #dc2626;'>• {escape(r)}</div>", unsafe_allow_html=True)
 
                         sugg = s.get("suggestions", {})
                         if sugg.get("tips"):
                             st.markdown("<div style='font-size: 0.78rem; font-weight:700; color:#475569; margin-top:8px; text-transform:uppercase;'>Estrategia para Eliminar la Huella:</div>", unsafe_allow_html=True)
                             for t in sugg["tips"]:
-                                st.markdown(f"<div style='font-size: 0.84rem; color: #1e293b;'>✓ {t}</div>", unsafe_allow_html=True)
+                                st.markdown(f"<div style='font-size: 0.84rem; color: #1e293b;'>✓ {escape(t)}</div>", unsafe_allow_html=True)
 
                         if sugg.get("suggested_rewrite"):
                             st.markdown("<div style='font-size: 0.78rem; font-weight:700; color:#059669; margin-top:8px; text-transform:uppercase;'>Propuesta de Reescritura Humana:</div>", unsafe_allow_html=True)
-                            st.markdown(f'<div class="diff-suggestion">"{sugg["suggested_rewrite"]}"</div>', unsafe_allow_html=True)
+                            st.markdown(f'<div class="diff-suggestion">"{escape(sugg["suggested_rewrite"])}"</div>', unsafe_allow_html=True)
 
         with tab_editor:
-            st.markdown("<div style='font-size: 0.86rem; color: #475569; margin-bottom: 6px;'>Aplica las sugerencias directamente sobre tu texto y pulsa el botón para re-evaluar la probabilidad de IA al instante:</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-size: 0.86rem; color: #475569; margin-bottom: 6px;'>Aplica las sugerencias directamente sobre tu texto y pulsa el botón para re-evaluar la índice de estilo al instante:</div>", unsafe_allow_html=True)
 
             text_draft = st.text_area(
                 "Editor interactivo:",
@@ -531,7 +537,7 @@ if "analysis" in st.session_state:
                 label_visibility="collapsed"
             )
 
-            if st.button("🔄 Recalcular Probabilidad de IA", type="primary", use_container_width=True):
+            if st.button("🔄 Recalcular Índice de estilo", type="primary", use_container_width=True):
                 with st.spinner("Reevaluando métricas en tiempo real..."):
                     st.session_state["analysis"] = detector.analyze_document(text_draft)
                     st.session_state["raw_text"] = text_draft

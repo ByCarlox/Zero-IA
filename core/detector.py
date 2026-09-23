@@ -7,6 +7,7 @@ cada oración y el documento completo con explicaciones transparentes.
 from typing import Dict, Any, List
 import numpy as np
 
+from core.academic_review import academic_review
 from core.sentence_tokenizer import split_into_sentences, split_into_paragraphs
 from core.perplexity_engine import PerplexityEngine
 from core.stylometrics import analyze_stylometrics, clean_words
@@ -25,7 +26,7 @@ class AIDetector:
         """
         Ejecuta el análisis completo del documento de texto.
         """
-        if not raw_text or not raw_text.strip():
+        if not raw_text or not clean_words(raw_text):
             return {
                 "error": "El documento está vacío.",
                 "ai_score": 0.0,
@@ -107,7 +108,7 @@ class AIDetector:
             mean_len = stylo_result["sentence_length"]["mean"]
             if mean_len > 0 and abs(w_len - mean_len) < 3 and w_len > 12:
                 sentence_score += 0.15
-                reasons.append("Cadencia sintáctica uniforme: encaja en el patrón rítmico estándar de LLM.")
+                reasons.append("Longitud próxima a la media; señal descriptiva, no evidencia de autoría.")
 
             # Normalizar score entre 0 y 1
             sentence_score = max(0.0, min(1.0, sentence_score))
@@ -122,7 +123,7 @@ class AIDetector:
             else:
                 risk = "low"  # Verde
                 if not reasons:
-                    reasons.append("Estilo natural, perplejidad y variación léxica compatibles con autoría humana.")
+                    reasons.append("No se observaron señales destacadas con estas reglas.")
 
             # Sugerencias de humanización
             suggestions = generate_suggestions_for_sentence(
@@ -166,16 +167,18 @@ class AIDetector:
 
         # Veredicto global
         if global_ai_score >= 65.0:
-            classification = "Alta probabilidad de texto generado por IA"
-            verdict_badge = "🔴 ALERTA IA"
+            classification = "Alta concentración de señales de estilo"
+            verdict_badge = "🔴 REVISIÓN PRIORITARIA"
         elif global_ai_score >= 35.0:
-            classification = "Texto mixto / Posible asistencia de IA detectada"
+            classification = "Concentración media de señales de estilo"
             verdict_badge = "🟡 REVISIÓN RECOMENDADA"
         else:
-            classification = "Alta probabilidad de autoría humana"
-            verdict_badge = "🟢 NATURAL / HUMANO"
+            classification = "Baja concentración de señales de estilo"
+            verdict_badge = "🟢 POCAS SEÑALES"
 
         return {
+            "academic_review": academic_review(raw_text),
+            "score_kind": "uncalibrated_heuristic",
             "global_ai_percentage": global_ai_score,
             "classification": classification,
             "verdict_badge": verdict_badge,

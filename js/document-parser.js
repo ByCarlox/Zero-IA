@@ -23,7 +23,7 @@ async function parsePdfDocument(file) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
   }
 
-  const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
+  const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false });
   const pdfDoc = await loadingTask.promise;
   const numPages = pdfDoc.numPages;
   const pageTexts = [];
@@ -31,8 +31,8 @@ async function parsePdfDocument(file) {
   for (let pageNum = 1; pageNum <= numPages; pageNum++) {
     const page = await pdfDoc.getPage(pageNum);
     const textContent = await page.getTextContent();
-    const pageStrings = textContent.items.map(item => item.str);
-    pageTexts.push(pageStrings.join(" "));
+    const pageStrings = textContent.items.map(item => item.str + (item.hasEOL ? "\n" : " "));
+    pageTexts.push(pageStrings.join(""));
   }
 
   return pageTexts.join("\n\n");

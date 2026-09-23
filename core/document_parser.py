@@ -6,6 +6,8 @@ Word (.docx), PDF (.pdf) y texto plano (.txt, .md).
 import io
 from typing import Dict, Any, List
 import docx
+from docx.text.paragraph import Paragraph
+from docx.table import Table
 import pypdf
 from core.sentence_tokenizer import split_into_paragraphs
 
@@ -16,17 +18,17 @@ def extract_from_docx(file_bytes: bytes) -> Dict[str, Any]:
     doc = docx.Document(doc_stream)
 
     paragraphs_text: List[str] = []
-    for p in doc.paragraphs:
-        txt = p.text.strip()
-        if txt:
-            paragraphs_text.append(txt)
-
-    # También extraer texto de tablas si existen
-    for table in doc.tables:
-        for row in table.rows:
-            row_texts = [cell.text.strip() for cell in row.cells if cell.text.strip()]
-            if row_texts:
-                paragraphs_text.append(" | ".join(row_texts))
+    # Preserve the original interleaving of paragraphs and tables.
+    for element in doc.element.body:
+        if element.tag.endswith('}p'):
+            txt = Paragraph(element, doc).text.strip()
+            if txt:
+                paragraphs_text.append(txt)
+        elif element.tag.endswith('}tbl'):
+            for row in Table(element, doc).rows:
+                cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                if cells:
+                    paragraphs_text.append(" | ".join(cells))
 
     full_text = "\n\n".join(paragraphs_text)
 
@@ -97,5 +99,7 @@ def parse_document(file_bytes: bytes, filename: str) -> Dict[str, Any]:
     else:
         raise ValueError(f"Formato no soportado para '{filename}'. Usa archivos .docx, .pdf o .txt")
 
+    if not res["full_text"].strip():
+        raise ValueError("No se extrajo texto. Si es un PDF escaneado, necesita OCR antes de analizarse.")
     res["filename"] = filename
     return res

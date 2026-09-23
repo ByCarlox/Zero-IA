@@ -52,7 +52,7 @@ class TestEndToEndPipeline(unittest.TestCase):
         # 5. Exportar reporte Markdown
         md_report = export_markdown_report(analysis)
         self.assertIn("Auditoría de Detección de Huellas de IA", md_report)
-        self.assertIn("Perplejidad", md_report)
+        self.assertIn("Flesch-Szigriszt", md_report)
 
 
 if __name__ == "__main__":

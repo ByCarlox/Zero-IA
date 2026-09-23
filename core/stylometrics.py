@@ -11,7 +11,7 @@ import numpy as np
 
 def clean_words(text: str) -> List[str]:
     """Extrae palabras en minúsculas ignorando puntuación."""
-    return re.findall(r"\b[a-záéíóúñA-ZÁÉÍÓÚÑ0-9]+\b", text.lower())
+    return re.findall(r"[a-záéíóúüñA-ZÁÉÍÓÚÜÑ0-9]+", text.lower())
 
 
 def compute_sentence_length_stats(sentences: List[str]) -> Dict[str, float]:

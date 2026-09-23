@@ -4,6 +4,7 @@ con resaltado y comentarios de huellas de IA.
 """
 
 import io
+from core.academic_review import academic_summary
 from typing import Dict, Any
 import docx
 from docx.shared import RGBColor, Pt
@@ -23,11 +24,17 @@ def export_annotated_docx(analysis_result: Dict[str, Any]) -> bytes:
     # Resumen ejecutivo
     p_meta = doc.add_paragraph()
     p_meta.add_run(f"Veredicto: {analysis_result.get('verdict_badge', '')} - {analysis_result.get('classification', '')}\n").bold = True
-    p_meta.add_run(f"Probabilidad Global de IA: {analysis_result.get('global_ai_percentage', 0)}%\n")
+    p_meta.add_run(f"Índice de estilo (no probabilidad): {analysis_result.get('global_ai_percentage', 0)}/100\n")
     p_meta.add_run(f"Total de Palabras: {analysis_result.get('total_words', 0)} | Oraciones: {analysis_result.get('total_sentences', 0)}\n")
-    p_meta.add_run(f"🔴 Huellas Críticas: {analysis_result.get('high_risk_sentences', 0)} | 🟡 Huellas Medias: {analysis_result.get('medium_risk_sentences', 0)} | 🟢 Oraciones Humanas: {analysis_result.get('low_risk_sentences', 0)}\n")
+    p_meta.add_run(f"🔴 Huellas Críticas: {analysis_result.get('high_risk_sentences', 0)} | 🟡 Huellas Medias: {analysis_result.get('medium_risk_sentences', 0)} | 🟢 Oraciones con pocas señales: {analysis_result.get('low_risk_sentences', 0)}\n")
 
-    doc.add_heading("Texto Anotado con Huellas Detectadas", level=1)
+
+    if analysis_result.get("academic_review"):
+        doc.add_heading("Legibilidad y coherencia bibliográfica", level=1)
+        for paragraph in academic_summary(analysis_result["academic_review"]).split("\n\n"):
+            doc.add_paragraph(paragraph)
+
+    doc.add_heading("Texto anotado", level=1)
 
     # Reconstruir párrafos con oraciones coloreadas
     current_p_idx = -1
@@ -48,7 +55,7 @@ def export_annotated_docx(analysis_result: Dict[str, Any]) -> bytes:
             run.font.highlight_color = WD_COLOR_INDEX.YELLOW
 
     # Sección de Recomendaciones de Humanización
-    doc.add_heading("Plan de Acción para Quitar Huellas de IA", level=1)
+    doc.add_heading("Recomendaciones editoriales", level=1)
     doc.add_paragraph("A continuación se detallan las oraciones con mayor índice de predictibilidad y sus sugerencias de reescritura:")
 
     for s_info in analysis_result.get("sentences", []):
@@ -78,12 +85,12 @@ def export_markdown_report(analysis_result: Dict[str, Any]) -> str:
         "# Auditoría de Detección de Huellas de IA",
         "",
         f"- **Veredicto:** {analysis_result.get('verdict_badge')} {analysis_result.get('classification')}",
-        f"- **Probabilidad de IA:** {analysis_result.get('global_ai_percentage')}%",
+        f"- **Índice de estilo (no probabilidad):** {analysis_result.get('global_ai_percentage')}/100",
         f"- **Palabras analizadas:** {analysis_result.get('total_words')}",
         f"- **Oraciones analizadas:** {analysis_result.get('total_sentences')}",
-        f"- **Oraciones en Rojo (Alta IA):** {analysis_result.get('high_risk_sentences')}",
+        f"- **Oraciones en Rojo (Muchas señales):** {analysis_result.get('high_risk_sentences')}",
         f"- **Oraciones en Amarillo (Riesgo medio):** {analysis_result.get('medium_risk_sentences')}",
-        f"- **Oraciones en Verde (Humano):** {analysis_result.get('low_risk_sentences')}",
+        f"- **Oraciones en Verde (Pocas señales):** {analysis_result.get('low_risk_sentences')}",
         "",
         "## Detalle de Oraciones Marcadas y Guía de Reescritura",
         ""
@@ -95,7 +102,7 @@ def export_markdown_report(analysis_result: Dict[str, Any]) -> str:
             lines.append(f"### {risk_icon} Oración ({s['risk_level'].upper()})")
             lines.append(f"> \"{s['text']}\"")
             lines.append("")
-            lines.append(f"- **Perplejidad:** `{s['perplexity']}` | **Score IA:** `{int(s['ai_score']*100)}%`")
+            lines.append(f"- **Métrica léxica (ver modo del motor):** `{s['perplexity']}` | **Índice de estilo:** `{int(s['ai_score']*100)}%`")
             for r in s.get("reasons", []):
                 lines.append(f"- **Motivo:** {r}")
             sugg = s.get("suggestions", {})
@@ -105,4 +112,6 @@ def export_markdown_report(analysis_result: Dict[str, Any]) -> str:
                 lines.append(f"- **Propuesta alternativa:** *\"{sugg['suggested_rewrite']}\"*")
             lines.append("")
 
+    if analysis_result.get("academic_review"):
+        lines.extend(["", academic_summary(analysis_result["academic_review"])])
     return "\n".join(lines)
