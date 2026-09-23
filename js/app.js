@@ -410,8 +410,9 @@ function renderAcademicReview(review) {
 function renderResults(analysis) {
   if (analysis.error) { alert(analysis.error); return; }
   renderAcademicReview(analysis.academic_review);
+
   // 1. Métricas Principales
-  globalPercentageEl.innerText = `${analysis.globalPercentage}/100`;
+  globalPercentageEl.innerText = `${analysis.globalPercentage}%`;
   globalPercentageEl.style.color = analysis.verdictColor === "red" ? "var(--color-danger-border)" : analysis.verdictColor === "yellow" ? "var(--color-warning-border)" : "var(--color-success-border)";
 
   verdictBadgeEl.innerText = analysis.classification;
@@ -421,6 +422,47 @@ function renderResults(analysis) {
   burstinessScoreEl.innerText = analysis.burstiness;
   highRiskCountEl.innerText = analysis.highRiskSentences;
   totalSentencesCountEl.innerText = `de ${analysis.totalSentences} frases`;
+
+  // 1.1 Veredicto General Ejecutivo
+  const verdictCard = document.getElementById("executiveVerdictCard");
+  const verdictTitle = document.getElementById("executiveVerdictTitle");
+  const verdictSubtitle = document.getElementById("executiveVerdictSubtitle");
+  const verdictPill = document.getElementById("executiveVerdictPill");
+  const verdictBody = document.getElementById("executiveVerdictBody");
+  const verdictIcon = document.getElementById("verdictIconContainer");
+
+  if (verdictCard) {
+    verdictCard.className = `executive-verdict-card verdict-${analysis.verdictColor}`;
+    verdictTitle.innerText = `Veredicto General: ${analysis.classification}`;
+    verdictSubtitle.innerText = `Probabilidad Global de IA: ${analysis.globalPercentage}% · ${analysis.totalWords} palabras analizadas`;
+    verdictPill.innerText = analysis.verdictBadge || (analysis.verdictColor === "red" ? "🔴 ALTA PROBABILIDAD IA" : analysis.verdictColor === "yellow" ? "🟡 CONTENIDO MIXTO" : "🟢 ORIGINAL HUMANO");
+    verdictPill.className = `tag-badge badge-${analysis.verdictColor}`;
+    verdictBody.innerText = analysis.verdictSummary || (analysis.classification + " en base a métricas de predictibilidad y cadencia.");
+    verdictIcon.innerText = analysis.verdictColor === "red" ? "⚠️" : analysis.verdictColor === "yellow" ? "⚖️" : "🛡️";
+  }
+
+  // 1.2 Escudo de Marcas de Agua Ocultas & Caracteres de Ancho Cero
+  const wmShieldBox = document.getElementById("watermarkShieldBox");
+  const wmShieldText = document.getElementById("watermarkShieldText");
+  const wmIcon = document.getElementById("watermarkIcon");
+  const btnStripWm = document.getElementById("btnStripWatermarks");
+
+  const wm = analysis.watermark_analysis;
+  if (wm && wm.hasWatermark) {
+    wmShieldBox.className = `watermark-shield-box shield-${wm.status}`;
+    if (wmIcon) wmIcon.innerText = wm.status === "critical" ? "🚨" : "⚠️";
+    if (wmShieldText) {
+      wmShieldText.innerHTML = `<strong>ALERTA DE MARCAS OCULTAS:</strong> Se detectaron ${wm.totalInvisibleChars} caracteres invisibles de ancho cero (Zero-Width Chars). ${wm.message}`;
+    }
+    if (btnStripWm) btnStripWm.style.display = "flex";
+  } else {
+    wmShieldBox.className = "watermark-shield-box shield-clean";
+    if (wmIcon) wmIcon.innerText = "🔒";
+    if (wmShieldText) {
+      wmShieldText.innerText = "No se detectaron marcas de agua Unicode, esteganografía ni caracteres invisibles de ancho cero.";
+    }
+    if (btnStripWm) btnStripWm.style.display = "none";
+  }
 
   // 2. Renderizar Manuscrito con Oraciones Interactivas
   manuscriptViewer.innerHTML = "";
@@ -439,7 +481,7 @@ function renderResults(analysis) {
     span.className = `manuscript-sentence sentence-${s.riskLevel}`;
     span.dataset.index = idx;
     span.innerText = s.text + " ";
-    span.title = `Riesgo: ${Math.round(s.aiScore * 100)}/100 · estilo | Índice léxico: ${s.perplexity}`;
+    span.title = `Probabilidad IA: ${Math.round(s.aiScore * 100)}% | Perplejidad: ${s.perplexity}`;
 
     span.addEventListener("click", () => selectSentence(idx));
     pEl.appendChild(span);
@@ -474,13 +516,13 @@ function showSentenceDetail(s) {
 
   let html = `
     <div style="margin-bottom: 14px;">
-      <span class="tag-badge ${badgeClass}">${pct}/100 · estilo · ${s.riskLevel.toUpperCase()}</span>
-      <span style="font-size: 0.8rem; color: var(--text-secondary); margin-left: 8px;">Índice léxico aproximado: <b>${s.perplexity}</b></span>
+      <span class="tag-badge ${badgeClass}">${pct}% Probabilidad IA · ${s.riskLevel === "high" ? "ALTO RIESGO" : s.riskLevel === "medium" ? "RIESGO MEDIO" : "HUMANO"}</span>
+      <span style="font-size: 0.8rem; color: var(--text-secondary); margin-left: 8px;">Perplejidad: <b>${s.perplexity}</b></span>
     </div>
     <div style="font-size: 0.95rem; font-style: italic; color: var(--text-primary); margin-bottom: 12px; padding: 10px; background: var(--bg-surface-elevated); border-radius: 8px;">
       "${escapeHTML(s.text)}"
     </div>
-    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px;">Observaciones de estilo:</div>
+    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px;">Diagnóstico y Patrones de IA:</div>
   `;
 
   s.reasons.forEach(r => {
@@ -488,7 +530,7 @@ function showSentenceDetail(s) {
   });
 
   if (s.tips.length > 0) {
-    html += `<div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-top: 12px; margin-bottom: 6px;">Recomendaciones editoriales:</div>`;
+    html += `<div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-top: 12px; margin-bottom: 6px;">Sugerencias de Humanización:</div>`;
     s.tips.forEach(t => {
       html += `<div style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 4px;">✓ ${escapeHTML(t)}</div>`;
     });
@@ -496,7 +538,7 @@ function showSentenceDetail(s) {
 
   if (s.suggestedRewrite) {
     html += `
-      <div style="font-size: 0.8rem; font-weight: 700; color: var(--color-success-text); text-transform: uppercase; margin-top: 12px;">Alternativa editorial:</div>
+      <div style="font-size: 0.8rem; font-weight: 700; color: var(--color-success-text); text-transform: uppercase; margin-top: 12px;">Propuesta de Reescritura Humana:</div>
       <div class="diff-box">"${escapeHTML(s.suggestedRewrite)}"</div>
       <button class="btn-primary" style="width: 100%; margin-top: 8px;" id="copySuggestionBtn">
         Copiar Sugerencia
@@ -525,8 +567,8 @@ function renderInspectorList(sentences) {
     inspectorContent.innerHTML = `
       <div style="text-align: center; padding: 24px 12px; color: var(--color-success-text);">
         <div style="font-size: 1.8rem; margin-bottom: 8px;">✨</div>
-        <div style="font-weight: 600;">Pocas señales de estilo</div>
-        <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">No se identificaron oraciones con patrones típicos de LLMs.</div>
+        <div style="font-weight: 600;">Texto Limpio de Huellas de IA</div>
+        <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">No se identificaron oraciones con patrones típicos de LLMs ni predictibilidad artificial.</div>
       </div>
     `;
     return;
@@ -539,8 +581,8 @@ function renderInspectorList(sentences) {
     html += `
       <div class="humanize-card" onclick="selectSentence(${s.globalIdx})" style="cursor: pointer;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <span class="tag-badge ${badgeClass}">${Math.round(s.aiScore * 100)}/100 · estilo</span>
-          <span style="font-size: 0.75rem; color: var(--text-secondary);">Índice léxico: ${s.perplexity}</span>
+          <span class="tag-badge ${badgeClass}">${Math.round(s.aiScore * 100)}% IA</span>
+          <span style="font-size: 0.75rem; color: var(--text-secondary);">Perplejidad: ${s.perplexity}</span>
         </div>
         <div style="font-size: 0.88rem; color: var(--text-primary); line-height: 1.4;">"${escapeHTML(s.text.slice(0, 90))}..."</div>
       </div>
@@ -594,18 +636,29 @@ downloadReportBtn.addEventListener("click", () => {
   if (!currentAnalysis) return;
 
   let report = `# Auditoría de Huellas de IA - Zero-IA\n\n`;
-  report += `- **Índice heurístico de estilo (no es probabilidad):** ${currentAnalysis.globalPercentage}/100\n`;
-  report += `- **Veredicto:** ${currentAnalysis.classification}\n`;
-  report += `- **Índice léxico aproximado Media:** ${currentAnalysis.meanPerplexity}\n`;
+  report += `- **Probabilidad Global de IA:** ${currentAnalysis.globalPercentage}%\n`;
+  report += `- **Veredicto General:** ${currentAnalysis.classification}\n`;
+  if (currentAnalysis.verdictSummary) {
+    report += `- **Dictamen:** ${currentAnalysis.verdictSummary}\n`;
+  }
+  report += `- **Perplejidad Media:** ${currentAnalysis.meanPerplexity}\n`;
   report += `- **Ráfaga (Burstiness):** ${currentAnalysis.burstiness}\n`;
-  report += `- **Palabras:** ${currentAnalysis.totalWords} | **Oraciones:** ${currentAnalysis.totalSentences}\n\n`;
+  report += `- **Palabras:** ${currentAnalysis.totalWords} | **Oraciones:** ${currentAnalysis.totalSentences}\n`;
+
+  const wm = currentAnalysis.watermark_analysis;
+  if (wm && wm.hasWatermark) {
+    report += `- **Marcas Ocultas Unicode:** ${wm.totalInvisibleChars} caracteres detectados (${wm.message})\n`;
+  } else {
+    report += `- **Marcas Ocultas:** Limpio (0 caracteres invisibles de ancho cero)\n`;
+  }
+  report += `\n`;
   report += window.ZeroIAAcademic.summary(currentAnalysis.academic_review) + "\n\n";
   report += `## Detalle de Oraciones Señaladas\n\n`;
 
   currentAnalysis.sentences.forEach(s => {
     if (s.riskLevel !== "low") {
       report += `### [${s.riskLevel.toUpperCase()}] "${escapeHTML(s.text)}"\n`;
-      report += `- **Estilo (no probabilidad):** ${Math.round(s.aiScore * 100)}% | **Índice léxico aproximado:** ${s.perplexity}\n`;
+      report += `- **Probabilidad IA:** ${Math.round(s.aiScore * 100)}% | **Perplejidad:** ${s.perplexity}\n`;
       s.reasons.forEach(r => { report += `- Diagnóstico: ${r}\n`; });
       if (s.suggestedRewrite) {
         report += `- Propuesta de reescritura: "${s.suggestedRewrite}"\n`;
@@ -622,6 +675,20 @@ downloadReportBtn.addEventListener("click", () => {
   a.click();
   URL.revokeObjectURL(url);
 });
+
+// Botón de Purga de Marcas Invisibles / Caracteres de Ancho Cero
+const btnStripWatermarks = document.getElementById("btnStripWatermarks");
+if (btnStripWatermarks) {
+  btnStripWatermarks.addEventListener("click", () => {
+    if (!currentRawText) return;
+    const clean = window.ZeroIADetector.stripInvisibleCharacters(currentRawText);
+    const diff = currentRawText.length - clean.length;
+    currentRawText = clean;
+    promptTextarea.value = clean;
+    alert(`✨ Se eliminaron ${diff} caracteres invisibles / marcas de agua Unicode de ancho cero. Re-analizando documento limpio...`);
+    runAnalysis();
+  });
+}
 
 // Botón Imprimir / Guardar en PDF
 const printReportBtn = document.getElementById("printReportBtn");

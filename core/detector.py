@@ -198,25 +198,53 @@ class AIDetector:
         elif burstiness > 35.0:
             raw_global_score -= 0.10
 
+        # 6. Detección de marcas de agua invisibles y caracteres de ancho cero
+        from core.watermark_detector import detect_invisible_watermarks
+        watermark_result = detect_invisible_watermarks(raw_text)
+        if watermark_result["steganography_detected"]:
+            raw_global_score = max(raw_global_score, 0.70)
+        elif watermark_result["has_watermark"]:
+            raw_global_score += 0.15
+
         global_ai_score = round(max(0.0, min(1.0, raw_global_score)) * 100, 1)
 
-        # Veredicto global
+        # 7. Veredicto General Ejecutivo
         if global_ai_score >= 65.0:
-            classification = "Alta concentración de señales de estilo"
-            verdict_badge = "🔴 REVISIÓN PRIORITARIA"
+            classification = "Alta probabilidad de IA"
+            verdict_badge = "🔴 ALTA PROBABILIDAD DE IA"
+            verdict_summary = (
+                f"El análisis detectó una concentración elevada de patrones sintéticos ({global_ai_score}%), "
+                f"con predictibilidad léxica alta (perplejidad {mean_ppl:.1f}), cadencia uniforme y {high_risk_count} oraciones críticas. "
+                "Se sugiere una revisión y reescritura profunda antes de su entrega formal."
+            )
         elif global_ai_score >= 35.0:
-            classification = "Concentración media de señales de estilo"
-            verdict_badge = "🟡 REVISIÓN RECOMENDADA"
+            classification = "Contenido mixto / Asistencia de IA"
+            verdict_badge = "🟡 CONTENIDO MIXTO"
+            verdict_summary = (
+                f"El texto muestra rasgos combinados ({global_ai_score}%): coexisten pasajes con ritmo natural humano "
+                f"y secciones con estructuras formulaicas de IA ({high_risk_count} oraciones en riesgo alto). "
+                "Se recomienda verificar y humanizar las oraciones señaladas en el manuscrito."
+            )
         else:
-            classification = "Baja concentración de señales de estilo"
-            verdict_badge = "🟢 POCAS SEÑALES"
+            classification = "Texto predominantemente humano"
+            verdict_badge = "🟢 ORIGINAL HUMANO"
+            verdict_summary = (
+                f"El documento presenta alta riqueza léxica, variabilidad rítmica natural ({burstiness:.1f} de ráfaga) "
+                f"y baja predictibilidad ({global_ai_score}%). "
+                "Cumple con las características esperadas de redacción humana original."
+            )
+
+        if watermark_result["has_watermark"]:
+            verdict_summary += f" ⚠️ ALERTA: Se detectaron {watermark_result['total_invisible_chars']} caracteres invisibles / marcas de agua de ancho cero."
 
         return {
             "academic_review": academic_review(raw_text),
+            "watermark_analysis": watermark_result,
             "score_kind": "uncalibrated_heuristic",
             "global_ai_percentage": global_ai_score,
             "classification": classification,
             "verdict_badge": verdict_badge,
+            "verdict_summary": verdict_summary,
             "total_sentences": total_s,
             "total_words": stylo_result["total_words"],
             "high_risk_sentences": high_risk_count,

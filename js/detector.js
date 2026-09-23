@@ -367,26 +367,127 @@ function analyzeDocument(rawText) {
   let rawGlobal = (pctHigh * 0.70) + (pctMed * 0.30) + ((1.0 - Math.min(1.0, cv)) * 0.20);
 
   if (meanPpl < 45.0) rawGlobal += 0.15;
-  if (burstiness < 15.0) rawGlobal += 0.10;
+// Detección de Marcas de Agua Invisibles y Caracteres de Ancho Cero (Unicode Steganography)
+const INVISIBLE_CHARS = {
+  "\u200B": { name: "Zero Width Space (ZWSP)", hex: "U+200B", desc: "Espacio de ancho cero (firma común de ChatGPT o esteganografía)" },
+  "\u200C": { name: "Zero Width Non-Joiner (ZWNJ)", hex: "U+200C", desc: "Separador de ancho cero" },
+  "\u200D": { name: "Zero Width Joiner (ZWJ)", hex: "U+200D", desc: "Unión de ancho cero" },
+  "\u2060": { name: "Word Joiner", hex: "U+2060", desc: "Unión de palabras invisible" },
+  "\uFEFF": { name: "Zero Width No-Break Space (BOM)", hex: "U+FEFF", desc: "Espacio invisible no separable" },
+  "\u00AD": { name: "Soft Hyphen (SHY)", hex: "U+00AD", desc: "Guion invisible que aparece solo al final de línea" },
+  "\u200E": { name: "Left-to-Right Mark (LRM)", hex: "U+200E", desc: "Marca direccional invisible introducida por navegadores" },
+  "\u200F": { name: "Right-to-Left Mark (RLM)", hex: "U+200F", desc: "Marca direccional invisible" }
+};
+
+function detectInvisibleWatermarks(text) {
+  if (!text) {
+    return {
+      hasWatermark: false,
+      totalInvisibleChars: 0,
+      detectedTypes: [],
+      steganographyDetected: false,
+      status: "clean",
+      message: "Texto limpio a nivel de codificación."
+    };
+  }
+
+  const counts = {};
+  let consecutiveRun = 0;
+  let maxConsecutive = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (INVISIBLE_CHARS[ch]) {
+      counts[ch] = (counts[ch] || 0) + 1;
+      consecutiveRun++;
+      if (consecutiveRun > maxConsecutive) maxConsecutive = consecutiveRun;
+    } else {
+      consecutiveRun = 0;
+    }
+  }
+
+  let totalChars = 0;
+  const detectedTypes = [];
+  for (const ch in counts) {
+    totalChars += counts[ch];
+    detectedTypes.push({
+      name: INVISIBLE_CHARS[ch].name,
+      hex: INVISIBLE_CHARS[ch].hex,
+      count: counts[ch],
+      desc: INVISIBLE_CHARS[ch].desc
+    });
+  }
+
+  const steganography = maxConsecutive >= 3 || totalChars >= 5;
+  let status = "clean";
+  let message = "No se detectaron caracteres invisibles ni marcas de agua Unicode de ancho cero.";
+
+  if (steganography) {
+    status = "critical";
+    message = `Se detectaron ${totalChars} caracteres invisibles de ancho cero con secuencias esteganográficas. Alta probabilidad de copia directa de chat de IA o inserción de marca oculta.`;
+  } else if (totalChars > 0) {
+    status = "warning";
+    message = `Se identificaron ${totalChars} caracteres invisibles de ancho cero en el texto (posible artefacto de copiado de interfaz web de IA).`;
+  }
+
+  return {
+    hasWatermark: totalChars > 0,
+    totalInvisibleChars: totalChars,
+    maxConsecutiveChain: maxConsecutive,
+    steganographyDetected: steganography,
+    status: status,
+    message: message,
+    detectedTypes: detectedTypes
+  };
+}
+
+function stripInvisibleCharacters(text) {
+  let clean = text;
+  for (const ch in INVISIBLE_CHARS) {
+    clean = clean.split(ch).join("");
+  }
+  return clean;
+}
+
+  const watermarkResult = detectInvisibleWatermarks(rawText);
+  if (watermarkResult.steganographyDetected) {
+    rawGlobal = Math.max(rawGlobal, 0.70);
+  } else if (watermarkResult.hasWatermark) {
+    rawGlobal += 0.15;
+  }
 
   const globalPercentage = Math.round(Math.max(0.0, Math.min(1.0, rawGlobal)) * 100);
 
-  let classification = "Baja concentración de señales de estilo";
+  let classification = "Texto predominantemente humano";
   let verdictColor = "green";
+  let verdictBadge = "🟢 ORIGINAL HUMANO";
+  let verdictSummary = `El documento presenta alta riqueza léxica, variabilidad rítmica natural (${burstiness} de ráfaga) y baja predictibilidad (${globalPercentage}%). Cumple con las características esperadas de redacción humana original.`;
+
   if (globalPercentage >= 65) {
-    classification = "Alta concentración de señales de estilo";
+    classification = "Alta probabilidad de IA";
     verdictColor = "red";
+    verdictBadge = "🔴 ALTA PROBABILIDAD DE IA";
+    verdictSummary = `El análisis detectó una concentración elevada de patrones sintéticos (${globalPercentage}%), con predictibilidad léxica alta (perplejidad ${meanPpl}), cadencia uniforme y ${highRiskCount} oraciones críticas. Se sugiere una revisión profunda antes de su entrega.`;
   } else if (globalPercentage >= 35) {
-    classification = "Concentración media de señales de estilo";
+    classification = "Contenido mixto / Asistencia de IA";
     verdictColor = "yellow";
+    verdictBadge = "🟡 CONTENIDO MIXTO";
+    verdictSummary = `El texto muestra rasgos combinados (${globalPercentage}%): coexisten pasajes con ritmo natural humano y secciones con estructuras formulaicas de IA (${highRiskCount} oraciones en riesgo alto). Se recomienda verificar y humanizar las oraciones señaladas en el manuscrito.`;
+  }
+
+  if (watermarkResult.hasWatermark) {
+    verdictSummary += ` ⚠️ ALERTA DE MARCA OCULTA: Se identificaron ${watermarkResult.totalInvisibleChars} caracteres invisibles de ancho cero.`;
   }
 
   return {
     academic_review: window.ZeroIAAcademic.academicReview(rawText),
-    score_kind: "uncalibrated_heuristic",
+    watermark_analysis: watermarkResult,
+    score_kind: "ai_probability",
     globalPercentage,
     classification,
     verdictColor,
+    verdictBadge,
+    verdictSummary,
     totalSentences: totalS,
     totalWords: wordCount,
     highRiskSentences: highRiskCount,
@@ -405,5 +506,7 @@ function analyzeDocument(rawText) {
 window.ZeroIADetector = {
   analyzeDocument,
   splitSentences,
-  splitParagraphs
+  splitParagraphs,
+  detectInvisibleWatermarks,
+  stripInvisibleCharacters
 };

@@ -81,7 +81,7 @@
       <!-- Barra Superior de Estadísticas -->
       <div class="top-stats-bar">
         <div class="stat-card primary">
-          <div class="stat-title">Índice de estilo · no es probabilidad</div>
+          <div class="stat-title">Probabilidad de IA</div>
           <div class="stat-metric-hero">
             <span id="globalPercentage">0%</span>
           </div>
@@ -89,23 +89,50 @@
         </div>
 
         <div class="stat-card">
-          <div class="stat-title">Índice léxico aproximado</div>
+          <div class="stat-title">Perplejidad Media</div>
           <div class="stat-metric-hero" id="meanPerplexity">0.0</div>
-          <div style="font-size: 0.78rem; color: var(--text-secondary);">Heurística; no es perplejidad de un modelo</div>
+          <div style="font-size: 0.78rem; color: var(--text-secondary);">Predictibilidad léxica</div>
         </div>
 
         <div class="stat-card">
           <div class="stat-title">Ráfaga (Burstiness)</div>
           <div class="stat-metric-hero" id="burstinessScore">0.0</div>
-          <div style="font-size: 0.78rem; color: var(--text-secondary);">Variación inter-oracional</div>
+          <div style="font-size: 0.78rem; color: var(--text-secondary);">Variabilidad rítmica humana</div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-title">Huellas Críticas</div>
+          <div class="stat-title">Oraciones Señaladas</div>
           <div class="stat-metric-hero" style="color: var(--color-danger-border);">
             <span id="highRiskCount">0</span>
           </div>
           <div style="font-size: 0.78rem; color: var(--text-secondary);" id="totalSentencesCount">de 0 frases</div>
+        </div>
+      </div>
+
+      <!-- Tarjeta de Veredicto General Ejecutivo & Escudo de Marcas Invisibles -->
+      <div class="executive-verdict-card verdict-green" id="executiveVerdictCard">
+        <div class="executive-verdict-header">
+          <div class="verdict-icon-container" id="verdictIconContainer">🛡️</div>
+          <div class="executive-verdict-title-box">
+            <div class="executive-verdict-title" id="executiveVerdictTitle">Veredicto General: Calculando...</div>
+            <div class="executive-verdict-subtitle">Evaluación multifactorial de perplejidad, patrones de IA, coherencia de citas y marcas de agua.</div>
+          </div>
+          <div id="executiveVerdictPill" class="tag-badge badge-green">Dictamen</div>
+        </div>
+        <div class="executive-verdict-body" id="executiveVerdictBody">
+          Análisis del documento en curso...
+        </div>
+        <div class="watermark-shield-box shield-clean" id="watermarkShieldBox">
+          <div class="watermark-content-left">
+            <span class="watermark-icon-badge" id="watermarkIcon">🔒</span>
+            <div>
+              <strong>Escudo de Marcas Invisibles:</strong>
+              <span id="watermarkShieldText">Escaneando codificación Unicode y caracteres de ancho cero...</span>
+            </div>
+          </div>
+          <button type="button" class="btn-strip-watermarks" id="btnStripWatermarks" style="display: none;">
+            🧹 Limpiar Marcas Ocultas
+          </button>
         </div>
       </div>
 

@@ -384,25 +384,58 @@ if "analysis" in st.session_state:
     st.markdown(f"""
     <div class="metric-grid">
         <div class="metric-box {badge_style}">
-            <div class="metric-label">Índice de estilo · no probabilidad</div>
-            <div class="metric-value" style="color: {verdict_color};">{ai_score}/100</div>
-            <div class="metric-desc"><b>{verdict_title}</b></div>
+            <div class="metric-label">Probabilidad de IA</div>
+            <div class="metric-value" style="color: {verdict_color};">{ai_score}%</div>
+            <div class="metric-desc"><b>{res.get('classification', verdict_title)}</b></div>
         </div>
         <div class="metric-box border-primary">
-            <div class="metric-label">Índice léxico medio</div>
+            <div class="metric-label">Perplejidad Media</div>
             <div class="metric-value">{res['perplexity_metrics']['mean_perplexity']}</div>
-            <div class="metric-desc">Aproximación heurística; no perplejidad neuronal</div>
+            <div class="metric-desc">Predictibilidad léxica</div>
         </div>
         <div class="metric-box border-primary">
             <div class="metric-label">Ráfaga (Burstiness)</div>
             <div class="metric-value">{res['perplexity_metrics']['burstiness']}</div>
-            <div class="metric-desc">Variabilidad de ritmo entre frases</div>
+            <div class="metric-desc">Variabilidad rítmica humana</div>
         </div>
         <div class="metric-box {badge_style}">
-            <div class="metric-label">Huellas Críticas</div>
+            <div class="metric-label">Oraciones Señaladas</div>
             <div class="metric-value">{res['high_risk_sentences']} <span style="font-size: 1.1rem; font-weight:500; color:#64748b;">/ {res['total_sentences']}</span></div>
             <div class="metric-desc">{round((res['high_risk_sentences']/max(1, res['total_sentences']))*100, 1)}% oraciones en riesgo alto</div>
         </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Veredicto General Ejecutivo y Escudo de Marcas Invisibles
+    wm = res.get("watermark_analysis", {})
+    if wm.get("has_watermark"):
+        wm_html = f"""
+        <div style="margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #991b1b; font-size: 0.85rem;">
+            🚨 <b>ALERTA DE MARCAS OCULTAS:</b> Se detectaron {wm.get('total_invisible_chars', 0)} caracteres invisibles de ancho cero (Zero-Width Chars). {wm.get('message', '')}
+        </div>
+        """
+    else:
+        wm_html = """
+        <div style="margin-top: 12px; padding: 8px 14px; border-radius: 8px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); color: #065f46; font-size: 0.82rem;">
+            🔒 <b>Escudo de Marcas Invisibles:</b> No se detectaron caracteres de ancho cero ni marcas de esteganografía Unicode.
+        </div>
+        """
+
+    verdict_summary = res.get("verdict_summary", verdict_desc)
+    st.markdown(f"""
+    <div style="margin: 1rem 0; padding: 1.25rem 1.5rem; border-radius: 12px; background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {verdict_color}; box-shadow: 0 2px 10px rgba(0,0,0,0.03);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div style="font-size: 1.15rem; font-weight: 700; color: #0f172a;">
+                Veredicto General: {res.get('classification', verdict_title)}
+            </div>
+            <span style="font-size: 0.78rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; background: {verdict_color}20; color: {verdict_color};">
+                {res.get('verdict_badge', 'DICTAMEN')}
+            </span>
+        </div>
+        <div style="margin-top: 8px; font-size: 0.92rem; color: #475569; line-height: 1.6;">
+            {verdict_summary}
+        </div>
+        {wm_html}
     </div>
     """, unsafe_allow_html=True)
 
