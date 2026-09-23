@@ -1,10 +1,12 @@
-# Zero-IA: Sistema Inteligente de Auditoría, Detección y Mitigación de Huellas de Modelos de Lenguaje en Documentos Académicos
-
 [![Python](https://img.shields.io/badge/Python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-blue.svg)](https://www.python.org/)
+[![GitHub Pages](https://img.shields.io/badge/Demo%20Online-GitHub%20Pages-brightgreen.svg)](https://bycarlox.github.io/Zero-IA/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Framework](https://img.shields.io/badge/Interface-Streamlit-red.svg)](https://streamlit.io/)
 [![NLP](https://img.shields.io/badge/NLP-Transformers%20%26%20Stylometrics-green.svg)](https://huggingface.co/)
 [![Tests](https://img.shields.io/badge/Tests-Passing%20(9%2F9)-brightgreen.svg)]()
+
+> 🌐 **Acceso Web en Vivo (100% Gratuito y Privado):**  
+> 👉 **[https://bycarlox.github.io/Zero-IA/](https://bycarlox.github.io/Zero-IA/)**  
+> *(Ejecución 100% client-side en tu navegador. Tus documentos nunca salen de tu ordenador).*
 
 ---
 

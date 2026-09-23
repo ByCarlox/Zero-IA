@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zero-IA · Validador y Auditor de Huellas de IA</title>
+  <meta name="description" content="Plataforma de alta precisión para auditar, detectar y humanizar huellas de IA en documentos académicos (Word y PDF).">
+  
+  <!-- Tipografías de Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Estilos CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Librerías Client-Side para Word y PDF (Gratuitas y CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+
+  <!-- Barra Superior Minimalista -->
+  <header class="gemini-header">
+    <div class="brand-wrapper">
+      <div class="gemini-sparkle">✦</div>
+      <div class="brand-text">Zero-IA</div>
+      <span class="brand-tag">Academic Edition</span>
+    </div>
+
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggleBtn" title="Cambiar tema">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      </button>
+      <a href="https://github.com/ByCarlox/Zero-IA" target="_blank" rel="noopener" class="icon-btn" title="Ver en GitHub">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Layout Principal -->
+  <main class="main-layout">
+
+    <!-- Vista Inicial: Estilo Gemini / ChatGPT -->
+    <section class="hero-container" id="heroContainer">
+      <div class="hero-sparkle-lg">✦</div>
+      <h1 class="hero-title">Auditoría Inteligente de Huellas de IA</h1>
+      <p class="hero-subtitle">Valida la autoría de tu TFM o manuscrito. Detecta patrones sintéticos, perplejidad y huellas de ChatGPT en segundos.</p>
+
+      <!-- Input Box Flotante -->
+      <div class="gemini-prompt-box">
+        <textarea id="promptTextarea" class="prompt-textarea" placeholder="Pega aquí el texto de tu tesis o capítulo..."></textarea>
+
+        <!-- Píldora de archivo adjunto -->
+        <div id="filePill" class="file-pill" style="display: none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span id="fileNameSpan">documento.docx</span>
+          <span id="removeFileBtn" style="cursor: pointer; font-weight: bold; margin-left: 4px;">&times;</span>
+        </div>
+
+        <div class="prompt-toolbar">
+          <div class="toolbar-left">
+            <input type="file" id="fileInput" accept=".docx,.pdf,.txt,.md" style="display: none;">
+            <button class="attach-btn" id="attachBtn" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              Adjuntar Word o PDF
+            </button>
+            <button class="sample-chip" id="sampleBtn" type="button">Cargar Ejemplo</button>
+          </div>
+
+          <button class="send-btn" id="sendBtn" disabled title="Analizar documento">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Vista de Resultados estilo Canvas -->
+    <section class="results-container" id="resultsContainer">
+      
+      <!-- Barra Superior de Estadísticas -->
+      <div class="top-stats-bar">
+        <div class="stat-card primary">
+          <div class="stat-title">Probabilidad Global de IA</div>
+          <div class="stat-metric-hero">
+            <span id="globalPercentage">0%</span>
+          </div>
+          <div id="verdictBadge" class="tag-badge">Analizando</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-title">Perplejidad Media</div>
+          <div class="stat-metric-hero" id="meanPerplexity">0.0</div>
+          <div style="font-size: 0.78rem; color: var(--text-secondary);">Sorpresa estadística léxica</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-title">Ráfaga (Burstiness)</div>
+          <div class="stat-metric-hero" id="burstinessScore">0.0</div>
+          <div style="font-size: 0.78rem; color: var(--text-secondary);">Variación inter-oracional</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-title">Huellas Críticas</div>
+          <div class="stat-metric-hero" style="color: var(--color-danger-border);">
+            <span id="highRiskCount">0</span>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-secondary);" id="totalSentencesCount">de 0 frases</div>
+        </div>
+      </div>
+
+      <!-- Canvas Split View: Manuscrito a la Izquierda | Inspector a la Derecha -->
+      <div class="canvas-grid">
+        
+        <!-- Columna Izquierda: Visor del Manuscrito -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-secondary);">Manuscrito Anotado</div>
+            <div style="font-size: 0.8rem; color: var(--text-tertiary);">Haz clic en una frase para ver el diagnóstico</div>
+          </div>
+          
+          <div class="manuscript-viewer" id="manuscriptViewer">
+            <!-- El contenido dinámico de oraciones se inyecta aquí -->
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 16px;">
+            <button class="btn-secondary" id="newAnalysisBtn">← Nuevo Análisis</button>
+            <button class="btn-secondary" id="downloadReportBtn">📑 Descargar Dictamen (.md)</button>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Inspector & Humanizador -->
+        <aside class="inspector-panel">
+          <div class="panel-header">
+            <div class="panel-title">Asistente de Mitigación</div>
+          </div>
+
+          <div class="tab-nav">
+            <button class="tab-btn active" data-tab="suggestions">Huellas & Alternativas</button>
+            <button class="tab-btn" data-tab="editor">Editor en Vivo</button>
+          </div>
+
+          <!-- Pestaña 1: Sugerencias y Diagnóstico -->
+          <div id="tabSuggestions">
+            <div id="inspectorContent">
+              <!-- Diagnóstico de la frase seleccionada -->
+            </div>
+          </div>
+
+          <!-- Pestaña 2: Editor en Vivo -->
+          <div id="tabEditor" style="display: none;">
+            <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 8px;">
+              Edita tu manuscrito aplicando las recomendaciones y recalcula la probabilidad de IA al instante:
+            </p>
+            <textarea id="liveEditorText" style="width: 100%; height: 380px; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; color: var(--text-primary); font-family: var(--font-family); font-size: 0.95rem; padding: 12px; resize: none; outline: none; line-height: 1.6;"></textarea>
+            <button class="btn-primary" id="recalculateBtn" style="width: 100%; margin-top: 12px;">
+              🔄 Recalcular % de IA
+            </button>
+          </div>
+        </aside>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Scripts de la Aplicación -->
+  <script src="js/detector.js"></script>
+  <script src="js/document-parser.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
