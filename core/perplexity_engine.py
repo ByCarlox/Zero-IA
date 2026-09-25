@@ -1,140 +1,70 @@
+"""Optional research-only neural likelihood. Never an authorship classifier.
+Sliding context: https://huggingface.co/docs/transformers/perplexity
+No fabricated lexical fallback; models must already exist locally by default.
 """
-Motor de cálculo de Perplejidad (Perplexity) y Ráfaga (Burstiness).
-Inspirado en GPTZero con soporte dual:
-1. Modo Neuronal (Hugging Face Transformers / GPT-2) para cálculo exacto de pérdida negativa de verosimilitud (NLL).
-2. Modo Estadístico Rápido (N-gram & Information Theory) para ejecución instantánea sin necesidad de GPU ni descarga pesada de modelos.
-"""
-
 import math
-import re
-from typing import List, Dict, Any, Optional
-import numpy as np
 
 
 class PerplexityEngine:
-    def __init__(self, use_transformers: bool = True, model_name: str = "gpt2", device: Optional[str] = None):
-        self.use_transformers = use_transformers
-        self.model_name = model_name
-        self.device = device
-        self._model = None
-        self._tokenizer = None
-        self._has_transformers = False
-
+    def __init__(self, use_transformers=False, model_name=None, device='cpu', allow_download=False):
+        self.model_name, self.device = model_name, device
+        self._model = self._tokenizer = None
+        self.error = 'Módulo neuronal no activado.'
         if use_transformers:
-            self._init_transformers()
+            if not model_name:
+                self.error = 'Selecciona explícitamente un modelo y valida su idioma y dominio.'
+                return
+            try:
+                from transformers import AutoModelForCausalLM, AutoTokenizer
+                self._tokenizer = AutoTokenizer.from_pretrained(model_name, local_files_only=not allow_download)
+                self._model = AutoModelForCausalLM.from_pretrained(model_name, local_files_only=not allow_download).to(device)
+                self._model.eval()
+                self.error = None
+            except Exception as error:
+                self._model = None
+                self.error = f'Modelo no disponible: {type(error).__name__}. No se calculó perplejidad.'
 
-    def _init_transformers(self):
-        """Intenta cargar el modelo de Transformers si está disponible."""
+    def is_neural_active(self):
+        return self._model is not None
+
+    def analyze_document(self, sentences):
+        base = {'engine_mode': 'unavailable', 'model': self.model_name, 'perplexity': None,
+                'authorship_probability': None, 'scored_tokens': 0, 'error': self.error}
+        if not self.is_neural_active():
+            return base
         try:
             import torch
-            from transformers import GPT2LMHeadModel, GPT2TokenizerFast
+            text = sentences if isinstance(sentences, str) else '\n'.join(sentences)
+            ids = self._tokenizer(text, return_tensors='pt').input_ids.to(self.device)
+            length = ids.size(1)
+            if length < 2:
+                return {**base, 'error': 'No hay suficientes tokens.'}
+            context = getattr(self._model.config, 'max_position_embeddings', None) or getattr(self._model.config, 'n_positions', 1024)
+            stride = max(1, context // 2)
+            total_loss, total_tokens, previous_end = 0., 0, 0
+            for start in range(0, length, stride):
+                end = min(start + context, length)
+                inputs = ids[:, start:end]
+                labels = inputs.clone()
+                new_tokens = end - previous_end
+                labels[:, :-new_tokens] = -100
+                # Causal shift removes index zero, not an arbitrary unmasked token.
+                count = int((labels[:, 1:] != -100).sum().item())
+                if count:
+                    with torch.no_grad():
+                        loss = float(self._model(inputs, labels=labels).loss.item())
+                    if not math.isfinite(loss):
+                        raise ValueError('Non-finite model loss')
+                    total_loss += loss * count
+                    total_tokens += count
+                previous_end = end
+                if end == length:
+                    break
+            average = total_loss / total_tokens
+            return {**base, 'engine_mode': 'neural_experimental', 'error': None,
+                    'mean_nll': average, 'perplexity': math.exp(average), 'scored_tokens': total_tokens}
+        except Exception as error:
+            return {**base, 'error': f'Inferencia incompleta: {type(error).__name__}. Sin sustitución heurística.'}
 
-            if self.device is None:
-                if torch.backends.mps.is_available():
-                    self.device = "mps"
-                elif torch.cuda.is_available():
-                    self.device = "cuda"
-                else:
-                    self.device = "cpu"
-
-            print(f"[PerplexityEngine] Cargando modelo '{self.model_name}' en dispositivo '{self.device}'...")
-            self._tokenizer = GPT2TokenizerFast.from_pretrained(self.model_name)
-            self._model = GPT2LMHeadModel.from_pretrained(self.model_name).to(self.device)
-            self._model.eval()
-            self._has_transformers = True
-            print("[PerplexityEngine] Modelo neuronal cargado con éxito.")
-        except Exception as e:
-            print(f"[PerplexityEngine] No se pudo cargar Transformers ({e}). Usando modo estadístico optimizado.")
-            self._has_transformers = False
-
-    def is_neural_active(self) -> bool:
-        return self._has_transformers
-
-    def compute_sentence_perplexity(self, sentence: str) -> float:
-        """
-        Calcula la perplejidad de una oración individual.
-        Valores bajos (< 45) sugieren alta predictibilidad (IA).
-        Valores altos (> 75) sugieren creatividad y redacción humana.
-        """
-        clean = sentence.strip()
-        if not clean or len(clean.split()) < 2:
-            return 50.0
-
-        if self._has_transformers:
-            try:
-                import torch
-                encodings = self._tokenizer(clean, return_tensors="pt")
-                input_ids = encodings.input_ids.to(self.device)
-                seq_len = input_ids.size(1)
-
-                if seq_len < 2:
-                    return 50.0
-
-                with torch.no_grad():
-                    outputs = self._model(input_ids, labels=input_ids)
-                    loss = outputs.loss.item()
-
-                ppl = float(math.exp(min(loss, 15.0)))  # evitar overflow
-                return round(ppl, 2)
-            except Exception:
-                pass
-
-        # Fallback estadístico: Perplejidad aproximada por longitud de palabras y sorpresa léxica
-        return self._compute_statistical_perplexity(clean)
-
-    def _compute_statistical_perplexity(self, sentence: str) -> float:
-        """
-        Aproximación de perplejidad basada en compresión de texto, longitud media de morfemas
-        y entropía posicional. Calibrada para mantener la misma escala de GPTZero (20 a 150+).
-        """
-        words = re.findall(r"\b\w+\b", sentence.lower())
-        if not words:
-            return 50.0
-
-        word_lengths = [len(w) for w in words]
-        avg_wlen = float(np.mean(word_lengths))
-        unique_ratio = len(set(words)) / len(words)
-
-        # La variabilidad de caracteres y combinaciones poco frecuentes
-        char_counts = {}
-        for c in sentence.lower():
-            char_counts[c] = char_counts.get(c, 0) + 1
-        entropy = -sum((cnt / len(sentence)) * math.log2(cnt / len(sentence)) for cnt in char_counts.values())
-
-        # Fórmula empírica calibrada con textos de referencia humanos vs GPT
-        base_ppl = 25.0 + (entropy * 8.5) + (unique_ratio * 20.0) + (avg_wlen * 2.0)
-        return round(float(base_ppl), 2)
-
-    def analyze_document(self, sentences: List[str]) -> Dict[str, Any]:
-        """
-        Analiza cada oración del texto calculando:
-        - Perplejidad individual por oración
-        - Perplejidad promedio
-        - Ráfaga (Burstiness = varianza / máximo de perplejidad entre oraciones contiguas)
-        """
-        if not sentences:
-            return {
-                "mean_perplexity": 0.0,
-                "burstiness": 0.0,
-                "sentence_perplexities": [],
-                "engine_mode": "neural" if self._has_transformers else "statistical"
-            }
-
-        perplexities = [self.compute_sentence_perplexity(s) for s in sentences]
-        arr_ppl = np.array(perplexities, dtype=float)
-
-        mean_ppl = float(np.mean(arr_ppl))
-        std_ppl = float(np.std(arr_ppl))
-        max_ppl = float(np.max(arr_ppl))
-
-        # Burstiness: diferencia entre picos y valles o desviación estándar de la perplejidad
-        burstiness = float(std_ppl)
-
-        return {
-            "mean_perplexity": round(mean_ppl, 2),
-            "burstiness": round(burstiness, 2),
-            "max_perplexity": round(max_ppl, 2),
-            "min_perplexity": round(float(np.min(arr_ppl)), 2),
-            "sentence_perplexities": perplexities,
-            "engine_mode": "neural" if self._has_transformers else "statistical"
-        }
+    def compute_sentence_perplexity(self, sentence):
+        return self.analyze_document(sentence)['perplexity']

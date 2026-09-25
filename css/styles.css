@@ -245,3 +245,18 @@ button:hover:not(:disabled) { border-color: var(--border-active); }
   .sentence-selected { outline: 0; }
   .app-footer { margin-top: 24px; }
 }
+
+/* Editorial review v2: source-preserving text and clear coverage. */
+[hidden] { display: none !important; }
+.analysis-progress { max-width: 1320px; margin: 12px auto; display:flex; align-items:center; gap:16px; color:var(--text-secondary); }
+.review-coverage { padding:24px; margin:20px 0; border:1px solid var(--border-subtle); border-radius:16px; background:var(--bg-surface); }
+.review-coverage h2 { font-size:1rem; margin-bottom:12px; }
+.review-coverage p { font-size:.85rem; line-height:1.65; color:var(--text-secondary); margin:8px 0; }
+#extractionWarnings:empty {display:none;}
+#manuscriptViewer {white-space:pre-wrap; overflow-wrap:anywhere;}
+.diff-box {line-height:1.7; padding:12px; margin:12px 0; overflow-wrap:anywhere; white-space:pre-wrap;}
+.diff-box del {background:rgba(220,90,90,.12);}
+.diff-box ins {background:rgba(80,180,130,.12); text-decoration:none;}
+button.humanize-card {width:100%;text-align:left;color:inherit;font:inherit;cursor:pointer;}
+.badge-neutral {background:var(--bg-surface-elevated);color:var(--text-secondary);}
+@media print { .analysis-progress, #loadMoreBtn {display:none;} #manuscriptViewer {max-height:none;overflow:visible;} }

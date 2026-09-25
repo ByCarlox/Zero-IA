@@ -37,8 +37,8 @@ class TestEndToEndPipeline(unittest.TestCase):
         detector = AIDetector(use_transformers=False)
         analysis = detector.analyze_document(parsed["full_text"])
 
-        self.assertGreater(analysis["global_ai_percentage"], 45.0)
-        self.assertGreaterEqual(analysis["high_risk_sentences"], 1)
+        self.assertGreater(len(analysis["findings"]), 0)
+        self.assertIsNone(analysis["authorship"]["probability"])
 
         # 4. Exportar Word anotado
         annotated_docx_bytes = export_annotated_docx(analysis)
@@ -47,11 +47,13 @@ class TestEndToEndPipeline(unittest.TestCase):
         # Verificar que el docx generado es válido abriéndolo
         read_back_doc = docx.Document(io.BytesIO(annotated_docx_bytes))
         headings = [p.text for p in read_back_doc.paragraphs if p.text]
-        self.assertTrue(any("Auditoría" in h for h in headings))
+        self.assertTrue(any("Validador" in h or "Revisión" in h for h in headings))
+
+        self.assertIn(parsed["full_text"], [p.text for p in read_back_doc.paragraphs])
 
         # 5. Exportar reporte Markdown
         md_report = export_markdown_report(analysis)
-        self.assertIn("Auditoría de Detección de Huellas de IA", md_report)
+        self.assertIn("Validador Académico", md_report)
         self.assertIn("Flesch-Szigriszt", md_report)
 
 

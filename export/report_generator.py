@@ -1,117 +1,37 @@
-"""
-Generador de informes de auditoría y exportación de documentos Word (.docx)
-con resaltado y comentarios de huellas de IA.
-"""
-
+"""Exports from the canonical report; no independent scoring or text rewriting."""
 import io
-from core.academic_review import academic_summary
-from typing import Dict, Any
 import docx
-from docx.shared import RGBColor, Pt
 from docx.enum.text import WD_COLOR_INDEX
+from core.engine_bridge import call_engine
 
 
-def export_annotated_docx(analysis_result: Dict[str, Any]) -> bytes:
-    """
-    Crea un nuevo documento Word con las oraciones coloreadas según su nivel de riesgo
-    y un apartado final con las sugerencias para eliminar huellas.
-    """
+def export_markdown_report(analysis_result):
+    return call_engine('report', analysis=analysis_result)
+
+
+def export_annotated_docx(analysis_result):
     doc = docx.Document()
-
-    # Título del reporte
-    doc.add_heading("Reporte de Auditoría de Huellas de IA", level=0)
-
-    # Resumen ejecutivo
-    p_meta = doc.add_paragraph()
-    p_meta.add_run(f"Veredicto: {analysis_result.get('verdict_badge', '')} - {analysis_result.get('classification', '')}\n").bold = True
-    p_meta.add_run(f"Índice de estilo (no probabilidad): {analysis_result.get('global_ai_percentage', 0)}/100\n")
-    p_meta.add_run(f"Total de Palabras: {analysis_result.get('total_words', 0)} | Oraciones: {analysis_result.get('total_sentences', 0)}\n")
-    p_meta.add_run(f"🔴 Huellas Críticas: {analysis_result.get('high_risk_sentences', 0)} | 🟡 Huellas Medias: {analysis_result.get('medium_risk_sentences', 0)} | 🟢 Oraciones con pocas señales: {analysis_result.get('low_risk_sentences', 0)}\n")
-
-
-    if analysis_result.get("academic_review"):
-        doc.add_heading("Legibilidad y coherencia bibliográfica", level=1)
-        for paragraph in academic_summary(analysis_result["academic_review"]).split("\n\n"):
-            doc.add_paragraph(paragraph)
-
-    doc.add_heading("Texto anotado", level=1)
-
-    # Reconstruir párrafos con oraciones coloreadas
-    current_p_idx = -1
-    active_paragraph = None
-
-    for s_info in analysis_result.get("sentences", []):
-        p_idx = s_info.get("paragraph_idx", 0)
-        if p_idx != current_p_idx:
-            current_p_idx = p_idx
-            active_paragraph = doc.add_paragraph()
-
-        run = active_paragraph.add_run(s_info["text"] + " ")
-        risk = s_info.get("risk_level", "low")
-
-        if risk == "high":
+    doc.add_heading('Validador Académico · Zero-IA', 0)
+    doc.add_paragraph('Exportación del texto extraído. No reproduce la maquetación del archivo original.')
+    if analysis_result.get('validationScore') is not None:
+        doc.add_paragraph(f"Índice de validación: {analysis_result['validationScore']}% ({analysis_result.get('cleanPercentage', 0)}% texto libre de incidencias).")
+    doc.add_heading('Texto anotado', 1)
+    source = analysis_result['sourceText'].encode('utf-16-le')
+    p = doc.add_paragraph()
+    cursor = 0
+    for sentence in analysis_result['sentences']:
+        start, end = sentence['start'] * 2, sentence['end'] * 2
+        p.add_run(source[cursor:start].decode('utf-16-le'))
+        run = p.add_run(source[start:end].decode('utf-16-le'))
+        if sentence['riskLevel'] == 'high':
             run.font.highlight_color = WD_COLOR_INDEX.PINK
-        elif risk == "medium":
+        elif sentence['riskLevel'] == 'medium':
             run.font.highlight_color = WD_COLOR_INDEX.YELLOW
-
-    # Sección de Recomendaciones de Humanización
-    doc.add_heading("Recomendaciones editoriales", level=1)
-    doc.add_paragraph("A continuación se detallan las oraciones con mayor índice de predictibilidad y sus sugerencias de reescritura:")
-
-    for s_info in analysis_result.get("sentences", []):
-        risk = s_info.get("risk_level", "low")
-        if risk in ["high", "medium"]:
-            p_rec = doc.add_paragraph()
-            prefix = "🔴 [ALTO]" if risk == "high" else "🟡 [MEDIO]"
-            p_rec.add_run(f"{prefix} Oración: \"{s_info['text']}\"\n").bold = True
-            for reason in s_info.get("reasons", []):
-                p_rec.add_run(f"  • Diagnóstico: {reason}\n")
-
-            sugg = s_info.get("suggestions", {})
-            for tip in sugg.get("tips", []):
-                p_rec.add_run(f"  ✓ Recomendación: {tip}\n")
-
-            if sugg.get("suggested_rewrite"):
-                p_rec.add_run(f"  ➜ Propuesta de reescritura: \"{sugg['suggested_rewrite']}\"\n").italic = True
-
-    out_stream = io.BytesIO()
-    doc.save(out_stream)
-    return out_stream.getvalue()
-
-
-def export_markdown_report(analysis_result: Dict[str, Any]) -> str:
-    """Genera un informe completo en formato Markdown."""
-    lines = [
-        "# Auditoría de Detección de Huellas de IA",
-        "",
-        f"- **Veredicto:** {analysis_result.get('verdict_badge')} {analysis_result.get('classification')}",
-        f"- **Índice de estilo (no probabilidad):** {analysis_result.get('global_ai_percentage')}/100",
-        f"- **Palabras analizadas:** {analysis_result.get('total_words')}",
-        f"- **Oraciones analizadas:** {analysis_result.get('total_sentences')}",
-        f"- **Oraciones en Rojo (Muchas señales):** {analysis_result.get('high_risk_sentences')}",
-        f"- **Oraciones en Amarillo (Riesgo medio):** {analysis_result.get('medium_risk_sentences')}",
-        f"- **Oraciones en Verde (Pocas señales):** {analysis_result.get('low_risk_sentences')}",
-        "",
-        "## Detalle de Oraciones Marcadas y Guía de Reescritura",
-        ""
-    ]
-
-    for s in analysis_result.get("sentences", []):
-        if s.get("risk_level") in ["high", "medium"]:
-            risk_icon = "🔴" if s["risk_level"] == "high" else "🟡"
-            lines.append(f"### {risk_icon} Oración ({s['risk_level'].upper()})")
-            lines.append(f"> \"{s['text']}\"")
-            lines.append("")
-            lines.append(f"- **Métrica léxica (ver modo del motor):** `{s['perplexity']}` | **Índice de estilo:** `{int(s['ai_score']*100)}%`")
-            for r in s.get("reasons", []):
-                lines.append(f"- **Motivo:** {r}")
-            sugg = s.get("suggestions", {})
-            for tip in sugg.get("tips", []):
-                lines.append(f"- **Acción sugerida:** {tip}")
-            if sugg.get("suggested_rewrite"):
-                lines.append(f"- **Propuesta alternativa:** *\"{sugg['suggested_rewrite']}\"*")
-            lines.append("")
-
-    if analysis_result.get("academic_review"):
-        lines.extend(["", academic_summary(analysis_result["academic_review"])])
-    return "\n".join(lines)
+        cursor = end
+    p.add_run(source[cursor:].decode('utf-16-le'))
+    doc.add_heading('Informe', 1)
+    for line in export_markdown_report(analysis_result).splitlines():
+        doc.add_paragraph(line)
+    output = io.BytesIO()
+    doc.save(output)
+    return output.getvalue()

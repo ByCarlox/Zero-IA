@@ -28,6 +28,7 @@ jobs:
           node-version: '22'
       - run: pip install numpy python-docx pypdf
       - run: python -m unittest discover tests/ -v
+      - run: python tools/build_rules.py --check
       - run: node tests/test_browser.js
 
   deploy:

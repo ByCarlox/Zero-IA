@@ -1,24 +1,21 @@
-"""
-Módulo de análisis estilométrico para distinguir texto generado por IA de texto humano.
-Evalúa variabilidad de longitud, homogeneidad sintáctica, riqueza de vocabulario y entropía.
-"""
+"""Descriptive vocabulary statistics; not used to infer authorship."""
 
 import math
 import re
+import unicodedata
 from typing import List, Dict, Any
 import numpy as np
 
 
 def clean_words(text: str) -> List[str]:
     """Extrae palabras en minúsculas ignorando puntuación."""
-    return re.findall(r"[a-záéíóúüñA-ZÁÉÍÓÚÜÑ0-9]+", text.lower())
+    return re.findall(r"[a-záéíóúüñA-ZÁÉÍÓÚÜÑ0-9]+", unicodedata.normalize("NFC", text).lower())
 
 
 def compute_sentence_length_stats(sentences: List[str]) -> Dict[str, float]:
     """
     Calcula estadísticas sobre la longitud de las oraciones en número de palabras.
-    La IA tiende a tener una varianza muy baja (ritmo monótono).
-    El humano tiene alta varianza (alterna frases cortas y largas).
+    La variación de longitud no identifica autoría.
     """
     if not sentences:
         return {"mean": 0.0, "std": 0.0, "cv": 0.0, "min": 0, "max": 0}
@@ -83,23 +80,10 @@ def analyze_stylometrics(sentences: List[str], full_text: str) -> Dict[str, Any]
     ttr = compute_ttr(words)
     entropy = compute_shannon_entropy(words)
 
-    # Indicador de monotonía sintáctica (0 a 1)
-    # Un cv < 0.3 indica alta uniformidad sintáctica (típica de IA)
-    cv = length_stats["cv"]
-    if cv < 0.25:
-        monotony_score = 0.85
-    elif cv < 0.40:
-        monotony_score = 0.60
-    elif cv < 0.60:
-        monotony_score = 0.35
-    else:
-        monotony_score = 0.10
-
     return {
         "total_words": len(words),
         "total_sentences": len(sentences),
         "sentence_length": length_stats,
         "type_token_ratio": round(ttr, 3),
-        "entropy": entropy,
-        "monotony_score": monotony_score
+        "entropy": entropy
     }

@@ -10,6 +10,9 @@ let currentAnalysis = null;
 let currentRawText = "";
 let selectedSentenceIdx = null;
 let analysisInProgress = false;
+let extractionInfo = null;
+let reviewHistory = [];
+let initialText = "";
 
 // Elementos DOM
 const promptTextarea = document.getElementById("promptTextarea");
@@ -70,7 +73,8 @@ themeToggleBtn.addEventListener("click", toggleTheme);
 promptTextarea.addEventListener("input", () => {
   promptTextarea.style.height = "auto";
   promptTextarea.style.height = Math.min(promptTextarea.scrollHeight, 260) + "px";
-  sendBtn.disabled = promptTextarea.value.trim().length === 0;
+  extractionInfo = null;
+  sendBtn.disabled = analysisInProgress || promptTextarea.value.trim().length === 0;
 });
 
 // Manejo de archivos (Word / PDF / Txt)
@@ -83,8 +87,11 @@ fileInput.addEventListener("change", async (e) => {
   try {
     attachBtn.innerText = "Leyendo archivo...";
     attachBtn.disabled = true;
+    sendBtn.disabled = true; sampleBtn.disabled = true;
 
-    const extractedText = await window.ZeroIAParser.extractTextFromFile(file);
+    const parsed = await window.ZeroIAParser.extractTextFromFile(file);
+    const extractedText = parsed.text;
+    extractionInfo = parsed.extraction;
     if (!extractedText.trim()) throw new Error("No se extrajo texto. Un PDF escaneado necesita OCR previo.");
     promptTextarea.value = extractedText;
     currentRawText = extractedText;
@@ -97,12 +104,13 @@ fileInput.addEventListener("change", async (e) => {
     alert("Error al extraer texto: " + err.message);
   } finally {
     attachBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Adjuntar Word o PDF`;
-    attachBtn.disabled = false;
+    attachBtn.disabled = false; sampleBtn.disabled = false; sendBtn.disabled = !promptTextarea.value.trim();
   }
 });
 
 removeFileBtn.addEventListener("click", () => {
   fileInput.value = "";
+  extractionInfo = null;
   filePill.style.display = "none";
 });
 
@@ -121,38 +129,55 @@ sampleBtn.addEventListener("click", () => {
 sendBtn.addEventListener("click", startAnalysis);
 
 function startAnalysis() {
-  if (analysisInProgress) return;
-  const text = promptTextarea.value.trim();
-  if (!text || text.length < 20) {
-    alert("Introduce un texto con al menos 20 caracteres para auditar.");
-    return;
-  }
-
-  analysisInProgress = true;
-  const buttonContent = sendBtn.innerHTML;
-  sendBtn.innerHTML = `<span style="font-size:0.8rem;">...</span>`;
-  sendBtn.disabled = true;
-
-  setTimeout(() => {
-    try {
-      const nextAnalysis = window.ZeroIADetector.analyzeDocument(text);
-      if (nextAnalysis.error) throw new Error(nextAnalysis.error);
-      currentRawText = text;
-      renderResults(nextAnalysis);
-      currentAnalysis = nextAnalysis;
-      heroContainer.style.display = "none";
-      resultsContainer.style.display = "block";
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (err) {
-      console.error("No se pudo completar el análisis:", err);
-      alert("No se pudo completar el análisis. Tu texto se conserva; vuelve a intentarlo.\n" + err.message);
-    } finally {
-      sendBtn.innerHTML = buttonContent;
-      sendBtn.disabled = promptTextarea.value.trim().length === 0;
-      analysisInProgress = false;
-    }
-  }, 100);
+  return runReview(promptTextarea.value, { extraction: extractionInfo });
 }
+
+async function runReview(text, options = {}) {
+  if (analysisInProgress) return false;
+  if (!text.trim()) { alert("Introduce el texto que deseas revisar."); return false; }
+  analysisInProgress = true;
+  const status = document.getElementById("analysisStatus");
+  const cancel = document.getElementById("cancelAnalysisBtn");
+  status.textContent = "Preparando revisión…";
+  cancel.hidden = false;
+  const previous = currentAnalysis ? { text: currentRawText, analysis: currentAnalysis } : null;
+  [sendBtn, recalculateBtn, sampleBtn, attachBtn].forEach(button => button.disabled = true);
+  try {
+    const extraction = options.extraction || (previous ? {...previous.analysis.extraction, warnings:[...previous.analysis.extraction.warnings.filter(w=>!w.startsWith("Texto editado")), "Texto editado: comprueba su correspondencia con el archivo original."]} : undefined);
+    const result = await window.ZeroIAAnalysisClient.analyze(text, { extraction }, message => status.textContent = message);
+    if (result.error) throw new Error(result.error);
+    if (options.recordHistory && previous) reviewHistory.push(previous);
+    if (reviewHistory.length > 20) reviewHistory.shift();
+    if (!initialText) initialText = text;
+    currentRawText = text;
+    currentAnalysis = result;
+    promptTextarea.value = text;
+    renderResults(result);
+    heroContainer.style.display = "none";
+    resultsContainer.style.display = "block";
+    status.textContent = "Validación completada. Autoría no determinada.";
+    document.getElementById("undoReviewBtn").disabled = reviewHistory.length === 0;
+    if (!options.keepScroll) window.scrollTo({top:0,behavior:"smooth"});
+    return true;
+  } catch (error) {
+    status.textContent = error.name === "AbortError" ? error.message : "No se pudo completar la revisión: " + error.message;
+    return false;
+  } finally {
+    analysisInProgress = false;
+    cancel.hidden = true;
+    [recalculateBtn, sampleBtn, attachBtn].forEach(button => button.disabled = false);
+    sendBtn.disabled = !promptTextarea.value.trim();
+  }
+}
+document.getElementById("cancelAnalysisBtn").addEventListener("click", () => window.ZeroIAAnalysisClient.cancel());
+document.getElementById("undoReviewBtn").addEventListener("click", () => {
+  if (analysisInProgress || !reviewHistory.length) return;
+  const previous = reviewHistory.pop();
+  currentRawText = previous.text; currentAnalysis = previous.analysis;
+  promptTextarea.value = currentRawText;
+  renderResults(currentAnalysis);
+  document.getElementById("undoReviewBtn").disabled = reviewHistory.length === 0;
+});
 
 function extractDOI(text) {
   if (!text) return null;
@@ -185,6 +210,8 @@ function getFindingBadge(code) {
 }
 
 async function verifyDOIWithCrossref(doi, resultEl, buttonEl) {
+  const reviewedReport = currentAnalysis;
+  const referenceText = reviewedReport.academic_review.citations.references.find(r=>extractDOI(r.text)===doi)?.text || "";
   buttonEl.disabled = true;
   resultEl.innerHTML = `<span style="font-size: 0.76rem; color: var(--text-secondary);">⏳ Consultando registro en api.crossref.org...</span>`;
 
@@ -200,6 +227,8 @@ async function verifyDOIWithCrossref(doi, resultEl, buttonEl) {
     if (resp.status === 200) {
       const data = await resp.json();
       const item = data.message || {};
+      const comparison = window.ZeroIAReferenceCheck.compare(referenceText, item);
+      reviewedReport.externalChecks.push({doi, checkedAt:new Date().toISOString(), ...comparison});
       const title = (item.title && item.title.length) ? item.title[0] : 'Título no registrado';
       const container = (item['container-title'] && item['container-title'].length) ? item['container-title'][0] : (item.publisher || 'Publicación no especificada');
       const issued = (item.issued && item.issued['date-parts'] && item.issued['date-parts'][0]) ? item.issued['date-parts'][0][0] : 'Año N/D';
@@ -207,7 +236,7 @@ async function verifyDOIWithCrossref(doi, resultEl, buttonEl) {
 
       resultEl.innerHTML = `
         <div class="doi-success-card">
-          <div class="doi-status-tag tag-verified">✓ Referencia comprobada en Crossref</div>
+          <div class="doi-status-tag tag-verified">${escapeHTML(comparison.message)}</div>
           <div style="font-weight: 600; color: var(--text-primary); font-size: 0.8rem;">${escapeHTML(title)}</div>
           <div style="color: var(--text-secondary); font-size: 0.75rem;">${escapeHTML(authors || 'Autores N/D')} · <em>${escapeHTML(container)}</em> (${issued})</div>
           <div class="doi-meta-notice">Nota metodológica: La existencia de la fuente no demuestra que respalde la afirmación del autor; se requiere leer el documento original.</div>
@@ -420,14 +449,25 @@ function renderResults(analysis) {
   renderAcademicReview(analysis.academic_review);
 
   // 1. Métricas Principales
-  globalPercentageEl.innerText = `${analysis.globalPercentage}/100`;
-  globalPercentageEl.style.color = analysis.verdictColor === "red" ? "var(--color-danger-border)" : analysis.verdictColor === "yellow" ? "var(--color-warning-border)" : "var(--color-success-border)";
+  if (analysis.validationScore !== null && analysis.validationScore !== undefined) {
+    globalPercentageEl.innerText = `${analysis.validationScore}%`;
+  } else {
+    globalPercentageEl.innerText = "N/D";
+  }
+  globalPercentageEl.style.color = analysis.verdictColor === "red" ? "var(--color-danger-border)" : analysis.verdictColor === "yellow" ? "var(--color-warning-border)" : "var(--color-success-border, var(--text-primary))";
 
   verdictBadgeEl.innerText = analysis.classification;
   verdictBadgeEl.className = `tag-badge badge-${analysis.verdictColor}`;
 
-  meanPerplexityEl.innerText = analysis.meanPerplexity;
-  burstinessScoreEl.innerText = analysis.burstiness;
+  const cleanLabelEl = document.getElementById("cleanPercentageLabel");
+  if (cleanLabelEl) {
+    cleanLabelEl.textContent = (analysis.cleanPercentage !== null && analysis.cleanPercentage !== undefined)
+      ? `${analysis.cleanPercentage}% texto sin incidencias`
+      : "No evaluable";
+  }
+
+  meanPerplexityEl.innerText = analysis.metrics.meanSentenceWords.toLocaleString("es", {maximumFractionDigits:1});
+  burstinessScoreEl.innerText = `${analysis.coverage.analyzedWords} / ${analysis.coverage.totalWords}`;
   highRiskCountEl.innerText = analysis.highRiskSentences;
   totalSentencesCountEl.innerText = `de ${analysis.totalSentences} frases`;
 
@@ -441,11 +481,11 @@ function renderResults(analysis) {
 
   if (verdictCard) {
     verdictCard.className = `executive-verdict-card verdict-${analysis.verdictColor}`;
-    verdictTitle.innerText = "Resumen de estilo y patrones";
-    verdictSubtitle.innerText = `Índice de patrones de IA: ${analysis.globalPercentage}/100 · ${analysis.totalWords} palabras evaluadas`;
+    verdictTitle.innerText = "Dictamen de validación";
+    verdictSubtitle.innerText = `Motor ${analysis.version} · ${analysis.totalSentences} frases · Idioma de revisión: español`;
     verdictPill.innerText = analysis.verdictBadge || (analysis.verdictColor === "red" ? "🔴 ALTA CONCENTRACIÓN" : analysis.verdictColor === "yellow" ? "🟡 CONCENTRACIÓN MEDIA" : "🟢 POCOS PATRONES");
     verdictPill.className = `tag-badge badge-${analysis.verdictColor}`;
-    verdictBody.innerText = `${analysis.highRiskSentences} de ${analysis.totalSentences} frases presentan concentración de patrones sintéticos o fórmulas fijas. Selecciona una frase del manuscrito para consultar la observación y sus alternativas. Este índice orienta la revisión y no determina la autoría del texto.`;
+    verdictBody.innerText = analysis.verdictSummary;
     verdictIcon.innerText = analysis.verdictColor === "red" ? "!" : analysis.verdictColor === "yellow" ? "—" : "✓";
   }
 
@@ -456,13 +496,13 @@ function renderResults(analysis) {
   const btnStripWm = document.getElementById("btnStripWatermarks");
 
   const wm = analysis.watermark_analysis;
-  if (wm && wm.hasWatermark) {
+  if (wm && wm.hasFormatting) {
     wmShieldBox.className = `watermark-shield-box shield-${wm.status}`;
     if (wmIcon) wmIcon.innerText = "!";
     if (wmShieldText) {
-      wmShieldText.innerHTML = `<strong>Revisar formato:</strong> Se detectaron ${wm.totalInvisibleChars} caracteres invisibles de ancho cero / formato. ${wm.message} <em>(Nota: pueden deberse a esteganografía, copiado web o conversión de PDF).</em>`;
+      wmShieldText.textContent = wm.message;
     }
-    if (btnStripWm) btnStripWm.style.display = "flex";
+    if (btnStripWm) btnStripWm.style.display = wm.positions.some(p => p.removable) ? "flex" : "none";
   } else {
     wmShieldBox.className = "watermark-shield-box shield-clean";
     if (wmIcon) wmIcon.innerText = "✓";
@@ -472,37 +512,34 @@ function renderResults(analysis) {
     if (btnStripWm) btnStripWm.style.display = "none";
   }
 
-  // 2. Renderizar Manuscrito con Oraciones Interactivas
-  manuscriptViewer.innerHTML = "";
-  let currentP = -1;
-  let pEl = null;
-
-  analysis.sentences.forEach((s, idx) => {
-    if (s.paragraphIdx !== currentP) {
-      currentP = s.paragraphIdx;
-      pEl = document.createElement("p");
-      pEl.style.marginBottom = "1.3rem";
-      manuscriptViewer.appendChild(pEl);
+  document.getElementById("unicodeDetails").textContent = wm.positions.slice(0,100).map(p=>`${p.hex} · posición ${p.start} · ${p.name}: ${p.context}`).join("\n") + (wm.positions.length>100 ? "\nMás posiciones en el informe." : "");
+  document.getElementById("coverageDetails").textContent = `${analysis.coverage.excludedWords} palabras excluidas del análisis de estilo (títulos, bibliografía, listas o tablas, o idioma no compatible). ${analysis.extraction.coverage || ""}`;
+  document.getElementById("extractionWarnings").textContent = (analysis.extraction.warnings || []).join(" ");
+  document.getElementById("dimensionSummary").innerHTML = analysis.dimensions.map(d => `<span class="citation-stat-badge"><strong>${d.count}</strong>${({repetition:"Repetición",structure:"Estructura",specificity:"Precisión",clarity:"Claridad"})[d.id]}</span>`).join("");
+  // Preserve every source character and original whitespace. Render 100 spans at a time.
+  manuscriptViewer.textContent = "";
+  let cursor = 0, rendered = 0;
+  const appendBatch = () => {
+    const batch = analysis.sentences.slice(rendered, rendered + 100);
+    for (const sentence of batch) {
+      manuscriptViewer.appendChild(document.createTextNode(analysis.sourceText.slice(cursor, sentence.start)));
+      const span = document.createElement("span");
+      span.className = `manuscript-sentence sentence-${sentence.riskLevel}`;
+      span.dataset.index = sentence.globalIdx;
+      span.textContent = sentence.text;
+      span.title = `${sentence.findings.length} observaciones · ${sentence.kind === "body" ? "Prosa" : "Bloque excluido"}`;
+      span.tabIndex = 0; span.setAttribute("role", "button");
+      span.setAttribute("aria-label", `Revisar fragmento ${sentence.globalIdx + 1}: ${sentence.text}`);
+      span.addEventListener("click", () => selectSentence(sentence.globalIdx));
+      span.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectSentence(sentence.globalIdx); } });
+      manuscriptViewer.appendChild(span); cursor = sentence.end;
     }
-
-    const span = document.createElement("span");
-    span.className = `manuscript-sentence sentence-${s.riskLevel}`;
-    span.dataset.index = idx;
-    span.innerText = s.text + " ";
-    span.title = `Índice de estilo: ${Math.round(s.aiScore * 100)}/100 | Índice léxico: ${s.perplexity}`;
-
-    span.tabIndex = 0;
-    span.setAttribute("role", "button");
-    span.setAttribute("aria-label", `Revisar frase ${idx + 1}: ${s.text}`);
-    span.addEventListener("keydown", event => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        selectSentence(idx);
-      }
-    });
-    span.addEventListener("click", () => selectSentence(idx));
-    pEl.appendChild(span);
-  });
+    rendered += batch.length;
+    if (rendered >= analysis.sentences.length) manuscriptViewer.appendChild(document.createTextNode(analysis.sourceText.slice(cursor)));
+    document.getElementById("loadMoreBtn").hidden = rendered >= analysis.sentences.length;
+  };
+  document.getElementById("loadMoreBtn").onclick = appendBatch;
+  appendBatch();
 
   // 3. Renderizar Panel Lateral con la lista de huellas
   renderInspectorList(analysis.sentences);
@@ -523,93 +560,34 @@ function selectSentence(idx) {
     targetSpan.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
+  document.querySelector('.tab-btn[data-tab="suggestions"]').click();
   const s = currentAnalysis.sentences[idx];
   showSentenceDetail(s);
 }
 
 function showSentenceDetail(s) {
-  const badgeClass = s.riskLevel === "high" ? "badge-red" : s.riskLevel === "medium" ? "badge-yellow" : "badge-green";
-  const pct = Math.round(s.aiScore * 100);
-
-  let html = `
-    <div style="margin-bottom: 14px;">
-      <span class="tag-badge ${badgeClass}">${pct}/100 patrones · ${s.riskLevel === "high" ? "Prioridad alta" : s.riskLevel === "medium" ? "Prioridad media" : "Prioridad baja"}</span>
-      <span style="font-size: 0.8rem; color: var(--text-secondary); margin-left: 8px;">Índice léxico: <b>${s.perplexity}</b></span>
-    </div>
-    <div style="font-size: 0.95rem; font-style: italic; color: var(--text-primary); margin-bottom: 12px; padding: 10px; background: var(--bg-surface-elevated); border-radius: 8px;">
-      "${escapeHTML(s.text)}"
-    </div>
-    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px;">Qué se observa</div>
-  `;
-
-  s.reasons.forEach(r => {
-    html += `<div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">• ${escapeHTML(r)}</div>`;
-  });
-
-  if (s.tips.length > 0) {
-    html += `<div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-top: 12px; margin-bottom: 6px;">Cómo mejorarlo</div>`;
-    s.tips.forEach(t => {
-      html += `<div style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 4px;">✓ ${escapeHTML(t)}</div>`;
-    });
+  let html = `<p class="academic-caption">Fragmento ${s.globalIdx + 1} · ${s.wordCount} palabras · ${s.kind === "body" ? "Prosa analizada" : "Excluido de estilo"}</p><blockquote class="diff-box">${escapeHTML(s.text)}</blockquote>`;
+  const findings = currentAnalysis.findings.filter(f => s.findings.includes(f.id));
+  html += findings.map(f => `<section class="finding-item"><strong>${escapeHTML(f.message)}</strong><p>${escapeHTML(f.advice)}</p><small>Regla: ${escapeHTML(f.rule)} · ${f.severity === "info" ? "Informativa" : f.severity === "high" ? "Prioridad alta" : "Prioridad media"}</small>${f.excerpt ? `<blockquote>${escapeHTML(f.excerpt)}</blockquote>` : ""}${f.sentenceIds.length > 1 ? `<p>También aparece en los fragmentos ${f.sentenceIds.filter(id => id !== s.globalIdx).slice(0,20).map(id => id + 1).join(", ")}${f.sentenceIds.length > 21 ? "…" : ""}.</p>` : ""}</section>`).join("");
+  if (!findings.length) html += `<p>${escapeHTML(s.reasons[0])}</p>`;
+  if (s.suggestion) {
+    html += `<h3 class="panel-title">Propuesta para revisar</h3><p class="academic-caption">${escapeHTML(s.suggestion.reason)}</p><div class="diff-box"><del>${escapeHTML(s.suggestion.original)}</del><br><ins>${escapeHTML(s.suggestedRewrite)}</ins></div><button class="btn-primary" id="applySuggestionBtn">Aceptar este cambio</button><button class="btn-secondary" id="copySuggestionBtn">Copiar alternativa</button>`;
   }
-
-  if (s.suggestedRewrite) {
-    html += `
-      <div style="font-size: 0.8rem; font-weight: 700; color: var(--color-success-text); text-transform: uppercase; margin-top: 12px;">Alternativa de redacción</div>
-      <div class="diff-box">"${escapeHTML(s.suggestedRewrite)}"</div>
-      <button class="btn-primary" style="width: 100%; margin-top: 8px;" id="copySuggestionBtn">
-        Copiar Sugerencia
-      </button>
-    `;
-  }
-
   inspectorContent.innerHTML = html;
-  const copyButton = document.getElementById("copySuggestionBtn");
-  if (copyButton) copyButton.addEventListener("click", () => navigator.clipboard.writeText(s.suggestedRewrite));
+  const apply = document.getElementById("applySuggestionBtn");
+  if (apply) apply.addEventListener("click", () => {
+    try {
+      const revised = window.ZeroIADetector.applySuggestion(liveEditorText.value, currentAnalysis, s.globalIdx);
+      runReview(revised, {recordHistory:true,keepScroll:true});
+    } catch (error) {document.getElementById("analysisStatus").textContent = error.message;}
+  });
+  const copy = document.getElementById("copySuggestionBtn");
+  if (copy) copy.addEventListener("click", async () => {try {await navigator.clipboard.writeText(s.suggestedRewrite);copy.textContent="Copiado";} catch {copy.textContent="Selecciona y copia la alternativa";}});
 }
-
-window.copySuggestion = function(encodedText) {
-  const text = decodeURIComponent(encodedText);
-  navigator.clipboard.writeText(text).then(() => {
-    alert("¡Sugerencia copiada al portapapeles!");
-  });
-};
-
-// Exponer selectSentence globalmente para eventos onclick
-window.selectSentence = selectSentence;
-
 function renderInspectorList(sentences) {
-  const flagged = sentences.filter(s => s.riskLevel !== "low");
-  if (flagged.length === 0) {
-    inspectorContent.innerHTML = `
-      <div style="text-align: center; padding: 24px 12px; color: var(--color-success-text);">
-        <div class="empty-state-mark">✓</div>
-        <div style="font-weight: 600;">Sin observaciones prioritarias</div>
-        <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">Puedes seleccionar cualquier frase para revisar sus indicadores. Este resultado no determina su autoría.</div>
-      </div>
-    `;
-    return;
-  }
-
-  let html = `<div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px;">Haz clic en cualquier frase del documento para inspeccionarla o revisa ${flagged.length === 1 ? "la oración señalada" : `las ${flagged.length} oraciones señaladas`}:</div>`;
-
-  flagged.forEach((s) => {
-    const badgeClass = s.riskLevel === "high" ? "badge-red" : "badge-yellow";
-    html += `
-      <button type="button" class="humanize-card" data-sentence-index="${s.globalIdx}">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <span class="tag-badge ${badgeClass}">${Math.round(s.aiScore * 100)}/100 · patrones</span>
-          <span style="font-size: 0.75rem; color: var(--text-secondary);">Índice léxico: ${s.perplexity}</span>
-        </div>
-        <div style="font-size: 0.88rem; color: var(--text-primary); line-height: 1.4;">"${escapeHTML(s.text.slice(0, 90))}${s.text.length > 90 ? "…" : ""}"</div>
-      </button>
-    `;
-  });
-
-  inspectorContent.innerHTML = html;
-  inspectorContent.querySelectorAll("[data-sentence-index]").forEach(button => {
-    button.addEventListener("click", () => selectSentence(Number(button.dataset.sentenceIndex)));
-  });
+  const flagged = sentences.filter(s => s.findings.length || s.suggestion);
+  inspectorContent.innerHTML = flagged.length ? `<p class="academic-caption">${flagged.length} fragmentos con observaciones o propuestas. Las observaciones informativas no son errores ni pruebas de IA.</p>` + flagged.slice(0,100).map(s => `<button type="button" class="humanize-card" data-sentence-index="${s.globalIdx}"><strong>Fragmento ${s.globalIdx+1} · ${s.findings.length} observaciones</strong><p>${escapeHTML(s.text.slice(0,130))}${s.text.length>130?"…":""}</p></button>`).join("") + (flagged.length>100?'<p>Se muestran los primeros 100. El informe descargado incluye todas las observaciones.</p>':'') : '<p>Sin incidencias detectadas con estas reglas. La autoría, la exactitud factual y el respaldo de las afirmaciones no están determinados.</p>';
+  inspectorContent.querySelectorAll("[data-sentence-index]").forEach(button => button.addEventListener("click", () => selectSentence(Number(button.dataset.sentenceIndex))));
 }
 
 // Tabs del panel lateral
@@ -630,19 +608,12 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 });
 
 // Recálculo desde el Editor en Vivo
-recalculateBtn.addEventListener("click", () => {
-  const updatedText = liveEditorText.value.trim();
-  if (!updatedText) return;
-
-  const nextAnalysis = window.ZeroIADetector.analyzeDocument(updatedText);
-  if (nextAnalysis.error) { alert(nextAnalysis.error); return; }
-  currentRawText = updatedText;
-  currentAnalysis = nextAnalysis;
-  renderResults(currentAnalysis);
-});
+recalculateBtn.addEventListener("click", () => runReview(liveEditorText.value, {recordHistory:true,keepScroll:true}));
 
 // Volver a inicio / Nueva Auditoría
 newAnalysisBtn.addEventListener("click", () => {
+  if (analysisInProgress) return;
+  currentAnalysis = null; currentRawText = ""; initialText = ""; reviewHistory = []; extractionInfo = null;
   resultsContainer.style.display = "none";
   heroContainer.style.display = "flex";
   promptTextarea.value = "";
@@ -656,38 +627,7 @@ newAnalysisBtn.addEventListener("click", () => {
 downloadReportBtn.addEventListener("click", () => {
   if (!currentAnalysis) return;
 
-  let report = `# Auditoría de Patrones de IA y Redacción - Zero-IA\n\n`;
-  report += `- **Índice Global de Patrones de IA:** ${currentAnalysis.globalPercentage}/100\n`;
-  report += `- **Veredicto:** ${currentAnalysis.classification}\n`;
-  report += `- **Aviso Metodológico:** Este índice describe heurísticas superficiales de estilo y no constituye un dictamen concluyente de autoría.\n`;
-  if (currentAnalysis.verdictSummary) {
-    report += `- **Dictamen:** ${currentAnalysis.verdictSummary}\n`;
-  }
-  report += `- **Perplejidad Media:** ${currentAnalysis.meanPerplexity}\n`;
-  report += `- **Ráfaga (Burstiness):** ${currentAnalysis.burstiness}\n`;
-  report += `- **Palabras:** ${currentAnalysis.totalWords} | **Oraciones:** ${currentAnalysis.totalSentences}\n`;
-
-  const wm = currentAnalysis.watermark_analysis;
-  if (wm && wm.hasWatermark) {
-    report += `- **Marcas Ocultas Unicode:** ${wm.totalInvisibleChars} caracteres detectados (${wm.message})\n`;
-  } else {
-    report += `- **Marcas Ocultas:** Limpio (0 caracteres invisibles de ancho cero)\n`;
-  }
-  report += `\n`;
-  report += window.ZeroIAAcademic.summary(currentAnalysis.academic_review) + "\n\n";
-  report += `## Detalle de Oraciones Señaladas\n\n`;
-
-  currentAnalysis.sentences.forEach(s => {
-    if (s.riskLevel !== "low") {
-      report += `### [${s.riskLevel.toUpperCase()}] "${escapeHTML(s.text)}"\n`;
-      report += `- **Índice de Estilo:** ${Math.round(s.aiScore * 100)}/100 | **Índice léxico:** ${s.perplexity}\n`;
-      s.reasons.forEach(r => { report += `- Diagnóstico: ${r}\n`; });
-      if (s.suggestedRewrite) {
-        report += `- Propuesta de reescritura: "${s.suggestedRewrite}"\n`;
-      }
-      report += `\n`;
-    }
-  });
+  const report = window.ZeroIADetector.summary(currentAnalysis);
 
   const blob = new Blob([report], { type: "text/markdown;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -698,24 +638,19 @@ downloadReportBtn.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
-// Botón de Purga de Marcas Invisibles / Caracteres de Ancho Cero
+// Only an initial BOM is removable. Other Unicode formatting is preserved.
 const btnStripWatermarks = document.getElementById("btnStripWatermarks");
-if (btnStripWatermarks) {
-  btnStripWatermarks.addEventListener("click", () => {
-    if (!currentRawText) return;
-    const clean = window.ZeroIADetector.stripInvisibleCharacters(currentRawText);
-    const diff = currentRawText.length - clean.length;
-    currentRawText = clean;
-    promptTextarea.value = clean;
-    alert(`✨ Se eliminaron ${diff} caracteres invisibles / marcas de agua Unicode de ancho cero. Re-analizando documento limpio...`);
-    runAnalysis();
-  });
-}
+btnStripWatermarks.addEventListener("click", () => {
+  if (!currentAnalysis || liveEditorText.value !== currentRawText) {document.getElementById("analysisStatus").textContent="Recalcula los cambios del editor antes de limpiar el formato.";return;}
+  const cleaned = window.ZeroIADetector.stripInvisibleCharacters(currentRawText);
+  if (cleaned !== currentRawText) runReview(cleaned,{recordHistory:true,keepScroll:true});
+});
 
 // Botón Imprimir / Guardar en PDF
 const printReportBtn = document.getElementById("printReportBtn");
 if (printReportBtn) {
   printReportBtn.addEventListener("click", () => {
+    while (!document.getElementById("loadMoreBtn").hidden) document.getElementById("loadMoreBtn").click();
     window.print();
   });
 }
@@ -761,52 +696,14 @@ document.querySelectorAll(".stat-info-btn").forEach(btn => {
   });
 });
 
-// Botón de Limpieza Automática de Clichés
+// Proposals never rewrite the whole manuscript automatically.
 const autoCleanBtn = document.getElementById("autoCleanBtn");
-if (autoCleanBtn) {
-  autoCleanBtn.addEventListener("click", () => {
-    let text = liveEditorText.value;
-    if (!text || text.trim().length === 0) return;
-
-    let count = 0;
-    // Aplicar reemplazos conocidos
-    const REPLACEMENTS_MAP = {
-      "en el ámbito de": "En",
-      "en el panorama actual": "Hoy en día",
-      "en la era digital": "En los últimos años",
-      "es importante destacar que": "Conviene notar que",
-      "es fundamental señalar que": "Debe considerarse que",
-      "cabe destacar que": "Específicamente,",
-      "cabe mencionar que": "Asimismo,",
-      "en conclusión": "Por consiguiente,",
-      "en resumen": "En síntesis,",
-      "juega un papel fundamental": "influye decisivamente",
-      "desempeña un papel crucial": "es determinante",
-      "es un testimonio de": "demuestra",
-      "un tapiz de": "una combinación de",
-      "una piedra angular": "un pilar esencial",
-      "delve into": "examine",
-      "a testament to": "evidence of",
-      "rich tapestry": "diverse set",
-      "plays a pivotal role": "is essential"
-    };
-
-    Object.keys(REPLACEMENTS_MAP).forEach(cliche => {
-      const reg = new RegExp(cliche, "gi");
-      if (reg.test(text)) {
-        text = text.replace(reg, (match, offset) => offset === 0 ? REPLACEMENTS_MAP[cliche] : REPLACEMENTS_MAP[cliche].toLowerCase());
-        count++;
-      }
-    });
-
-    liveEditorText.value = text.replace(/,\s*,/g, ",");
-    if (count > 0) {
-      alert(`✨ Se sustituyeron ${count} muletillas de IA por alternativas académicas. Pulsa "Recalcular estilo" para ver el nuevo resultado.`);
-    } else {
-      alert("No se encontraron muletillas automáticas directas. Prueba a reescribir manualmente las frases marcadas.");
-    }
-  });
-}
+autoCleanBtn.addEventListener("click", async () => {
+  if (liveEditorText.value !== currentRawText && !await runReview(liveEditorText.value,{recordHistory:true,keepScroll:true})) return;
+  const next = currentAnalysis?.sentences.find(s => s.suggestion);
+  if (next) {tabSuggestions.style.display="block";tabEditor.style.display="none";document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active",b.dataset.tab==="suggestions"));selectSentence(next.globalIdx);}
+  else document.getElementById("analysisStatus").textContent="No hay cambios automáticos conservadores disponibles. Revisa las observaciones en su contexto.";
+});
 
 // Filtros de visualización en el Manuscrito
 const filterChips = document.querySelectorAll(".filter-chip");
@@ -831,3 +728,12 @@ filterChips.forEach(chip => {
 
 // Inicializar al cargar
 initTheme();
+
+function downloadText(text, name) {
+  const url = URL.createObjectURL(new Blob([text], {type:"text/plain;charset=utf-8"}));
+  const link = document.createElement("a"); link.href=url; link.download=name; link.click(); URL.revokeObjectURL(url);
+}
+document.getElementById("downloadOriginalBtn").addEventListener("click",()=>downloadText(initialText,"original.txt"));
+document.getElementById("downloadCurrentBtn").addEventListener("click",()=>downloadText(liveEditorText.value,"revisado.txt"));
+
+liveEditorText.addEventListener("input",()=>{document.getElementById("analysisStatus").textContent=liveEditorText.value===currentRawText?"Texto igual a la última revisión.":"Cambios sin revisar. Recalcula para actualizar las observaciones y el informe.";});

@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
-# Script de inicio rápido para el Validador de Huellas de IA
+set -e
+cd "$(dirname "$0")"
+export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin"
+command -v node >/dev/null || { echo "Instala Node.js 22 o posterior."; exit 1; }
+# Script de inicio rápido para el Validador Académico
 
 echo "=========================================================="
-echo "  Validador & Auditor de Huellas de IA para TFM / Tesis   "
+echo "  Zero-IA · Validador Académico y Asistente Editorial     "
 echo "  100% Open Source y Privado                              "
 echo "=========================================================="
 

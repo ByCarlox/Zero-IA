@@ -50,9 +50,9 @@ class AcademicReviewTests(unittest.TestCase):
 
     def test_exports_and_empty_input(self):
         detector = AIDetector(use_transformers=False)
-        self.assertIn('error', detector.analyze_document('!!!'))
+        self.assertEqual(detector.analyze_document('!!!')['status'], 'no_prose')
         result = detector.analyze_document(CASES[3])
-        self.assertEqual(result['score_kind'], 'uncalibrated_heuristic')
+        self.assertEqual(result['score_kind'], 'editorial_observations')
         md = export_markdown_report(result)
         self.assertIn('missing_reference', md)
         document = docx.Document(io.BytesIO(export_annotated_docx(result)))
@@ -65,6 +65,7 @@ class AcademicReviewTests(unittest.TestCase):
         script = """
 const fs = require('fs'), vm = require('vm');
 global.window = global;
+require('./js/editorial-rules.js'); require('./js/text-structure.js');
 vm.runInThisContext(fs.readFileSync('js/academic-review.js','utf8'));
 vm.runInThisContext(fs.readFileSync('js/detector.js','utf8'));
 const cases = JSON.parse(fs.readFileSync(0,'utf8'));

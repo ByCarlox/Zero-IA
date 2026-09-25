@@ -1,0 +1,54 @@
+{
+  "engine": "2.0.0",
+  "unit": "document_rule_presence",
+  "split": "test",
+  "documents": 4,
+  "provenance": [
+    "synthetic regression, not authorship-labelled"
+  ],
+  "rules": {
+    "exact_repetition": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "generic_expression:es importante destacar que": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    }
+  },
+  "outcomes": [
+    {
+      "id": "repetition",
+      "status": "limited_sample",
+      "unexpected": [],
+      "missed": []
+    },
+    {
+      "id": "quoted",
+      "status": "limited_sample",
+      "unexpected": [],
+      "missed": []
+    },
+    {
+      "id": "connector",
+      "status": "limited_sample",
+      "unexpected": [],
+      "missed": []
+    },
+    {
+      "id": "filler",
+      "status": "limited_sample",
+      "unexpected": [],
+      "missed": []
+    }
+  ],
+  "authorship_accuracy": null,
+  "notice": "Descriptive sample metrics only. No population accuracy or external detector agreement established.",
+  "dataset_sha256": "e417d9f9de4b27a78f60f1c2f495d598476209d834c15d00f523631d90c8c6e0"
+}

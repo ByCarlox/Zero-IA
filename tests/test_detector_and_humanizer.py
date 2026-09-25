@@ -1,82 +1,82 @@
-"""
-Tests unitarios para el motor de detección de huellas de IA y humanizador.
-"""
-
+"""Editorial contracts, not assertions that invented samples prove authorship."""
 import unittest
+import unicodedata
 from core.detector import AIDetector
-from core.llm_heuristics import detect_cliches_in_sentence
-from core.stylometrics import analyze_stylometrics
-from humanizer.suggestion_engine import generate_suggestions_for_sentence
+from core.engine_bridge import call_engine
+from core.perplexity_engine import PerplexityEngine
 
+class EditorialTests(unittest.TestCase):
+    def analyze(self, text):
+        return AIDetector().analyze_document(text)
 
-class TestDetectorAndHumanizer(unittest.TestCase):
-    def setUp(self):
-        # Usar modo estadístico para tests unitarios rápidos
-        self.detector = AIDetector(use_transformers=False)
+    def test_no_authorship_percentage(self):
+        report = self.analyze('En conclusión, el procedimiento terminó sin incidencias.')
+        self.assertIsNone(report['authorship']['probability'])
+        self.assertNotIn('global_ai_percentage', report)
+        self.assertEqual(report['findings'], [])
+        self.assertEqual(report['validationScore'], 100)
+        self.assertEqual(report['cleanPercentage'], 100)
+        self.assertEqual(report['issuePercentage'], 0)
 
-    def test_detect_ai_cliches(self):
-        sentence = "En el ámbito de la medicina, es importante destacar que la prevención juega un papel fundamental."
-        cliches = detect_cliches_in_sentence(sentence)
-        self.assertTrue(len(cliches) >= 2)
-        matches = [c["match"].lower() for c in cliches]
-        self.assertTrue(any("ámbito" in m for m in matches))
-        self.assertTrue(any("destacar" in m for m in matches))
+    def test_repetition_detected_without_cliches(self):
+        text = 'El sensor acústico registró variaciones significativas durante toda la noche. '
+        report = self.analyze(text * 12)
+        self.assertEqual(report['highRiskSentences'], 12)
+        self.assertIn('exact_repetition', [f['rule'] for f in report['findings']])
+        self.assertEqual(report['cleanPercentage'], 0)
+        self.assertEqual(report['validationScore'], 0)
 
-    def test_suggestion_generation(self):
-        sentence = "En conclusión, es importante destacar que el modelo es eficiente."
-        cliches = detect_cliches_in_sentence(sentence)
-        suggestions = generate_suggestions_for_sentence(
-            sentence=sentence,
-            risk_level="high",
-            perplexity=30.0,
-            length_words=10,
-            cliches=cliches
-        )
-        self.assertEqual(suggestions["risk_level"], "high")
-        self.assertTrue(len(suggestions["tips"]) > 0)
-        self.assertIsNotNone(suggestions["suggested_rewrite"])
-        self.assertNotIn(",,", suggestions["suggested_rewrite"])
-        # La sugerencia debe haber limpiado o reemplazado el cliché
-        self.assertNotIn("en conclusión,", suggestions["suggested_rewrite"].lower())
+    def test_protected_quotes_and_negation(self):
+        for text in ['El autor escribió «es importante destacar que».', 'No es importante destacar que esto ocurrió.']:
+            self.assertEqual(self.analyze(text)['findings'], [])
 
-    def test_detector_chatgpt_sample(self):
-        chatgpt_text = (
-            "En el ámbito de la tecnología moderna, es importante destacar que los modelos de lenguaje desempeñan un papel crucial. "
-            "En el panorama actual, estas herramientas transforman los procesos educativos de manera holística, eficiente y escalable. "
-            "En conclusión, el desarrollo tecnológico constituye una piedra angular para las futuras generaciones."
-        )
-        result = self.detector.analyze_document(chatgpt_text)
-        self.assertGreater(result["global_ai_percentage"], 50.0)
-        self.assertIn("ALTA CONCENTRACIÓN", result["verdict_badge"])
-        self.assertTrue(result["high_risk_sentences"] >= 2)
+    def test_unicode_equivalence(self):
+        text = 'Es importante destacar que la metodología requiere revisión.'
+        first, second = [self.analyze(t) for t in [text, unicodedata.normalize('NFD', text)]]
+        self.assertEqual(first['dimensions'], second['dimensions'])
+        self.assertEqual(first['metrics'], second['metrics'])
+        self.assertEqual(first['academic_review'], second['academic_review'])
 
-    def test_detector_human_sample(self):
-        human_text = (
-            "Durante las pruebas que hicimos en el laboratorio el pasado mes de octubre, observamos anomalías claras. "
-            "¿Por qué ocurrió esto? Principalmente por fluctuaciones en los datos suministrados por el sensor analógico. "
-            "A pesar de reiniciar los calibradores, el desfase continuó presente durante cuarenta y ocho horas más."
-        )
-        result = self.detector.analyze_document(human_text)
-        self.assertLess(result["global_ai_percentage"], 40.0)
-        self.assertIn("POCOS PATRONES", result["verdict_badge"])
+    def test_short_and_unsupported(self):
+        self.assertEqual(self.analyze('Texto breve.')['status'], 'limited_sample')
+        self.assertIsNone(self.analyze('这是一个中文文本。')['validationScore'])
+        self.assertIsNone(self.analyze('!!!')['validationScore'])
+        self.assertIsNone(self.analyze('')['validationScore'])
 
-    def test_detector_bibliography_isolation(self):
-        text_with_bib = (
-            "Durante las pruebas que hicimos en el laboratorio el pasado mes de octubre, observamos anomalías claras. "
-            "El sensor registró variaciones significativas en la señal acústica.\n\n"
-            "Referencias\n"
-            "García, M. (2023). Estudio de sensores. Revista de Ingeniería, 12(3), 45-56. https://doi.org/10.1000/182\n"
-            "López, J. (2022). Métodos acústicos. Editorial Ciencia."
-        )
-        result = self.detector.analyze_document(text_with_bib)
-        self.assertLess(result["global_ai_percentage"], 40.0)
-        bib_sentences = [s for s in result["sentences"] if s.get("is_bibliography")]
-        self.assertTrue(len(bib_sentences) >= 1)
-        for bs in bib_sentences:
-            self.assertEqual(bs["risk_level"], "low")
-            self.assertEqual(bs["ai_score"], 0.0)
-            self.assertIn("bibliográfica", bs["reasons"][0])
+    def test_bibliography_and_annex(self):
+        text='1. Referencias\nGómez, A. (2020). Método.\n2. Anexos\nEl sensor acústico registró valores normales durante todo el experimento.'
+        report=self.analyze(text)
+        self.assertEqual(report['totalSentences'], 1)
+        self.assertEqual(len(report['academic_review']['citations']['references']),1)
+        self.assertEqual(report['coverage']['totalWords'], report['coverage']['analyzedWords']+report['coverage']['excludedWords'])
 
+    def test_bibliography_only_abstains(self):
+        report=self.analyze('Referencias\nGómez, A. (2020). Método.')
+        self.assertEqual(report['status'], 'no_body')
+        self.assertEqual(report['findings'], [])
 
-if __name__ == "__main__":
-    unittest.main()
+    def test_suggestion_guard_and_source(self):
+        text='  Es importante destacar que el sistema requiere revisión.\n\nOtro texto.'
+        report=self.analyze(text)
+        revised=call_engine('apply',text,analysis=report,sentenceId=0)
+        self.assertEqual(revised,'  El sistema requiere revisión.\n\nOtro texto.')
+        with self.assertRaises(RuntimeError):
+            call_engine('apply',text+' editado',analysis=report,sentenceId=0)
+        for protected in ['Es importante destacar que no funciona.', 'Es importante destacar que costó 30 euros.', 'Es importante destacar que dijo «sí».']:
+            self.assertIsNone(call_engine('suggest',protected))
+
+    def test_source_offsets(self):
+        text='😀 El Dr. Gómez dijo: «Hola». luego salió.\n\nTexto final.'
+        report=self.analyze(text)
+        raw=text.encode('utf-16-le')
+        for sentence in report['sentences']:
+            self.assertEqual(raw[2*sentence['start']:2*sentence['end']].decode('utf-16-le'),sentence['text'])
+
+    def test_limit(self):
+        self.assertEqual(self.analyze('a'*500001)['status'],'too_large')
+
+    def test_neural_does_not_fake_fallback(self):
+        report=PerplexityEngine().analyze_document(['Texto'])
+        self.assertEqual(report['engine_mode'],'unavailable')
+        self.assertIsNone(report['perplexity'])
+        self.assertIsNone(PerplexityEngine(use_transformers=True).compute_sentence_perplexity('Texto'))

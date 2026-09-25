@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zero-IA · Validador y Auditor de Huellas de IA</title>
-  <meta name="description" content="Revisión orientativa de estilo, legibilidad en español y coherencia bibliográfica.">
+  <title>Zero-IA · Validador Académico</title>
+  <meta name="description" content="Validador académico y asistente de redacción: pulcritud editorial, legibilidad y coherencia bibliográfica.">
   
   <!-- Tipografías de Google -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <!-- Estilos CSS -->
-  <link rel="stylesheet" href="css/styles.css?v=20260923-2">
+  <link rel="stylesheet" href="css/styles.css?v=20260925-2">
 
   <!-- Librerías Client-Side para Word y PDF (Gratuitas y CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
@@ -25,7 +25,7 @@
     <div class="brand-wrapper">
       <div class="gemini-sparkle">✦</div>
       <div class="brand-text">Zero-IA</div>
-      <span class="brand-tag">Revisión académica</span>
+      <span class="brand-tag">Validador académico</span>
     </div>
 
     <div class="header-actions">
@@ -43,9 +43,9 @@
 
     <!-- Vista Inicial: Estilo Gemini / ChatGPT -->
     <section class="hero-container" id="heroContainer">
-      <div class="eyebrow">TU ESPACIO DE REVISIÓN</div>
-      <h1 class="hero-title">Una mirada más clara<br>a tu manuscrito.</h1>
-      <p class="hero-subtitle">Analiza la legibilidad, revisa tus referencias y mejora la redacción. Cada observación, en su contexto.</p>
+      <div class="eyebrow">VALIDADOR ACADÉMICO</div>
+      <h1 class="hero-title">Una mirada analítica y clara<br>a tu manuscrito.</h1>
+      <p class="hero-subtitle">Valida la pulcritud editorial, detecta repeticiones, analiza legibilidad y comprueba la coherencia bibliográfica.</p>
 
       <!-- Input Box Flotante -->
       <div class="gemini-prompt-box">
@@ -76,13 +76,14 @@
       <p class="input-note">Word, PDF o texto · Procesamiento en tu navegador · Sin registro</p>
     </section>
 
+    <div class="analysis-progress"><p id="analysisStatus" role="status" aria-live="polite"></p><button id="cancelAnalysisBtn" class="btn-secondary" hidden>Cancelar revisión</button></div>
     <!-- Informe de revisión -->
     <section class="results-container" id="resultsContainer" aria-label="Resultados del análisis">
       <div class="report-heading">
         <div>
-          <div class="eyebrow">INFORME DEL DOCUMENTO</div>
-          <h1>Tu revisión, en detalle.</h1>
-          <p>Indicadores orientativos para una lectura crítica y una edición consciente.</p>
+          <div class="eyebrow">INFORME DE VALIDACIÓN</div>
+          <h1>Resultados de la validación.</h1>
+          <p>Indicadores objetivos y reproducibles para una edición consciente y fundamentada.</p>
         </div>
         <div class="report-heading-actions">
           <button type="button" class="btn-guide-toggle" id="btnToggleGuide" aria-expanded="false" aria-controls="metricsGuideSection" title="Explicación de las métricas">
@@ -104,62 +105,44 @@
           <button type="button" class="guide-close-btn" id="btnCloseGuide" aria-label="Cerrar guía">✕</button>
         </div>
         <div class="guide-grid">
-          <div class="guide-card" id="guideCardPatrones">
-            <div class="guide-card-tag">Escala 0 – 100</div>
-            <h4>Patrones de IA</h4>
-            <p>Evalúa la presencia de fórmulas fijas, conectores típicos de LLMs y uniformidad estructural. Valores bajos (0-30) señalan redacción natural y diversa; valores altos (65+) indican patrones sintéticos característicos de asistentes de IA.</p>
-          </div>
-          <div class="guide-card" id="guideCardLexico">
-            <div class="guide-card-tag">Perplejidad</div>
-            <h4>Índice léxico</h4>
-            <p>Estima la riqueza y predictibilidad del vocabulario. Una puntuación alta (&gt;75) refleja variedad léxica y términos especializados (propio de redacción experta). Puntuaciones bajas (&lt;45) denotan expresiones muy predecibles.</p>
-          </div>
-          <div class="guide-card" id="guideCardVariacion">
-            <div class="guide-card-tag">Burstiness</div>
-            <h4>Variación entre frases</h4>
-            <p>Mide la alternancia en el ritmo y longitud de las oraciones. La redacción humana es variada (combina oraciones breves con largas y complejas, &gt;20); la IA tiende a generar frases de longitud muy similar (&lt;15).</p>
-          </div>
-          <div class="guide-card" id="guideCardPrioritarias">
-            <div class="guide-card-tag">Revisión focalizada</div>
-            <h4>Frases prioritarias</h4>
-            <p>Señala las oraciones donde coinciden varios factores sintéticos (clichés, longitud monótona o baja perplejidad). Te permite focalizar la lectura y humanización en el manuscrito interactivo.</p>
-          </div>
+          <div class="guide-card" id="guideCardPatrones"><h4>Observaciones</h4><p>Repeticiones, expresiones genéricas y dificultades de lectura con evidencia localizada. Su cantidad no indica quién escribió el texto.</p></div>
+          <div class="guide-card" id="guideCardLexico"><h4>Longitud de frase</h4><p>Promedio de palabras por oración. Una frase larga puede necesitar una segunda lectura; no es evidencia de IA.</p></div>
+          <div class="guide-card" id="guideCardVariacion"><h4>Cobertura</h4><p>Palabras de prosa revisadas respecto al texto extraído. Se excluyen títulos, listas, tablas y bibliografía del análisis de estilo.</p></div>
+          <div class="guide-card" id="guideCardPrioritarias"><h4>Prioridades</h4><p>La prioridad organiza la revisión editorial. Los textos breves tienen cobertura limitada. Las reglas trabajan sobre español y no determinan autoría.</p></div>
         </div>
-        <div class="guide-footer-note">
-          <span>💡 <strong>Nota metodológica:</strong> Estos indicadores son estimaciones estadísticas descriptivas para la autorrevisión y no constituyen una prueba jurídica ni concluyente de autoría.</span>
-        </div>
+        <div class="guide-footer-note">Reglas transparentes, sin probabilidad de IA. No predice resultados de Turnitin ni de otros detectores.</div>
       </div>
       
       <!-- Barra Superior de Estadísticas -->
       <div class="top-stats-bar">
         <div class="stat-card primary">
           <div class="stat-title-row">
-            <div class="stat-title">Patrones de IA</div>
-            <button type="button" class="stat-info-btn" data-guide-target="guideCardPatrones" title="¿Qué significa Patrones de IA?">ⓘ</button>
+            <div class="stat-title">Índice de Validación</div>
+            <button type="button" class="stat-info-btn" data-guide-target="guideCardPatrones" title="¿Qué significa Índice de Validación?">ⓘ</button>
           </div>
           <div class="stat-metric-hero">
-            <span id="globalPercentage">0/100</span>
+            <span id="globalPercentage">100%</span>
           </div>
-          <div style="font-size: 0.78rem; color: var(--text-secondary);">Coincidencia con estructuras sintéticas</div>
+          <div id="cleanPercentageLabel" style="font-size: 0.78rem; color: var(--text-secondary);">100% texto sin incidencias</div>
           <div id="verdictBadge" class="tag-badge" style="margin-top: 6px;">Analizando</div>
         </div>
 
         <div class="stat-card">
           <div class="stat-title-row">
-            <div class="stat-title">Índice léxico</div>
-            <button type="button" class="stat-info-btn" data-guide-target="guideCardLexico" title="¿Qué significa Índice léxico?">ⓘ</button>
+            <div class="stat-title">Palabras por frase</div>
+            <button type="button" class="stat-info-btn" data-guide-target="guideCardLexico" title="¿Qué significa Palabras por frase?">ⓘ</button>
           </div>
           <div class="stat-metric-hero" id="meanPerplexity">0.0</div>
-          <div style="font-size: 0.78rem; color: var(--text-secondary);">Estimación heurística</div>
+          <div style="font-size: 0.78rem; color: var(--text-secondary);">Promedio en la prosa revisada</div>
         </div>
 
         <div class="stat-card">
           <div class="stat-title-row">
-            <div class="stat-title">Variación entre frases</div>
-            <button type="button" class="stat-info-btn" data-guide-target="guideCardVariacion" title="¿Qué significa Variación entre frases?">ⓘ</button>
+            <div class="stat-title">Cobertura del texto</div>
+            <button type="button" class="stat-info-btn" data-guide-target="guideCardVariacion" title="¿Qué significa Cobertura del texto?">ⓘ</button>
           </div>
           <div class="stat-metric-hero" id="burstinessScore">0.0</div>
-          <div style="font-size: 0.78rem; color: var(--text-secondary);">Dispersión del índice léxico</div>
+          <div style="font-size: 0.78rem; color: var(--text-secondary);">Palabras revisadas / extraídas</div>
         </div>
 
         <div class="stat-card">
@@ -179,8 +162,8 @@
         <div class="executive-verdict-header">
           <div class="verdict-icon-container" id="verdictIconContainer">🛡️</div>
           <div class="executive-verdict-title-box">
-            <h2 class="executive-verdict-title" id="executiveVerdictTitle">Resumen de estilo</h2>
-            <div class="executive-verdict-subtitle" id="executiveVerdictSubtitle">Evaluación multifactorial de perplejidad, patrones de IA, coherencia de citas y marcas de agua.</div>
+            <h2 class="executive-verdict-title" id="executiveVerdictTitle">Dictamen de validación</h2>
+            <div class="executive-verdict-subtitle" id="executiveVerdictSubtitle">Cobertura, pulcritud editorial y coherencia de referencias.</div>
           </div>
           <div id="executiveVerdictPill" class="tag-badge badge-green">Dictamen</div>
         </div>
@@ -196,11 +179,13 @@
             </div>
           </div>
           <button type="button" class="btn-strip-watermarks" id="btnStripWatermarks" style="display: none;">
-            Limpiar caracteres invisibles
+            Quitar BOM inicial
           </button>
         </div>
       </div>
 
+<details class="review-coverage"><summary>Detalle de formato Unicode</summary><pre id="unicodeDetails" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></details>
+      <section class="review-coverage" aria-label="Alcance de la revisión"><h2>Cobertura y alcance</h2><p id="coverageDetails"></p><p id="extractionWarnings" class="academic-alert"></p><div id="dimensionSummary" class="citations-summary-stats"></div><p>Sin evaluación de autoría, exactitud factual ni respaldo semántico de las fuentes. Pocas observaciones no certifican que una entrega sea correcta.</p></section>
       <details open class="academic-review-card">
         <summary>
           <div style="display: flex; align-items: center; gap: 8px;">
@@ -230,8 +215,9 @@
             <!-- El contenido dinámico de oraciones se inyecta aquí -->
           </div>
 
+          <button id="loadMoreBtn" class="btn-secondary" hidden>Mostrar más fragmentos</button>
           <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
-            <button class="btn-secondary" id="newAnalysisBtn">Nuevo análisis</button>
+            <button class="btn-secondary" id="undoReviewBtn" disabled>Deshacer revisión</button><button class="btn-secondary" id="downloadOriginalBtn">Texto original</button><button class="btn-secondary" id="downloadCurrentBtn">Texto revisado</button><button class="btn-secondary" id="newAnalysisBtn">Nuevo análisis</button>
             <button class="btn-secondary" id="downloadReportBtn">Descargar informe</button>
             <button class="btn-secondary" id="printReportBtn">Imprimir / PDF</button>
           </div>
@@ -262,7 +248,7 @@
             </p>
             <div style="margin-bottom: 8px;">
               <button class="btn-secondary" id="autoCleanBtn" style="width: 100%; font-size: 0.82rem; padding: 6px 10px;">
-                Proponer alternativas
+                Revisar propuestas individuales
               </button>
             </div>
             <textarea aria-label="Editar manuscrito" id="liveEditorText" style="width: 100%; height: 340px; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; color: var(--text-primary); font-family: var(--font-family); font-size: 0.95rem; padding: 12px; resize: none; outline: none; line-height: 1.6;"></textarea>
@@ -283,14 +269,14 @@
           Alcance y privacidad
         </div>
         <p class="disclaimer-text">
-          <b>Zero-IA</b> es una herramienta técnica orientativa para asistencia en redacción y auditoría de estilo basada en modelos probabilísticos y heurísticos de procesamiento del lenguaje natural (NLP). Sus índices y diagnósticos reflejan grados de predictibilidad estadística y <b>no constituyen una prueba jurídica ni concluyente de autoría</b>, no debiendo reemplazar la valoración cualitativa de comités de ética, docentes o tribunales evaluadores.
+          <b>Zero-IA</b> es un validador académico y asistente editorial para tesis y manuscritos. Revisa pulcritud, repetición, legibilidad y correspondencia bibliográfica mediante reglas reproducibles. No determina autoría ni predice resultados de detectores comerciales.
         </p>
         <p class="disclaimer-text" style="margin-top: 6px;">
           <b>Garantía de Privacidad:</b> El análisis se ejecuta 100% en el entorno local de su navegador web (<i>Client-Side Execution</i>). La aplicación no envía el documento a un servicio de análisis. Carga fuentes y bibliotecas desde servicios externos (CDN); requiere conexión para cargarlos.
         </p>
       </div>
       <div class="footer-bottom">
-        <span>Zero-IA · Revisión académica</span>
+        <span>Zero-IA · Validador académico</span>
         <span>Proyecto académico</span>
       </div>
     </footer>
@@ -298,9 +284,13 @@
   </main>
 
   <!-- Scripts de la Aplicación -->
+  <script src="js/editorial-rules.js"></script>
+  <script src="js/text-structure.js"></script>
   <script src="js/academic-review.js"></script>
   <script src="js/detector.js"></script>
+  <script src="js/analysis-client.js"></script>
   <script src="js/document-parser.js"></script>
-  <script src="js/app.js?v=20260923-3"></script>
+  <script src="js/reference-check.js"></script>
+  <script src="js/app.js?v=20260925-2"></script>
 </body>
 </html>

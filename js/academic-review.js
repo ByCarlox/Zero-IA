@@ -18,21 +18,17 @@
     return Math.max(1, total);
   }
   function splitBibliography(text) {
-    const heading = /^\s*(?:#{1,6}\s*)?(?:referencias(?: bibliográficas)?|bibliografía|references|bibliography)\s*:?\s*$/im.exec(text);
-    if (!heading) return { body: text, bibliography: '', hasBibliography: false };
-    return {
-      body: text.slice(0, heading.index),
-      bibliography: text.slice(heading.index + heading[0].length),
-      hasBibliography: true
-    };
+    return root.ZeroIAStructure.splitBibliography(text);
   }
   function academicReview(text, currentYear = new Date().getFullYear()) {
+    text = text.normalize("NFC");
     const bibData = splitBibliography(text);
     const body = bibData.body;
     const bibliography = bibData.bibliography;
     const heading = bibData.hasBibliography;
-    const words = body.toLowerCase().match(/[a-záéíóúüñ]+/g) || [];
-    const sentences = root.ZeroIADetector.splitSentences(body).filter(s => /[a-záéíóúüñ]/i.test(s));
+    const prose = root.ZeroIAStructure.blocks(text).filter(b => b.kind === "body").map(b => b.text).join("\n");
+    const words = prose.toLowerCase().match(/[a-záéíóúüñ]+/g) || [];
+    const sentences = root.ZeroIADetector.splitSentences(prose).filter(s => /[a-záéíóúüñ]/i.test(s));
     const n = words.length, f = sentences.length, count = words.reduce((sum, w) => sum + syllables(w), 0);
     const score = n && f ? Number((206.835 - 62.3 * count / n - n / f).toFixed(2)) : null;
     const readability = {
