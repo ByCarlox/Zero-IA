@@ -105,7 +105,7 @@
           <button type="button" class="guide-close-btn" id="btnCloseGuide" aria-label="Cerrar guía">✕</button>
         </div>
         <div class="guide-grid">
-          <div class="guide-card" id="guideCardPatrones"><h4>Observaciones</h4><p>Repeticiones, expresiones genéricas y dificultades de lectura con evidencia localizada. Su cantidad no indica quién escribió el texto.</p></div>
+          <div class="guide-card" id="guideCardPatrones"><h4>Pulcritud Editorial</h4><p>Puntuación de 0 a 100 que refleja la calidad y limpieza de la prosa (100 = sin incidencias). No mide probabilidad de IA.</p></div>
           <div class="guide-card" id="guideCardLexico"><h4>Longitud de frase</h4><p>Promedio de palabras por oración. Una frase larga puede necesitar una segunda lectura; no es evidencia de IA.</p></div>
           <div class="guide-card" id="guideCardVariacion"><h4>Cobertura</h4><p>Palabras de prosa revisadas respecto al texto extraído. Se excluyen títulos, listas, tablas y bibliografía del análisis de estilo.</p></div>
           <div class="guide-card" id="guideCardPrioritarias"><h4>Prioridades</h4><p>La prioridad organiza la revisión editorial. Los textos breves tienen cobertura limitada. Las reglas trabajan sobre español y no determinan autoría.</p></div>
@@ -117,11 +117,11 @@
       <div class="top-stats-bar">
         <div class="stat-card primary">
           <div class="stat-title-row">
-            <div class="stat-title">Índice de Validación</div>
-            <button type="button" class="stat-info-btn" data-guide-target="guideCardPatrones" title="¿Qué significa Índice de Validación?">ⓘ</button>
+            <div class="stat-title">Índice de Pulcritud Editorial</div>
+            <button type="button" class="stat-info-btn" data-guide-target="guideCardPatrones" title="¿Qué significa Índice de Pulcritud Editorial?">ⓘ</button>
           </div>
           <div class="stat-metric-hero">
-            <span id="globalPercentage">100%</span>
+            <span id="globalPercentage">100<span style="font-size: 0.55em; color: var(--text-secondary); font-weight: normal; margin-left: 3px;">/ 100</span></span>
           </div>
           <div id="cleanPercentageLabel" style="font-size: 0.78rem; color: var(--text-secondary);">100% texto sin incidencias</div>
           <div id="verdictBadge" class="tag-badge" style="margin-top: 6px;">Analizando</div>

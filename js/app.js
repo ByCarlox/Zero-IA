@@ -450,7 +450,7 @@ function renderResults(analysis) {
 
   // 1. Métricas Principales
   if (analysis.validationScore !== null && analysis.validationScore !== undefined) {
-    globalPercentageEl.innerText = `${analysis.validationScore}%`;
+    globalPercentageEl.innerHTML = `${analysis.validationScore}<span style="font-size: 0.55em; color: var(--text-secondary); font-weight: normal; margin-left: 3px;">/ 100</span>`;
   } else {
     globalPercentageEl.innerText = "N/D";
   }
