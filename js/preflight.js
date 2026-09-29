@@ -48,7 +48,25 @@
     const stage=['proposal','progress','final'].includes(options.stage)?options.stage:'progress';
     const preflight=root.ZeroIAAcademic?.preflight?root.ZeroIAAcademic.preflight(report.sourceText||'',{stage,rubric:options.rubric,structure:report.extraction?.structure}):report.preflight||{};
     const findings=(preflight.findings||[]).map(f=>({...f,title:f.title||f.message,action:f.action||f.advice||'Revisa la evidencia y documenta tu decisión.'}));
-    const authorship={status:'not_determined',percentage:null,label:'No determinado',provider:null,provenance:null,notice:'No hay un detector de IA calibrado en esta versión. Las reglas editoriales no estiman autoría.'};
+    const internalAI = report.authorship && typeof report.authorship.percentage === 'number' ? report.authorship : (report.ai_probability && typeof report.ai_probability.aiPercentage === 'number' ? {
+      percentage: report.ai_probability.aiPercentage,
+      status: report.ai_probability.aiPercentage >= 65 ? 'high_ai_probability' : report.ai_probability.aiPercentage >= 35 ? 'mixed_ai_content' : 'human_original',
+      classification: report.ai_probability.classification,
+      badge: report.ai_probability.verdictBadge,
+      color: report.ai_probability.verdictColor,
+      summary: report.ai_probability.verdictSummary
+    } : null);
+    const authorship = internalAI && typeof internalAI.percentage === 'number' ? {
+      status: internalAI.status,
+      percentage: internalAI.percentage,
+      label: internalAI.percentage + '%',
+      provider: 'Zero-IA Probabilistic Engine (Científico)',
+      provenance: 'computed_internal',
+      classification: internalAI.classification,
+      badge: internalAI.badge,
+      color: internalAI.color,
+      notice: internalAI.summary || 'Estimación científica probabilística basada en predictibilidad léxica, perplejidad inversa, cadencia de ráfaga (burstiness) y densidad de fórmulas sintéticas de LLM en español.'
+    } : {status:'not_determined',percentage:null,label:'No determinado',provider:null,provenance:null,notice:'Introduce el texto del documento para calcular la probabilidad de autoría por IA.'};
     let external=null;
     if(options.externalReport) {
       external=validate(options.externalReport,options.externalReport.provenance==='manual'?'manual':'imported_unverified');

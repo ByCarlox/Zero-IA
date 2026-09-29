@@ -64,8 +64,17 @@ if report:
     report['deliveryReview'] = delivery
     ai = delivery['authorship']
     dirty = st.session_state.manuscript != report['sourceText']
-    st.metric('Porcentaje de IA · resultado externo', 'No determinado' if dirty else ai['label'])
-    st.caption('Hay cambios sin revisar; el resultado anterior no corresponde al editor.' if dirty else ai['notice'])
+    ai_label = 'Cambios sin revisar' if dirty else (ai.get('label') or '0%')
+    metric_title = 'Porcentaje de IA (Resultado Externo)' if st.session_state.external_report else 'Probabilidad Estimada de IA (Científica)'
+    st.metric(metric_title, ai_label)
+    if report.get('ai_probability') and report['ai_probability'].get('metrics'):
+        m = report['ai_probability']['metrics']
+        col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+        col_m1.metric('Predictibilidad', f"{m.get('predictabilityScore', 0)}%")
+        col_m2.metric('Cadencia (CV)', m.get('burstiness', 0))
+        col_m3.metric('Entropía', m.get('entropy', 0))
+        col_m4.metric('Frases Sintéticas', f"{m.get('highRiskSentences', 0)} / {m.get('totalSentences', 0)}")
+    st.caption('Hay cambios sin revisar; el resultado anterior no corresponde al editor.' if dirty else ai.get('notice', ''))
     with st.expander('Registrar resultado externo de Turnitin'):
         st.caption('Dato declarado por el usuario, sin verificación de autenticidad. Se vincula al texto de la última revisión.')
         with st.form('external_result'):

@@ -765,16 +765,212 @@ function renderPreflight() {
   currentAnalysis.deliveryReview = currentPreflight;
   const editorDirty = liveEditorText.value !== currentRawText;
   const ai = currentPreflight.authorship;
-  document.getElementById("aiPercentage").textContent = ai.status === "reported" && ai.percentage !== null ? `${ai.percentage}%` : ai.status === "stale" ? "Versión modificada" : ai.status === "below_threshold" ? "* · Sin porcentaje exacto" : "No determinado";
-  document.getElementById("aiResultExplanation").textContent = ai.notice || "Añade un resultado externo para conocer su porcentaje de IA. La revisión editorial no calcula autoría.";
-  document.getElementById("aiResultProvenance").textContent = externalReport ? `${externalReport.provider} · ${externalReport.date}${externalReport.sourceNote ? ` · ${externalReport.sourceNote}` : ""} · ${externalReport.provenance === "manual" ? "Declarado por el usuario" : "Importado, sin verificar"}${externalReport.similarityPercentage == null ? "" : ` · Similitud: ${externalReport.similarityPercentage}%`} · ${ai.status === "stale" ? "El texto no coincide con la versión registrada" : "Vinculado al texto registrado; origen no verificado"}` : "Sin resultado externo registrado. Esto no significa 0% de IA.";
-  document.getElementById("preflightSummary").textContent = currentPreflight.summary || "Revisa los siguientes puntos antes de entregar.";
+  const aiPercentageEl = document.getElementById("aiPercentage");
+  const aiVerdictBadgeEl = document.getElementById("aiVerdictBadge");
+  const aiExplanationEl = document.getElementById("aiResultExplanation");
+  const aiProvenanceEl = document.getElementById("aiResultProvenance");
+
+  // Metrics elements
+  const aiProbMetrics = currentAnalysis.ai_probability?.metrics || {};
+  if (document.getElementById("aiPredictability")) {
+    document.getElementById("aiPredictability").textContent = aiProbMetrics.predictabilityScore != null ? `${aiProbMetrics.predictabilityScore}%` : "--";
+  }
+  if (document.getElementById("aiBurstiness")) {
+    document.getElementById("aiBurstiness").textContent = aiProbMetrics.burstiness != null ? `${aiProbMetrics.burstiness}` : "--";
+  }
+  if (document.getElementById("aiEntropy")) {
+    document.getElementById("aiEntropy").textContent = aiProbMetrics.entropy != null ? `${aiProbMetrics.entropy}` : "--";
+  }
+  if (document.getElementById("aiHighRiskSentences")) {
+    document.getElementById("aiHighRiskSentences").textContent = aiProbMetrics.highRiskSentences != null ? `${aiProbMetrics.highRiskSentences} de ${aiProbMetrics.totalSentences || 0}` : "--";
+  }
+
+  aiPercentageEl.className = "ai-percentage";
+  if (editorDirty) {
+    aiPercentageEl.textContent = "Cambios sin revisar";
+    aiExplanationEl.textContent = "Recalcula el manuscrito para actualizar la probabilidad científica de IA.";
+    if (aiVerdictBadgeEl) aiVerdictBadgeEl.hidden = true;
+  } else if (ai.percentage !== null && ai.percentage !== undefined) {
+    aiPercentageEl.textContent = `${ai.percentage}%`;
+    const colorClass = ai.color === "red" ? "ai-percentage-red" : ai.color === "yellow" ? "ai-percentage-yellow" : "ai-percentage-green";
+    aiPercentageEl.classList.add(colorClass);
+    if (aiVerdictBadgeEl) {
+      aiVerdictBadgeEl.textContent = ai.badge || ai.classification || "";
+      aiVerdictBadgeEl.className = `tag-badge badge-${ai.color || 'yellow'}`;
+      aiVerdictBadgeEl.hidden = false;
+    }
+    aiExplanationEl.textContent = ai.notice || ai.summary || "";
+    aiProvenanceEl.textContent = ai.provenance === "computed_internal"
+      ? `🔬 Detección estadística interna: Predictibilidad ${aiProbMetrics.predictabilityScore || 0}% · Cadencia CV ${aiProbMetrics.burstiness || 0} · ${aiProbMetrics.highRiskSentences || 0} frases sintéticas críticas.`
+      : (ai.provenance === "manual" ? `Informe externo declarado (${ai.provider || 'Turnitin'})` : `Informe externo importado (${ai.provider || 'Turnitin'})`);
+  } else {
+    aiPercentageEl.textContent = "0%";
+    aiExplanationEl.textContent = "Texto sin señales sintéticas detectadas.";
+    if (aiVerdictBadgeEl) aiVerdictBadgeEl.hidden = true;
+  }
+
+  const btnToggleAIHighlight = document.getElementById("btnToggleAIHighlight");
+  if (btnToggleAIHighlight && !btnToggleAIHighlight.dataset.bound) {
+    btnToggleAIHighlight.dataset.bound = "true";
+    let isHighlighting = false;
+    btnToggleAIHighlight.addEventListener("click", () => {
+      isHighlighting = !isHighlighting;
+      btnToggleAIHighlight.classList.toggle("btn-primary", isHighlighting);
+      btnToggleAIHighlight.classList.toggle("btn-secondary", !isHighlighting);
+      const spans = manuscriptViewer.querySelectorAll(".manuscript-sentence");
+      spans.forEach(span => {
+        const idx = Number(span.dataset.index);
+        const s = currentAnalysis?.sentences?.[idx];
+        if (isHighlighting) {
+          if (s?.aiRisk === 'high' || (s?.aiProbability && s.aiProbability >= 55)) {
+            span.classList.add("sentence-ai-flagged");
+          } else {
+            span.classList.add("dimmed-sentence");
+          }
+        } else {
+          span.classList.remove("sentence-ai-flagged");
+          span.classList.remove("dimmed-sentence");
+        }
+      });
+      btnToggleAIHighlight.querySelector("span").textContent = isHighlighting
+        ? "Quitar resaltado de IA"
+        : "Ver frases críticas de IA en el manuscrito";
+    });
+  }
+  // Preflight findings con categorización y agrupación inteligente
   const findings = [...(currentPreflight.findings || [])].sort((a,b) => ({critical:0,high:0,warning:1,medium:1,low:2,info:2}[a.severity] ?? 3) - ({critical:0,high:0,warning:1,medium:1,low:2,info:2}[b.severity] ?? 3));
-  document.getElementById("preflightFindings").innerHTML = findings.map(f => {
-    const evidence = typeof f.evidence === "string" ? f.evidence : f.evidence ? JSON.stringify(f.evidence) : "";
-    const excerpt = evidence.length > 280 ? evidence.slice(0,280) + "…" : evidence;
-    return `<details class="preflight-finding"><summary><span class="tag-badge">${escapeHTML(({high:"Prioridad alta",critical:"Prioridad alta",warning:"Revisar",medium:"Revisar",info:"Comprobar",low:"Comprobar"})[f.severity] || "Revisar")}</span><span class="finding-title">${escapeHTML(f.title)}</span></summary><p>${escapeHTML(f.message || "")}</p>${excerpt ? `<blockquote>${escapeHTML(excerpt)}</blockquote>` : ""}${evidence.length > 280 ? `<details class="finding-evidence"><summary>Ver evidencia completa</summary><blockquote>${escapeHTML(evidence)}</blockquote></details>` : ""}${f.action ? `<p><strong>Siguiente paso:</strong> ${escapeHTML(f.action)}</p>` : ""}</details>`;
-  }).join("") || '<p>No se detectaron incidencias en estas comprobaciones automáticas. Revisa también la rúbrica y las fuentes.</p>';
+  
+  function getCategory(f) {
+    const text = ((f.title || '') + ' ' + (f.message || '')).toLowerCase();
+    if (f.severity === 'high' || f.severity === 'critical') return 'high';
+    if (text.includes('bibliograf') || text.includes('referencia') || text.includes('cita') || text.includes('fuente') || text.includes('doi')) return 'bib';
+    if (text.includes('sección') || text.includes('estructura') || text.includes('desarrollo') || text.includes('capítulo') || text.includes('metodolog') || text.includes('título')) return 'struct';
+    return 'general';
+  }
+
+  const groups = new Map();
+  for (const f of findings) {
+    const key = (f.title || f.message || "Observación editorial").trim();
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(f);
+  }
+
+  const highCount = findings.filter(f => f.severity === 'high' || f.severity === 'critical').length;
+  const bibCount = findings.filter(f => getCategory(f) === 'bib').length;
+  const structCount = findings.filter(f => getCategory(f) === 'struct').length;
+
+  document.getElementById("preflightSummary").innerHTML = findings.length ? `
+    <div class="preflight-summary-badge-bar">
+      <span class="preflight-count-pill">${findings.length} pendientes detectados</span>
+      ${highCount > 0 ? `<span class="preflight-count-pill pill-danger">${highCount} de prioridad alta</span>` : ''}
+      ${bibCount > 0 ? `<span class="preflight-count-pill pill-warning">${bibCount} citas y referencias</span>` : ''}
+      ${structCount > 0 ? `<span class="preflight-count-pill pill-info">${structCount} de estructura</span>` : ''}
+    </div>
+    <div class="preflight-toolbar">
+      <div class="preflight-filters" id="preflightFilterChips">
+        <button type="button" class="filter-chip active" data-filter-cat="all">Todos (${findings.length})</button>
+        ${highCount > 0 ? `<button type="button" class="filter-chip" data-filter-cat="high">🔴 Prioridad alta (${highCount})</button>` : ''}
+        ${bibCount > 0 ? `<button type="button" class="filter-chip" data-filter-cat="bib">📚 Bibliografía (${bibCount})</button>` : ''}
+        ${structCount > 0 ? `<button type="button" class="filter-chip" data-filter-cat="struct">📑 Estructura (${structCount})</button>` : ''}
+      </div>
+      <button type="button" class="btn-toggle-all-preflight" id="btnToggleAllPreflight" title="Abrir o cerrar todos los acordeones">
+        <span>Expandir todos</span>
+      </button>
+    </div>
+  ` : "Sin pendientes detectados por las comprobaciones disponibles. No certifica aceptación.";
+
+  const cardsHtml = Array.from(groups.entries()).map(([title, items]) => {
+    const first = items[0];
+    const category = getCategory(first);
+    const severityClass = ({high:"badge-red", critical:"badge-red", warning:"badge-amber", medium:"badge-amber", info:"badge-blue", low:"badge-blue"})[first.severity] || "badge-amber";
+    const severityLabel = ({high:"Prioridad alta", critical:"Prioridad alta", warning:"Revisar", medium:"Revisar", info:"Comprobar", low:"Comprobar"})[first.severity] || "Revisar";
+    
+    if (items.length > 1) {
+      return `
+        <details class="preflight-finding preflight-grouped-card" data-category="${category}" data-severity="${first.severity}">
+          <summary>
+            <div class="finding-summary-main">
+              <span class="tag-badge ${severityClass}">${escapeHTML(severityLabel)} (${items.length})</span>
+              <span class="finding-title">${escapeHTML(title)} <span class="finding-grouped-counter">${items.length} incidencias</span></span>
+            </div>
+            <span class="chevron-icon-box" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </span>
+          </summary>
+          <div class="finding-card-content">
+            <p class="finding-desc">${escapeHTML(first.message || "Se detectaron múltiples ocurrencias que requieren verificación:")}</p>
+            <div class="grouped-evidence-container">
+              <div class="grouped-evidence-header">Desglose de fragmentos y evidencias (${items.length}):</div>
+              <div class="grouped-evidence-grid">
+                ${items.map((it, idx) => {
+                  const ev = typeof it.evidence === "string" ? it.evidence : it.evidence ? JSON.stringify(it.evidence) : "";
+                  const shortEv = ev.length > 180 ? ev.slice(0, 180) + "…" : ev;
+                  return `
+                    <div class="grouped-evidence-item">
+                      <span class="evidence-pill-num">#${idx + 1}</span>
+                      <code class="evidence-pill-code">${escapeHTML(shortEv || it.message || "Sin fragmento textual")}</code>
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+            </div>
+            ${first.action ? `<div class="finding-action-row"><strong>Siguiente paso recomendado:</strong> <span>${escapeHTML(first.action)}</span></div>` : ""}
+          </div>
+        </details>
+      `;
+    } else {
+      const evidence = typeof first.evidence === "string" ? first.evidence : first.evidence ? JSON.stringify(first.evidence) : "";
+      const excerpt = evidence.length > 280 ? evidence.slice(0, 280) + "…" : evidence;
+      return `
+        <details class="preflight-finding" data-category="${category}" data-severity="${first.severity}">
+          <summary>
+            <div class="finding-summary-main">
+              <span class="tag-badge ${severityClass}">${escapeHTML(severityLabel)}</span>
+              <span class="finding-title">${escapeHTML(title)}</span>
+            </div>
+            <span class="chevron-icon-box" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </span>
+          </summary>
+          <div class="finding-card-content">
+            <p class="finding-desc">${escapeHTML(first.message || "")}</p>
+            ${excerpt ? `<blockquote class="finding-quote">${escapeHTML(excerpt)}</blockquote>` : ""}
+            ${evidence.length > 280 ? `<details class="finding-evidence"><summary>Ver evidencia completa</summary><blockquote>${escapeHTML(evidence)}</blockquote></details>` : ""}
+            ${first.action ? `<div class="finding-action-row"><strong>Siguiente paso:</strong> <span>${escapeHTML(first.action)}</span></div>` : ""}
+          </div>
+        </details>
+      `;
+    }
+  }).join("");
+
+  document.getElementById("preflightFindings").innerHTML = cardsHtml || '<p class="empty-findings-msg">No se detectaron incidencias en estas comprobaciones automáticas. Revisa también la rúbrica y las fuentes.</p>';
+
+  const filterBtns = document.querySelectorAll("#preflightFilterChips [data-filter-cat]");
+  filterBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      filterBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const cat = btn.dataset.filterCat;
+      const cards = document.querySelectorAll("#preflightFindings .preflight-finding");
+      cards.forEach(card => {
+        if (cat === "all" || card.dataset.category === cat) {
+          card.style.display = "block";
+        } else {
+          card.style.display = "none";
+        }
+      });
+    });
+  });
+
+  const toggleAllBtn = document.getElementById("btnToggleAllPreflight");
+  if (toggleAllBtn) {
+    let allOpen = false;
+    toggleAllBtn.addEventListener("click", () => {
+      allOpen = !allOpen;
+      document.querySelectorAll("#preflightFindings details.preflight-finding").forEach(d => d.open = allOpen);
+      toggleAllBtn.querySelector("span").textContent = allOpen ? "Colapsar todos" : "Expandir todos";
+    });
+  }
   if (editorDirty) {
     document.getElementById("aiPercentage").textContent = "Cambios sin revisar";
     document.getElementById("aiResultExplanation").textContent = "Recalcula el manuscrito. El resultado externo pertenece a la versión registrada.";

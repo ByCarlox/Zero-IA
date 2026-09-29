@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zero-IA · Validador Académico</title>
-  <meta name="description" content="Validador académico y asistente de redacción: pulcritud editorial, legibilidad y coherencia bibliográfica.">
+  <title>Axioma · Academic Preflight Suite</title>
+  <meta name="description" content="Axioma: Suite de preflight y validación académica: pulcritud editorial, legibilidad, correspondencia bibliográfica y auditoría 100% local.">
   
   <!-- Tipografías de Google -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,9 +23,13 @@
   <!-- Barra Superior Minimalista -->
   <header class="gemini-header">
     <div class="brand-wrapper">
-      <div class="gemini-sparkle" aria-hidden="true">✦</div>
-      <div class="brand-text">Zero-IA</div>
-      <span class="brand-tag">Validador académico</span>
+      <div class="gemini-sparkle" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2L14.8 8.6L22 9.4L16.6 14.2L18.2 21.2L12 17.5L5.8 21.2L7.4 14.2L2 9.4L9.2 8.6L12 2Z"/>
+        </svg>
+      </div>
+      <div class="brand-text">Axioma</div>
+      <span class="brand-tag">Academic Preflight Suite</span>
       <span class="brand-version-pill">v3.0 Pro</span>
     </div>
 
@@ -46,11 +50,11 @@
     <section class="hero-container" id="heroContainer">
       <div class="hero-badge-pill">
         <span class="hero-badge-dot"></span>
-        <span>Validación Académica & Asistencia Editorial 100% Local</span>
+        <span>Axioma Suite · Auditoría Académica y Editorial 100% Local</span>
       </div>
-      <div class="eyebrow">VALIDADOR ACADÉMICO</div>
-      <h1 class="hero-title">Revisa tu trabajo<br><span class="hero-title-gradient">antes de entregarlo.</span></h1>
-      <p class="hero-subtitle">Reúne el resultado de IA, los pendientes académicos y la revisión editorial en un informe claro. El porcentaje de IA requiere un resultado externo; la app no lo estima.</p>
+      <div class="eyebrow">ACADEMIC PREFLIGHT SUITE</div>
+      <h1 class="hero-title">Del borrador a la entrega<br><span class="hero-title-gradient">con rigor absoluto.</span></h1>
+      <p class="hero-subtitle">Audita la pulcritud de tu prosa, correspondencia bibliográfica, estructura y pendientes académicos en un informe integral y transparente. Procesamiento privado en tu navegador.</p>
 
       <!-- Input Box Flotante -->
       <div class="gemini-prompt-box">
@@ -132,11 +136,43 @@
       </div>
 
       <section class="ai-result-card" aria-labelledby="aiResultTitle">
-        <div class="eyebrow">RESULTADO DE IA</div><h2 id="aiResultTitle">Porcentaje de IA</h2>
-        <div id="aiPercentage" class="ai-percentage">No determinado</div>
-        <p id="aiResultExplanation">Añade el resultado de Turnitin para mostrar aquí su porcentaje. Las reglas editoriales no permiten calcularlo.</p>
+        <div class="ai-result-header">
+          <div>
+            <div class="eyebrow">DETECCIÓN CIENTÍFICA Y PROBABILIDAD DE AUTORÍA</div>
+            <h2 id="aiResultTitle">Probabilidad de Generación por IA</h2>
+          </div>
+          <div id="aiVerdictBadge" class="tag-badge badge-red" hidden>🔴 ALTA PROBABILIDAD DE IA</div>
+        </div>
+        <div class="ai-main-metric-row">
+          <div id="aiPercentage" class="ai-percentage">--%</div>
+          <div class="ai-metrics-breakdown" id="aiMetricsBreakdown">
+            <div class="ai-mini-metric">
+              <span class="mini-label">Predictibilidad Léxica</span>
+              <strong id="aiPredictability">--</strong>
+            </div>
+            <div class="ai-mini-metric">
+              <span class="mini-label">Cadencia / Ráfaga (CV)</span>
+              <strong id="aiBurstiness">--</strong>
+            </div>
+            <div class="ai-mini-metric">
+              <span class="mini-label">Entropía Léxica</span>
+              <strong id="aiEntropy">--</strong>
+            </div>
+            <div class="ai-mini-metric">
+              <span class="mini-label">Frases Sintéticas</span>
+              <strong id="aiHighRiskSentences">--</strong>
+            </div>
+          </div>
+        </div>
+        <p id="aiResultExplanation">Estimación científica probabilística basada en predictibilidad léxica, perplejidad inversa, cadencia de ráfaga (burstiness) y densidad de fórmulas sintéticas de LLM en español.</p>
         <p id="aiResultProvenance" class="result-provenance"></p>
-        <details class="external-report"><summary>Registrar un resultado externo</summary>
+        <div class="ai-card-actions">
+          <button type="button" class="btn-secondary" id="btnToggleAIHighlight">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span>Ver frases críticas de IA en el manuscrito</span>
+          </button>
+        </div>
+        <details class="external-report"><summary>¿Tienes un informe oficial de Turnitin? Registrar resultado externo</summary>
           <form id="externalReportForm">
             <div class="external-fields"><label>Detector<input id="externalProvider" value="Turnitin" maxlength="80" required></label><label>Tipo de resultado<select id="externalAIStatus"><option value="reported">Porcentaje exacto</option><option value="below_threshold">Asterisco / inferior al umbral</option></select></label><label>IA (%)<input id="externalAI" type="number" min="0" max="100" step="0.1" required></label><label>Similitud (%) · opcional<input id="externalSimilarity" type="number" min="0" max="100" step="0.1"></label><label>Fecha del informe<input id="externalDate" type="date" required></label></div>
             <label>Procedencia del dato<input id="externalProvenance" maxlength="600" placeholder="Ej.: captura del comentario del profesor" required></label>
@@ -324,15 +360,15 @@
           Alcance y privacidad
         </div>
         <p class="disclaimer-text">
-          <b>Zero-IA</b> es un validador académico y asistente editorial para tesis y manuscritos. Revisa pulcritud, repetición, legibilidad y correspondencia bibliográfica mediante reglas reproducibles. No determina autoría ni predice resultados de detectores comerciales.
+          <b>Axioma Academic</b> es una suite de preflight y asistente editorial para tesis y manuscritos científicos. Revisa pulcritud, repetición léxica, legibilidad y correspondencia bibliográfica mediante reglas reproducibles. No determina autoría ni predice resultados de detectores comerciales.
         </p>
         <p class="disclaimer-text" style="margin-top: 6px;">
-          <b>Garantía de Privacidad:</b> El análisis se ejecuta 100% en el entorno local de su navegador web (<i>Client-Side Execution</i>). La aplicación no envía el documento a un servicio de análisis. Carga fuentes y bibliotecas desde servicios externos (CDN); requiere conexión para cargarlos.
+          <b>Garantía de Privacidad Absoluta:</b> El análisis se ejecuta 100% en el entorno local de su navegador web (<i>Client-Side Execution</i>). La aplicación no envía el documento a ningún servicio o servidor externo.
         </p>
       </div>
       <div class="footer-bottom">
-        <span>Zero-IA · Validador académico</span>
-        <span>Proyecto académico</span>
+        <span>Axioma · Academic Preflight Suite</span>
+        <span>Proyecto de investigación y rigor académico</span>
       </div>
     </footer>
 
@@ -341,8 +377,9 @@
   <!-- Scripts de la Aplicación -->
   <script src="js/editorial-rules.js?v=3.0.0"></script>
   <script src="js/text-structure.js?v=3.0.0"></script>
-  <script src="js/academic-review.js?v=3.0.0"></script>
-  <script src="js/detector.js?v=3.0.0"></script>
+  <script src="js/academic-review.js?v=3.1.0"></script>
+  <script src="js/ai-probabilistic-engine.js?v=3.1.0"></script>
+  <script src="js/detector.js?v=3.1.0"></script>
   <script src="js/analysis-client.js?v=3.0.0"></script>
   <script src="js/document-parser.js?v=3.0.0"></script>
   <script src="js/reference-check.js?v=3.0.0"></script>

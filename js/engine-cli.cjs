@@ -2,6 +2,7 @@
 require('./editorial-rules.js');
 require('./text-structure.js');
 require('./academic-review.js');
+require('./ai-probabilistic-engine.js');
 require('./detector.js');
 require('./preflight.js');
 const fs=require('node:fs');

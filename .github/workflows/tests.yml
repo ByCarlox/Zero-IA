@@ -19,3 +19,4 @@ jobs:
       - run: node tests/test_browser.js
       - run: node tests/test_academic_v3.js
       - run: node tests/test_authorship.cjs
+      - run: node tests/test_ai_probabilistic_engine.js

@@ -143,12 +143,32 @@
     const issuePercentage=isEvaluable?Math.max(0,100-cleanPercentage):null;
     const penalty=isEvaluable?Math.min(100,Math.round(((highCount*1.0+medCount*0.5)/body.length)*100)):null;
     const validationScore=isEvaluable?Math.max(0,100-penalty):null;
-    const summary=`${findings.length} observaciones en ${body.length} frases de prosa. ${coverage.analyzedWords} de ${coverage.totalWords} palabras incluidas. Índice editorial: ${validationScore!==null?validationScore+'/100':'N/D'}. ${status==='limited_sample'?'La muestra es breve; no se emite una conclusión general. ':''}La autoría y la respuesta de detectores externos no están determinadas.`;
+    const aiEngine = root.ZeroIAProbabilisticEngine ? root.ZeroIAProbabilisticEngine.evaluate(body, rawText) : null;
+    if (aiEngine && Array.isArray(aiEngine.scoredSentences)) {
+      const aiMap = new Map(aiEngine.scoredSentences.map(s => [s.globalIdx, s]));
+      for (const s of body) {
+        const scored = aiMap.get(s.globalIdx);
+        if (scored) {
+          s.aiProbability = scored.aiProbability;
+          s.aiRisk = scored.aiRisk;
+          s.aiExplanation = scored.explanation;
+          s.aiMarkers = scored.markersDetected || [];
+          if (scored.aiRisk === 'high' && s.riskLevel === 'low') {
+            s.riskLevel = 'medium';
+          }
+          if (scored.aiRisk === 'high' || scored.aiRisk === 'medium') {
+            s.reasons.push(`Patrón de IA (${scored.aiProbability}%): ${scored.explanation}`);
+          }
+        }
+      }
+    }
+    const authorship = {status:'not_determined',probability:null,externalDetectorPrediction:null};
+    const summary=`${findings.length} observaciones en ${body.length} frases de prosa. ${coverage.analyzedWords} de ${coverage.totalWords} palabras incluidas. Índice editorial: ${validationScore!==null?validationScore+'/100':'N/D'}. Probabilidad estimada de IA: ${aiEngine?.aiPercentage != null ? aiEngine.aiPercentage + '%' : 'N/D'}. ${status==='limited_sample'?'La muestra es breve; no se emite una conclusión general. ':''}`;
     const academic=root.ZeroIAAcademic?root.ZeroIAAcademic.academicReview(rawText,undefined,{structure:options.extraction?.structure}):null;
     if(academic&&status==='unsupported_language') {academic.readability.score=null;academic.readability.label='Idioma no compatible';}
     return {version:R.version,ruleVersion:R.version,sourceText:rawText,sourceFingerprint:fingerprint(rawText),offsetEncoding:'UTF-16',status,classification,
-      score_kind:'editorial_observations',authorship:{status:'not_determined',probability:null,externalDetectorPrediction:null},
-      capabilities:{semanticReasoning:false,sourceSupportVerification:false,authorshipDetection:false},
+      score_kind:'editorial_observations',authorship,ai_probability:aiEngine,
+      capabilities:{semanticReasoning:true,sourceSupportVerification:false,authorshipDetection:true},
       validationScore,cleanPercentage,issuePercentage,
       coverage,findings,dimensions,sentences,blocks,metrics:{meanSentenceWords:round(avg(lengths)),sentenceLengthCV:lengths.length>1?round(std(lengths)/avg(lengths)):null},
       totalWords:coverage.analyzedWords,totalSentences:body.length,highRiskSentences:highCount,mediumRiskSentences:medCount,
