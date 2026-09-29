@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
+  "version": "3.0.0",
   "minWords": 100,
   "minSentences": 5,
   "maxCharacters": 500000,

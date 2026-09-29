@@ -6,8 +6,32 @@ async function extractTextFromFile(file) {
   let text='';
   if(name.endsWith('.docx')) {
     if(!window.mammoth)throw new Error('No se cargó el lector Word. Revisa tu conexión y recarga.');
-    const result=await window.mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});text=result.value;
+    const buffer=await file.arrayBuffer();
+    const result=await window.mammoth.extractRawText({arrayBuffer:buffer.slice(0)});text=result.value;
     report.warnings=(result.messages||[]).map(m=>m.message);
+    report.structure={blocks:[],mapped:0,unmapped:0,source:'docx-html-to-raw-exact'};
+    try {
+      const html=await window.mammoth.convertToHtml({arrayBuffer:buffer.slice(0)});
+      // Parse as an inert document; never insert imported HTML into the application.
+      const dom=new DOMParser().parseFromString(html.value,'text/html');
+      let cursor=0;
+      for(const element of dom.querySelectorAll('h1,h2,h3,h4,h5,h6,p,li,td,th')) {
+        if(element.matches('li') && element.querySelector('p')) continue;
+        if(element.matches('td,th') && element.querySelector('p')) continue;
+        const value=(element.textContent||'').trim();
+        if(!value) continue;
+        const start=text.indexOf(value,cursor);
+        if(start<0) {report.structure.unmapped++;continue;}
+        const end=start+value.length;cursor=end;
+        let kind=/^H[1-6]$/.test(element.tagName)?'heading':element.closest('td,th')?'table':element.closest('li')?'list':'body';
+        if(/(?:\.{3,}|\t+)\s*\d+\s*$/u.test(value)) kind='toc';
+        // Retain only exact source spans, so highlights still address the original text.
+        report.structure.blocks.push({kind,start,end,text:value,...(kind==='heading' ? {level:Number(element.tagName.slice(1))} : {})});report.structure.mapped++;
+      }
+      if(report.structure.unmapped) report.warnings.push(`Word: ${report.structure.unmapped} elementos de estructura no se pudieron vincular exactamente al texto; se usarán reglas de texto para ellos.`);
+    } catch(error) {
+      report.warnings.push('Word: no se pudo conservar la estructura; el texto sigue disponible y se revisa con reglas de texto.');
+    }
     report.warnings.push('Word: no se garantiza la conservación de notas, cuadros de texto, imágenes ni maquetación.');
   } else if(name.endsWith('.pdf')) {
     if(!window.pdfjsLib)throw new Error('No se cargó el lector PDF. Revisa tu conexión y recarga.');

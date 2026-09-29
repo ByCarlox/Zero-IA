@@ -4,12 +4,53 @@ Word (.docx), PDF (.pdf) y texto plano (.txt, .md).
 """
 
 import io
+import re
 from typing import Dict, Any, List
 import docx
 from docx.text.paragraph import Paragraph
 from docx.table import Table
+from docx.oxml.ns import qn
 import pypdf
 from core.sentence_tokenizer import split_into_paragraphs
+
+
+def _paragraph_structure(paragraph: Paragraph) -> Dict[str, Any]:
+    """Read Word semantics without changing the canonical extracted text."""
+    style = paragraph.style
+    styles = []
+    seen = set()
+    while style is not None and style.style_id not in seen:
+        seen.add(style.style_id)
+        styles.append(style)
+        style = style.base_style
+    style_names = " ".join((item.name or "") + " " + (item.style_id or "") for item in styles)
+    text = paragraph.text.strip()
+    if re.search(r"\bTOC\s*\d*\b|Tabla de contenido|Índice", style_names, re.I) or re.search(r"(?:\.{3,}|\t+)\s*\d+\s*$", text):
+        return {"kind": "toc"}
+    # Direct outline properties override inherited styles, including body level 9.
+    properties = [paragraph._p.pPr] + [item.element.pPr for item in styles]
+    outline_found = False
+    for prop in properties:
+        node = prop.find(qn("w:outlineLvl")) if prop is not None else None
+        if node is not None:
+            outline_found = True
+            try:
+                value = int(node.get(qn("w:val")))
+            except (TypeError, ValueError):
+                break
+            if 0 <= value <= 8:
+                return {"kind": "heading", "level": value + 1}
+            break
+    if not outline_found:
+        heading = re.search(r"(?:Heading|Título|Titulo)\s*([1-9])", style_names, re.I)
+        if heading:
+            return {"kind": "heading", "level": int(heading.group(1))}
+    for prop in properties:
+        if prop is not None and prop.find(qn("w:numPr")) is not None:
+            return {"kind": "list"}
+    if re.search(r"List(?: Bullet| Number)|Lista", style_names, re.I):
+        return {"kind": "list"}
+    return {"kind": "body"}
 
 
 def extract_from_docx(file_bytes: bytes) -> Dict[str, Any]:
@@ -18,17 +59,29 @@ def extract_from_docx(file_bytes: bytes) -> Dict[str, Any]:
     doc = docx.Document(doc_stream)
 
     paragraphs_text: List[str] = []
+    blocks: List[Dict[str, Any]] = []
+    cursor = 0
+
+    def append_block(text: str, metadata: Dict[str, Any]) -> None:
+        nonlocal cursor
+        if paragraphs_text:
+            cursor += 2  # The canonical join separator is two LF code units.
+        length = len(text.encode("utf-16-le")) // 2
+        blocks.append({**metadata, "start": cursor, "end": cursor + length, "text": text})
+        paragraphs_text.append(text)
+        cursor += length
     # Preserve the original interleaving of paragraphs and tables.
     for element in doc.element.body:
         if element.tag.endswith('}p'):
-            txt = Paragraph(element, doc).text.strip()
+            paragraph = Paragraph(element, doc)
+            txt = paragraph.text.strip()
             if txt:
-                paragraphs_text.append(txt)
+                append_block(txt, _paragraph_structure(paragraph))
         elif element.tag.endswith('}tbl'):
             for row in Table(element, doc).rows:
                 cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
                 if cells:
-                    paragraphs_text.append(" | ".join(cells))
+                    append_block(" | ".join(cells), {"kind": "table"})
 
     full_text = "\n\n".join(paragraphs_text)
 
@@ -37,7 +90,8 @@ def extract_from_docx(file_bytes: bytes) -> Dict[str, Any]:
         "paragraphs": paragraphs_text,
         "full_text": full_text,
         "word_count": len(full_text.split()),
-        "paragraph_count": len(paragraphs_text)
+        "paragraph_count": len(paragraphs_text),
+        "structure": {"blocks": blocks, "mapped": len(blocks), "unmapped": 0, "source": "docx-python-raw-exact"}
     }
 
 
@@ -117,5 +171,7 @@ def parse_document(file_bytes: bytes, filename: str) -> Dict[str, Any]:
         warnings.append('Se extraen párrafos y tablas del cuerpo. Notas, imágenes, encabezados y cuadros de texto pueden quedar fuera.')
     res['extraction'] = {'format': res['format'], 'pages': res.get('pages', []), 'warnings': warnings,
                          'coverage': 'La cobertura se refiere al texto extraído; comprueba su integridad frente al original.'}
+    if "structure" in res:
+        res["extraction"]["structure"] = res["structure"]
     res["filename"] = filename
     return res

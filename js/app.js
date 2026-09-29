@@ -13,6 +13,8 @@ let analysisInProgress = false;
 let extractionInfo = null;
 let reviewHistory = [];
 let initialText = "";
+let externalReport = null;
+let currentPreflight = null;
 
 // Elementos DOM
 const promptTextarea = document.getElementById("promptTextarea");
@@ -48,7 +50,8 @@ const metricsGuideSection = document.getElementById("metricsGuideSection");
 
 // Tema Oscuro / Claro
 function initTheme() {
-  const savedTheme = localStorage.getItem("zeroia_theme") || "dark";
+  let savedTheme = "dark";
+  try { if (localStorage.getItem("zeroia_theme") === "light") savedTheme = "light"; } catch (_) {}
   document.documentElement.setAttribute("data-theme", savedTheme);
   updateThemeIcon(savedTheme);
 }
@@ -57,7 +60,7 @@ function toggleTheme() {
   const current = document.documentElement.getAttribute("data-theme") || "dark";
   const next = current === "dark" ? "light" : "dark";
   document.documentElement.setAttribute("data-theme", next);
-  localStorage.setItem("zeroia_theme", next);
+  try { localStorage.setItem("zeroia_theme", next); } catch (_) {}
   updateThemeIcon(next);
 }
 
@@ -144,8 +147,9 @@ async function runReview(text, options = {}) {
   [sendBtn, recalculateBtn, sampleBtn, attachBtn].forEach(button => button.disabled = true);
   try {
     const extraction = options.extraction || (previous ? {...previous.analysis.extraction, warnings:[...previous.analysis.extraction.warnings.filter(w=>!w.startsWith("Texto editado")), "Texto editado: comprueba su correspondencia con el archivo original."]} : undefined);
-    const result = await window.ZeroIAAnalysisClient.analyze(text, { extraction }, message => status.textContent = message);
+    const result = await window.ZeroIAAnalysisClient.analyze(text, { extraction, stage: document.getElementById("deliveryStage").value, rubric: document.getElementById("deliveryRubric").value }, message => status.textContent = message);
     if (result.error) throw new Error(result.error);
+    result.sourceSHA256 = await window.ZeroIAPreflight.hash(text);
     if (options.recordHistory && previous) reviewHistory.push(previous);
     if (reviewHistory.length > 20) reviewHistory.shift();
     if (!initialText) initialText = text;
@@ -153,6 +157,7 @@ async function runReview(text, options = {}) {
     currentAnalysis = result;
     promptTextarea.value = text;
     renderResults(result);
+    saveReviewMetadata();
     heroContainer.style.display = "none";
     resultsContainer.style.display = "block";
     status.textContent = "Validación completada. Autoría no determinada.";
@@ -481,7 +486,7 @@ function renderResults(analysis) {
 
   if (verdictCard) {
     verdictCard.className = `executive-verdict-card verdict-${analysis.verdictColor}`;
-    verdictTitle.innerText = "Dictamen de validación";
+    verdictTitle.innerText = "Resumen editorial";
     verdictSubtitle.innerText = `Motor ${analysis.version} · ${analysis.totalSentences} frases · Idioma de revisión: español`;
     verdictPill.innerText = analysis.verdictBadge || (analysis.verdictColor === "red" ? "🔴 ALTA CONCENTRACIÓN" : analysis.verdictColor === "yellow" ? "🟡 CONCENTRACIÓN MEDIA" : "🟢 POCOS PATRONES");
     verdictPill.className = `tag-badge badge-${analysis.verdictColor}`;
@@ -546,6 +551,7 @@ function renderResults(analysis) {
 
   // 4. Cargar texto en editor en vivo
   liveEditorText.value = currentRawText;
+  renderPreflight();
 }
 
 // Selección de oración individual
@@ -613,7 +619,12 @@ recalculateBtn.addEventListener("click", () => runReview(liveEditorText.value, {
 // Volver a inicio / Nueva Auditoría
 newAnalysisBtn.addEventListener("click", () => {
   if (analysisInProgress) return;
-  currentAnalysis = null; currentRawText = ""; initialText = ""; reviewHistory = []; extractionInfo = null;
+  currentAnalysis = null; currentRawText = ""; initialText = ""; reviewHistory = []; extractionInfo = null; externalReport = null; currentPreflight = null;
+  document.getElementById("externalReportForm").reset();
+  document.getElementById("externalAI").required = true;
+  document.getElementById("externalAI").disabled = false;
+  recordStatus("");
+  document.getElementById("analysisStatus").textContent = "";
   resultsContainer.style.display = "none";
   heroContainer.style.display = "flex";
   promptTextarea.value = "";
@@ -627,6 +638,7 @@ newAnalysisBtn.addEventListener("click", () => {
 downloadReportBtn.addEventListener("click", () => {
   if (!currentAnalysis) return;
 
+  if (liveEditorText.value !== currentRawText) { recordStatus("Recalcula los cambios antes de descargar el informe."); return; }
   const report = window.ZeroIADetector.summary(currentAnalysis);
 
   const blob = new Blob([report], { type: "text/markdown;charset=utf-8" });
@@ -650,7 +662,11 @@ btnStripWatermarks.addEventListener("click", () => {
 const printReportBtn = document.getElementById("printReportBtn");
 if (printReportBtn) {
   printReportBtn.addEventListener("click", () => {
+    if (liveEditorText.value !== currentRawText) { recordStatus("Recalcula los cambios antes de imprimir."); return; }
     while (!document.getElementById("loadMoreBtn").hidden) document.getElementById("loadMoreBtn").click();
+    const closedFindings = [...document.querySelectorAll("#preflightFindings details:not([open])")];
+    closedFindings.forEach(detail => detail.open = true);
+    window.addEventListener("afterprint", () => closedFindings.forEach(detail => detail.open = false), {once:true});
     window.print();
   });
 }
@@ -737,3 +753,81 @@ document.getElementById("downloadOriginalBtn").addEventListener("click",()=>down
 document.getElementById("downloadCurrentBtn").addEventListener("click",()=>downloadText(liveEditorText.value,"revisado.txt"));
 
 liveEditorText.addEventListener("input",()=>{document.getElementById("analysisStatus").textContent=liveEditorText.value===currentRawText?"Texto igual a la última revisión.":"Cambios sin revisar. Recalcula para actualizar las observaciones y el informe.";});
+
+// Delivery review: external measurements stay separate from editorial rules.
+function renderPreflight() {
+  if (!currentAnalysis) return;
+  currentPreflight = window.ZeroIAPreflight.evaluate(currentAnalysis, {
+    stage: document.getElementById("deliveryStage").value,
+    rubric: document.getElementById("deliveryRubric").value,
+    externalReport
+  });
+  currentAnalysis.deliveryReview = currentPreflight;
+  const editorDirty = liveEditorText.value !== currentRawText;
+  const ai = currentPreflight.authorship;
+  document.getElementById("aiPercentage").textContent = ai.status === "reported" && ai.percentage !== null ? `${ai.percentage}%` : ai.status === "stale" ? "Versión modificada" : ai.status === "below_threshold" ? "* · Sin porcentaje exacto" : "No determinado";
+  document.getElementById("aiResultExplanation").textContent = ai.notice || "Añade un resultado externo para conocer su porcentaje de IA. La revisión editorial no calcula autoría.";
+  document.getElementById("aiResultProvenance").textContent = externalReport ? `${externalReport.provider} · ${externalReport.date}${externalReport.sourceNote ? ` · ${externalReport.sourceNote}` : ""} · ${externalReport.provenance === "manual" ? "Declarado por el usuario" : "Importado, sin verificar"}${externalReport.similarityPercentage == null ? "" : ` · Similitud: ${externalReport.similarityPercentage}%`} · ${ai.status === "stale" ? "El texto no coincide con la versión registrada" : "Vinculado al texto registrado; origen no verificado"}` : "Sin resultado externo registrado. Esto no significa 0% de IA.";
+  document.getElementById("preflightSummary").textContent = currentPreflight.summary || "Revisa los siguientes puntos antes de entregar.";
+  const findings = [...(currentPreflight.findings || [])].sort((a,b) => ({critical:0,high:0,warning:1,medium:1,low:2,info:2}[a.severity] ?? 3) - ({critical:0,high:0,warning:1,medium:1,low:2,info:2}[b.severity] ?? 3));
+  document.getElementById("preflightFindings").innerHTML = findings.map(f => {
+    const evidence = typeof f.evidence === "string" ? f.evidence : f.evidence ? JSON.stringify(f.evidence) : "";
+    const excerpt = evidence.length > 280 ? evidence.slice(0,280) + "…" : evidence;
+    return `<details class="preflight-finding"><summary><span class="tag-badge">${escapeHTML(({high:"Prioridad alta",critical:"Prioridad alta",warning:"Revisar",medium:"Revisar",info:"Comprobar",low:"Comprobar"})[f.severity] || "Revisar")}</span><span class="finding-title">${escapeHTML(f.title)}</span></summary><p>${escapeHTML(f.message || "")}</p>${excerpt ? `<blockquote>${escapeHTML(excerpt)}</blockquote>` : ""}${evidence.length > 280 ? `<details class="finding-evidence"><summary>Ver evidencia completa</summary><blockquote>${escapeHTML(evidence)}</blockquote></details>` : ""}${f.action ? `<p><strong>Siguiente paso:</strong> ${escapeHTML(f.action)}</p>` : ""}</details>`;
+  }).join("") || '<p>No se detectaron incidencias en estas comprobaciones automáticas. Revisa también la rúbrica y las fuentes.</p>';
+  if (editorDirty) {
+    document.getElementById("aiPercentage").textContent = "Cambios sin revisar";
+    document.getElementById("aiResultExplanation").textContent = "Recalcula el manuscrito. El resultado externo pertenece a la versión registrada.";
+  }
+  const rubric = document.getElementById("deliveryRubric").value.trim().split(/\n/).filter(Boolean);
+  document.getElementById("rubricChecklist").innerHTML = rubric.length ? `<h3>Comprobación manual de tus requisitos</h3>${rubric.map(line => `<label class="checkbox-label"><input type="checkbox">${escapeHTML(line)}</label>`).join("")}` : "<p>No has añadido requisitos del profesor. La revisión no puede confirmar que cumple la consigna.</p>";
+}
+function recordStatus(message) { document.getElementById("reviewRecordStatus").textContent = message; }
+document.getElementById("externalAIStatus").addEventListener("change", event => { const field = document.getElementById("externalAI"); field.required = event.target.value === "reported"; field.disabled = !field.required; });
+document.getElementById("externalReportForm").addEventListener("submit", event => {
+  event.preventDefault();
+  if (!currentAnalysis || liveEditorText.value !== currentRawText) { recordStatus("Recalcula los cambios del manuscrito antes de registrar el resultado."); return; }
+  try {
+    externalReport = window.ZeroIAPreflight.createExternal({provider:document.getElementById("externalProvider").value, aiStatus:document.getElementById("externalAIStatus").value, aiPercentage:document.getElementById("externalAIStatus").value === "reported" ? Number(document.getElementById("externalAI").value) : null, similarityPercentage:document.getElementById("externalSimilarity").value === "" ? null : Number(document.getElementById("externalSimilarity").value), date:document.getElementById("externalDate").value, sourceNote:document.getElementById("externalProvenance").value.trim()}, currentAnalysis.sourceSHA256);
+    document.getElementById("externalVersionConfirm").checked = false;
+    renderPreflight(); saveReviewMetadata(); recordStatus("Resultado externo registrado para esta versión. No se ha verificado con el detector.");
+  } catch (error) { recordStatus(error.message); }
+});
+document.getElementById("removeExternalReport").addEventListener("click", () => { externalReport = null; renderPreflight(); recordStatus("Resultado externo eliminado de esta revisión."); });
+function downloadJSON(value, name) { const url = URL.createObjectURL(new Blob([value],{type:"application/json"})); const link = document.createElement("a"); link.href=url; link.download=name; link.click(); URL.revokeObjectURL(url); }
+document.getElementById("exportReviewJSON").addEventListener("click", () => {
+  if (!currentAnalysis) return;
+  if (liveEditorText.value !== currentRawText) {recordStatus("Recalcula los cambios antes de exportar."); return;}
+  downloadJSON(JSON.stringify({schemaVersion:1,kind:"zeroia-review",createdAt:new Date().toISOString(),sourceSHA256:currentAnalysis.sourceSHA256,stage:document.getElementById("deliveryStage").value,editorialScore:currentAnalysis.validationScore,externalReport,preflight:currentPreflight},null,2), `ZeroIA_revision_${Date.now()}.json`);
+});
+document.getElementById("importReviewJSON").addEventListener("click", () => document.getElementById("reviewJSONFile").click());
+document.getElementById("reviewJSONFile").addEventListener("change", async event => {
+  const file = event.target.files[0]; if (!file) return;
+  if (liveEditorText.value !== currentRawText) {recordStatus("Recalcula los cambios antes de importar un resultado.");event.target.value="";return;}
+  try {
+    if (file.size > 2000000) throw new Error("El archivo supera el límite de 2 MB.");
+    const parsed = JSON.parse(await file.text());
+    externalReport = window.ZeroIAPreflight.importExternal(JSON.stringify(parsed.kind === "zeroia-review" ? parsed.externalReport : parsed));
+    renderPreflight(); recordStatus("Resultado externo importado. Comprueba su procedencia y correspondencia con el documento.");
+  } catch (error) { recordStatus(`No se importó el resultado: ${error.message}`); }
+  event.target.value = "";
+});
+const reviewMetadataKey = "zeroia_review_metadata_v1";
+function loadReviewMetadata() { try { const value = JSON.parse(localStorage.getItem(reviewMetadataKey) || "[]"); return Array.isArray(value) ? value.slice(-30) : []; } catch (_) {return [];} }
+function showReviewMetadata() {
+  const items = loadReviewMetadata();
+  document.getElementById("localReviewHistory").innerHTML = items.length ? `<ul>${items.slice().reverse().map(item => `<li>${escapeHTML(item.date)} · Editorial: ${escapeHTML(item.score ?? "N/D")}/100 · IA registrada: ${escapeHTML(item.ai ?? "No determinada")} · Versión ${escapeHTML(String(item.hash || "").slice(7,19))}</li>`).join("")}</ul>` : "<p>Sin revisiones guardadas.</p>";
+}
+function saveReviewMetadata() {
+  if (!currentAnalysis || !document.getElementById("historyConsent").checked) return;
+  try {
+    const rows=loadReviewMetadata(); const row={date:new Date().toISOString(),hash:currentAnalysis.sourceSHA256,score:currentAnalysis.validationScore,ai:currentPreflight?.authorship?.status === "reported" ? `${currentPreflight.authorship.percentage}%` : null};
+    const previous=rows.findIndex(item=>item.hash===row.hash); if(previous>=0) rows.splice(previous,1); rows.push(row);
+    localStorage.setItem(reviewMetadataKey,JSON.stringify(rows.slice(-30))); showReviewMetadata();
+  } catch (_) {recordStatus("El navegador no permitió guardar el historial.");}
+}
+document.getElementById("historyConsent").addEventListener("change", () => {saveReviewMetadata();});
+document.getElementById("clearReviewHistory").addEventListener("click", () => {try {localStorage.removeItem(reviewMetadataKey);document.getElementById("historyConsent").checked=false;showReviewMetadata();recordStatus("Historial local borrado.");} catch (_) {recordStatus("No se pudo acceder al almacenamiento local.");}});
+for (const id of ["deliveryStage","deliveryRubric"]) document.getElementById(id).addEventListener("change", () => {if(currentAnalysis) {renderPreflight();liveEditorText.dispatchEvent(new Event("input"));}});
+liveEditorText.addEventListener("input", () => {if(liveEditorText.value!==currentRawText) {document.getElementById("aiPercentage").textContent="Cambios sin revisar";document.getElementById("aiResultExplanation").textContent="Recalcula el texto. Cualquier resultado externo pertenece a la versión registrada y no se traslada a los cambios.";} else renderPreflight();});
+showReviewMetadata();

@@ -7,7 +7,7 @@
   return new Promise((resolve,reject)=>{
    const id=++sequence;
    let worker;
-   try {if(root.location?.protocol==='file:')throw new Error('Local file compatibility');worker=new Worker('js/analysis-worker.js?v=2.0.0');} catch(error) {
+   try {if(root.location?.protocol==='file:')throw new Error('Local file compatibility');worker=new Worker('js/analysis-worker.js?v=3.0.0');} catch(error) {
     // file:// can prohibit workers; keep this explicit and bounded.
     if(text.length>50000){reject(new Error('Para documentos extensos abre la aplicación mediante su servidor local o GitHub Pages.'));return;}
     onProgress('Revisión local compatible (sin trabajador en segundo plano)…');

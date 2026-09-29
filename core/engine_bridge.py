@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def call_engine(action, text='', **kwargs):
     node = shutil.which('node')
     if not node:
-        for candidate in ['/opt/homebrew/bin/node', '/usr/local/bin/node', '/usr/bin/node']:
+        for candidate in [str(Path.home() / '.local/bin/node'), '/opt/homebrew/bin/node', '/usr/local/bin/node', '/usr/bin/node']:
             if Path(candidate).is_file():
                 node = candidate
                 break

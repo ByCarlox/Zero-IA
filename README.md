@@ -1,89 +1,64 @@
-# Zero-IA · Validador Académico y Asistente Editorial
+# Zero IA 3
 
-> **Plataforma web de auditoría editorial, legibilidad y coherencia académica para tesis, manuscritos y artículos científicos.**
+Revisión académica antes de entregar: resultado externo de IA, pendientes con evidencia, referencias y revisión editorial.
 
-Zero-IA es una herramienta analítica diseñada para elevar el rigor y la calidad de la prosa académica. A diferencia de los detectores opacos tradicionales, Zero-IA no emite acusaciones basadas en porcentajes probabilísticos arbitrarios de autoría: proporciona una **auditoría transparente, determinista y fundamentada** con indicadores reproducibles para autores, investigadores y comités académicos.
+## Qué muestra el porcentaje de IA
 
----
+El primer resultado es IA. Sin un informe externo aparece **No determinado**, nunca un cero inventado. Puedes registrar el porcentaje de Turnitin comunicado por el profesor o importar un registro JSON de Zero IA. El dato se identifica como declarado o importado sin verificar: la app no autentica informes de Turnitin.
 
-## 🏛️ Fundamentos y Filosofía
+El resultado se vincula mediante SHA-256 al texto exacto extraído. Si cambias el texto, deja de presentarse como aplicable a la nueva versión. Esta huella no verifica el archivo Word binario, la procedencia ni quién escribió el contenido. Un asterisco se conserva sin convertirlo en un porcentaje.
 
-### 1. La falacia de los "detectores de porcentaje de IA"
-Las herramientas que afirman clasificar un texto con etiquetas binarias o porcentajes absolutos ("80% generado por IA") presentan problemas metodológicos insalvables:
-- **Tasas inaceptables de falsos positivos:** Afectan desproporcionadamente a autores no nativos de una lengua, escritores técnicos o textos con alta densidad conceptual.
-- **Opacidad algorítmica:** No ofrecen explicaciones accionables sobre por qué una frase específica fue marcada.
-- **Inseguridad jurídica y académica:** Ninguna institución rigurosa acepta hoy en día un porcentaje probabilístico como prueba fehaciente de mala conducta o autoría.
+**Esta versión no incluye un clasificador calibrado de autoría ni predice Turnitin.** El índice editorial de 0 a 100 mide incidencias de redacción y se presenta por separado. Ninguna pantalla certifica aprobación académica.
 
-### 2. El enfoque de Zero-IA: Evidencia objetiva y reproducible
-Zero-IA transforma la revisión en un **proceso pedagógico y editorial**:
-- **Diagnóstico basado en reglas y lingüística computacional:** Cada observación está vinculada a una evidencia textual concreta (repetición léxica, desbalance de cadencia, oraciones excesivamente complejas, apertura repetitiva de párrafos).
-- **Tratamiento contextual de la prosa académica:** Se aísla el cuerpo del texto para no penalizar citas bibliográficas, títulos, tablas o listas formales.
-- **Auditoría de integridad bibliográfica:** Validación estructural de referencias y correspondencia interna entre menciones en texto y fuentes bibliográficas (APA, Harvard, IEEE) con consulta voluntaria a Crossref para DOIs.
+## Uso
 
----
+1. Abre la aplicación, selecciona propuesta, avance o entrega final y añade requisitos del profesor si los tienes.
+2. Adjunta Word, PDF o texto, o pega el manuscrito. Comprueba las advertencias de extracción.
+3. Revisa los pendientes de bibliografía, estructura y metodología junto a la evidencia textual. Las reglas metodológicas plantean preguntas concretas; no sustituyen una revisión experta.
+4. Si cuentas con un resultado externo, registra proveedor, fecha, porcentaje y procedencia. Confirma que corresponde a esta versión.
+5. Edita, recalcula y exporta el informe Markdown o JSON. Las sugerencias editoriales se aceptan individualmente y pueden deshacerse.
 
-## 📊 Arquitectura de Métricas e Indicadores
+Los requisitos escritos por el usuario se presentan como lista manual. Marcar una casilla no verifica automáticamente su cumplimiento. La autenticidad y el respaldo de las fuentes requieren consultar los originales.
 
-### 1. Índice de Pulcritud Editorial (Puntuación 0–100)
-*El indicador central de calidad y pulcritud de la prosa académica.*
+## Abrir localmente
 
-| Rango | Calificación | Interpretación |
-| :--- | :--- | :--- |
-| **90 – 100 pts** | **Excelente pulcritud** | Prosa fluida, léxico variado, estructuras bien equilibradas y mínima redundancia. |
-| **75 – 89 pts** | **Buena calidad (con observaciones)** | El texto es sólido, pero presenta focos específicos de mejora (ej. oraciones sobrecargadas o repeticiones léxicas localizadas). |
-| **< 75 pts** | **Revisión recomendada** | Presencia recurrente de patrones mecánicos, monotonía sintáctica o problemas de legibilidad que dificultan la lectura fluida. |
+Requiere Python 3 para servir archivos; la aplicación web no necesita instalar paquetes Python ni Node para utilizarse.
 
-> **Nota para autores:** Este índice funciona como una calificación de examen de estilo (donde 100 pts es el estado óptimo libre de incidencias); no representa en ningún caso una probabilidad o porcentaje de autoría por IA.
+```sh
+python3 -m http.server 8765 --bind 127.0.0.1
+```
 
----
+Abre http://127.0.0.1:8765 en el navegador. También puedes ejecutar `./run.sh`. El lector de Word y PDF y las tipografías se descargan de CDN; se necesita conexión para cargarlos. Para documentos extensos, usa el servidor local o HTTPS, no el protocolo file.
 
-### 2. Legibilidad Objetiva (Flesch-Szigriszt & Escala INFLESZ)
-Mide el esfuerzo cognitivo que demanda el manuscrito, adaptado a la morfología y fonética del idioma español:
-- Evalúa la relación entre sílabas por palabra y palabras por oración.
-- Permite detectar secciones con densidad innecesaria o sintaxis sobrecargada sin sacrificar la precisión terminológica de la disciplina.
+Para generar la distribución pública y su ZIP:
 
-### 3. Coherencia Sintáctica y Monotonía de Estilo
-- **Longitud y variabilidad de oraciones:** La escritura académica natural alterna oraciones cortas con oraciones complejas. La uniformidad artificial (muchas frases seguidas con idéntica longitud) suele ser síntoma de traducción automática, redacción apresurada o generación mecánica.
-- **Aperturas idénticas y solapamiento léxico:** Detección de oraciones o párrafos consecutivos que inician con las mismas estructuras o comparten excesivo vocabulario sin aportar nueva información conceptual.
+```sh
+python3 tools/build_site.py
+```
 
-### 4. Cobertura del Texto
-Diferenciación automática entre la prosa argumentativa y los elementos paratextuales:
-- **Prosa evaluable:** Se analiza con las reglas de estilo y sintaxis.
-- **Elementos excluidos del cálculo de estilo:** Bibliografía, encabezados de tablas, leyendas de figuras y citas en bloque se conservan pero no penalizan la calificación de prosa.
+La carpeta `dist/Zero-IA-3.0.0` contiene solo los archivos públicos del producto. Excluye manuscritos, informes internos, corpus de pruebas y datos del repositorio. El paquete incluye `Iniciar.command` para macOS con Python 3. Puedes alojar esa carpeta en un servicio de archivos estáticos con HTTPS.
 
-### 5. Escudo de Caracteres Invisibles y Sanitización
-Inspección profunda de texto en busca de:
-- Caracteres de ancho cero (Zero-Width Space `U+200B`, Joiners `U+200D`, etc.).
-- Espacios no separables anómalos y caracteres de control que pueden corromper la maquetación o indicar copiado no sanitizado.
+## Privacidad
 
----
+La versión web procesa el documento en el navegador. No sube el manuscrito a Turnitin ni a otros detectores. La consulta opcional a Crossref envía el DOI elegido; no verifica que el artículo respalde la afirmación. Las bibliotecas y fuentes externas implican conexiones de carga a sus proveedores.
 
-## 🔍 Guía de Interpretación: ¿Cómo trabajar con el informe?
+El historial local es opcional y guarda fecha, huella y puntuaciones, no el manuscrito. Puede borrarse en la interfaz. Los informes exportados sí contienen fragmentos del documento y deben tratarse como documentos del usuario. Cerrar o recargar la página descarta la revisión en memoria.
 
-1. **Atender primero las Frases Prioritarias:**
-   El motor destaca las oraciones con incidencias de mayor impacto (repeticiones notorias o estructuras confusas). Ajustar estas pocas oraciones suele elevar el índice significativamente.
-2. **Revisar la correspondencia de citas:**
-   Comprobar que cada autor citado en el texto tenga su referencia completa en la bibliografía final y viceversa.
-3. **Equilibrar el ritmo de la prosa:**
-   Si el promedio de palabras por frase supera las 30–35 palabras, evalúa dividir párrafos o introducir pausas mediante oraciones directas.
-4. **Respetar la voz del autor:**
-   Las sugerencias son guías de optimización editorial. El criterio del autor e investigador siempre prevalece sobre cualquier recomendación automática.
+## Pruebas y límites
 
----
+```sh
+python -m unittest discover tests/ -v
+python tools/build_rules.py --check
+node tests/test_browser.js
+node tests/test_academic_v3.js
+node tests/test_authorship.cjs
+node tools/evaluate_authorship.cjs
+```
 
-## 🔒 Privacidad y Procesamiento en Cliente
+Las pruebas Python requieren Node.js 22+, numpy, python-docx y pypdf. El corpus independiente incluye controles históricos humanos y controles expresamente generados por IA, con variantes aleatorias reproducibles. Comprueba abstención, integridad de resultados externos y regresiones; **no demuestra precisión predictiva**. La concordancia con Turnitin no se ha medido. Consulta `docs/QA_INDEPENDIENTE_2026-09-29.md`.
 
-- **Sin almacenamiento de manuscritos:** El análisis se ejecuta directamente en el navegador del usuario utilizando JavaScript moderno. El contenido de tu investigación no se envía a servidores de almacenamiento, bases de datos externas ni plataformas de entrenamiento de modelos.
-- **Confidencialidad absoluta:** Adecuado para tesis en curso, artículos bajo revisión por pares (*peer-review*) y documentos protegidos por acuerdos de confidencialidad institucional.
+Para añadir un detector propio se requiere un corpus español representativo, procedencia verificable, separación por autor/documento, evaluación independiente, calibración y métricas de error publicadas. El resultado de otro detector no equivale a una etiqueta cierta de autoría.
 
----
+## Interfaz Python opcional
 
-## 🎓 Uso Ético para Docentes y Comités Académicos
-
-Zero-IA está concebido como una **herramienta formativa y de apoyo a la corrección de estilo**:
-- **No es una herramienta punitiva:** El software no dictamina "culpabilidad" ni reemplaza el criterio del docente.
-- **Base para tutorías:** Permite a los evaluadores señalar puntos objetivos de mejora en la redacción de los estudiantes de posgrado y pregrado, fomentando un aprendizaje constructivo de la escritura académica.
-
----
-
-*Desarrollado para una comunidad académica que valora la transparencia, la precisión y la honestidad intelectual.*
+`./run.sh --streamlit` inicia la alternativa Streamlit con las dependencias de `requirements.txt` ya instaladas. Procesa el texto en el servidor donde se ejecuta, no en el navegador. La web estática es la interfaz principal de esta entrega.

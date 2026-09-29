@@ -1,0 +1,1311 @@
+{
+  "date": "2026-09-29",
+  "seed": 20260929,
+  "purpose": "Evidence integrity and abstention, NOT detection accuracy",
+  "caseCount": 130,
+  "abstentionCount": 130,
+  "detectionAccuracy": null,
+  "turnitinConcordance": null,
+  "rows": [
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "original",
+      "words": 1222,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "nfd",
+      "words": 1222,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "crlf",
+      "words": 1222,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "heading",
+      "words": 1222,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "html_literal",
+      "words": 1228,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "bibliography",
+      "words": 1222,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-0",
+      "words": 892,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-1",
+      "words": 1052,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-2",
+      "words": 964,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-3",
+      "words": 904,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-4",
+      "words": 974,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-5",
+      "words": 973,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-6",
+      "words": 956,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-7",
+      "words": 935,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-8",
+      "words": 1025,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-9",
+      "words": 1015,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-10",
+      "words": 993,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-11",
+      "words": 1051,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-12",
+      "words": 933,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-13",
+      "words": 1101,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-14",
+      "words": 1061,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-15",
+      "words": 950,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-16",
+      "words": 1021,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-17",
+      "words": 1011,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-18",
+      "words": 1037,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-2000",
+      "label": "human_historical",
+      "variant": "random-19",
+      "words": 881,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "original",
+      "words": 1075,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "nfd",
+      "words": 1075,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "crlf",
+      "words": 1075,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "heading",
+      "words": 1075,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "html_literal",
+      "words": 1081,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "bibliography",
+      "words": 1075,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-0",
+      "words": 831,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-1",
+      "words": 945,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-2",
+      "words": 894,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-3",
+      "words": 881,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-4",
+      "words": 859,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-5",
+      "words": 880,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-6",
+      "words": 941,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-7",
+      "words": 862,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-8",
+      "words": 914,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-9",
+      "words": 938,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-10",
+      "words": 887,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-11",
+      "words": 914,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-12",
+      "words": 879,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-13",
+      "words": 965,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-14",
+      "words": 858,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-15",
+      "words": 1002,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-16",
+      "words": 944,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-17",
+      "words": 935,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-18",
+      "words": 875,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "human-66373",
+      "label": "human_historical",
+      "variant": "random-19",
+      "words": 916,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "original",
+      "words": 191,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "nfd",
+      "words": 191,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "crlf",
+      "words": 191,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "heading",
+      "words": 191,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "html_literal",
+      "words": 197,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "bibliography",
+      "words": 191,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-0",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-1",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-2",
+      "words": 65,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-3",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-4",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-5",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-6",
+      "words": 65,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-7",
+      "words": 63,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-8",
+      "words": 65,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-9",
+      "words": 126,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-10",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-11",
+      "words": 191,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-12",
+      "words": 63,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-13",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-14",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-15",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-16",
+      "words": 128,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-17",
+      "words": 63,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-18",
+      "words": 63,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-academic-business",
+      "label": "ai_generated",
+      "variant": "random-19",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "original",
+      "words": 91,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "nfd",
+      "words": 91,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "crlf",
+      "words": 91,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "heading",
+      "words": 91,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "html_literal",
+      "words": 97,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "bibliography",
+      "words": 91,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-0",
+      "words": 52,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-1",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-2",
+      "words": 39,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-3",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-4",
+      "words": 91,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-5",
+      "words": 52,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-6",
+      "words": 52,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-7",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-8",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-9",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-10",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-11",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-12",
+      "words": 39,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-13",
+      "words": 52,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-14",
+      "words": 39,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-15",
+      "words": 39,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-16",
+      "words": 39,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-17",
+      "words": 91,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-18",
+      "words": 0,
+      "editorialScore": null,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-personal-plain",
+      "label": "ai_generated",
+      "variant": "random-19",
+      "words": 39,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "original",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "nfd",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "crlf",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "heading",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "html_literal",
+      "words": 9,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "bibliography",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-0",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-1",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-2",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-3",
+      "words": 6,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-4",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-5",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-6",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-7",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-8",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-9",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-10",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-11",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-12",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-13",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-14",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-15",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-16",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-17",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-18",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    },
+    {
+      "id": "ai-technical-list",
+      "label": "ai_generated",
+      "variant": "random-19",
+      "words": 3,
+      "editorialScore": 100,
+      "percentage": null,
+      "status": "not_determined",
+      "abstained": true
+    }
+  ]
+}

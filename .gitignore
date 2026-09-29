@@ -17,9 +17,10 @@ hf_cache/
 .DS_Store
 Thumbs.db
 
-# IDEs
+# IDEs & Local Agent Config
 .vscode/
 .idea/
+.agents/
 
 # Uploaded private test documents
 uploads/
@@ -32,3 +33,6 @@ output/
 # Temp files
 *.tmp
 *.log
+
+# Public build outputs
+dist/

@@ -1,4 +1,4 @@
-importScripts('editorial-rules.js?v=2.0.0','text-structure.js?v=2.0.0','academic-review.js?v=2.0.0','detector.js?v=2.0.0');
+importScripts('editorial-rules.js?v=3.0.0','text-structure.js?v=3.0.0','academic-review.js?v=3.0.0','detector.js?v=3.0.0');
 self.onmessage = ({data}) => {
   try {
     self.postMessage({id:data.id,stage:'Revisando estructura y redacción…'});

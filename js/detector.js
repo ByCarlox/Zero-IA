@@ -35,7 +35,7 @@
   function analyzeDocument(rawText,options={}) {
     if(typeof rawText!=='string'||!rawText.trim()) return {error:'El documento está vacío.',status:'empty',validationScore:null,cleanPercentage:null,issuePercentage:null};
     if(rawText.length>R.maxCharacters) return {error:`El límite es ${R.maxCharacters.toLocaleString('es')} caracteres. Divide el documento por secciones.`,status:'too_large',validationScore:null,cleanPercentage:null,issuePercentage:null};
-    const blocks=S.blocks(rawText), sentences=[];
+    const blocks=S.blocks(rawText,options.extraction?.structure), sentences=[];
     for(const block of blocks) {
       let sentenceIndex=0;
       const spans=block.kind==='body'?S.sentenceSpans(block.text,block.start):[{text:block.text,start:block.start,end:block.end}];
@@ -133,7 +133,7 @@
     }
     const dimensions=['repetition','structure','specificity','clarity'].map(id=>({id,count:findings.filter(f=>f.dimension===id).length,sentenceCount:new Set(findings.filter(f=>f.dimension===id).flatMap(f=>f.sentenceIds)).size}));
     const lengths=body.map(s=>s.wordCount);
-    const coverage={totalWords:allWords.length,analyzedWords:['unsupported_language','no_prose'].includes(status)?0:bodyWords.length,excludedWords:allWords.length-(['unsupported_language','no_prose'].includes(status)?0:bodyWords.length),byKind:Object.fromEntries(['body','heading','bibliography','table','list'].map(k=>[k,sum(sentences.filter(s=>s.kind===k).map(s=>s.wordCount))])),language:'es',languageStatus:status==='unsupported_language'?'unsupported':'selected_not_certified'};
+    const coverage={totalWords:allWords.length,analyzedWords:['unsupported_language','no_prose'].includes(status)?0:bodyWords.length,excludedWords:allWords.length-(['unsupported_language','no_prose'].includes(status)?0:bodyWords.length),byKind:Object.fromEntries(['body','heading','bibliography','table','list','toc'].map(k=>[k,sum(sentences.filter(s=>s.kind===k).map(s=>s.wordCount))])),language:'es',languageStatus:status==='unsupported_language'?'unsupported':'selected_not_certified'};
     const classification= status==='unsupported_language'?'Idioma no compatible':status==='no_body'||status==='no_prose'?'Sin prosa evaluable':status==='limited_sample'?'Muestra breve: validación parcial':findings.length?'Observaciones para revisar':'Sin incidencias detectadas por estas reglas';
     const highCount=body.filter(s=>s.riskLevel==='high').length;
     const medCount=body.filter(s=>s.riskLevel==='medium').length;
@@ -143,8 +143,8 @@
     const issuePercentage=isEvaluable?Math.max(0,100-cleanPercentage):null;
     const penalty=isEvaluable?Math.min(100,Math.round(((highCount*1.0+medCount*0.5)/body.length)*100)):null;
     const validationScore=isEvaluable?Math.max(0,100-penalty):null;
-    const summary=`${findings.length} observaciones en ${body.length} frases de prosa. ${coverage.analyzedWords} de ${coverage.totalWords} palabras incluidas. Índice de validación: ${validationScore!==null?validationScore+'%':'N/D'}. ${status==='limited_sample'?'La muestra es breve; no se emite una conclusión general. ':''}La autoría y la respuesta de detectores externos no están determinadas.`;
-    const academic=root.ZeroIAAcademic?root.ZeroIAAcademic.academicReview(rawText):null;
+    const summary=`${findings.length} observaciones en ${body.length} frases de prosa. ${coverage.analyzedWords} de ${coverage.totalWords} palabras incluidas. Índice editorial: ${validationScore!==null?validationScore+'/100':'N/D'}. ${status==='limited_sample'?'La muestra es breve; no se emite una conclusión general. ':''}La autoría y la respuesta de detectores externos no están determinadas.`;
+    const academic=root.ZeroIAAcademic?root.ZeroIAAcademic.academicReview(rawText,undefined,{structure:options.extraction?.structure}):null;
     if(academic&&status==='unsupported_language') {academic.readability.score=null;academic.readability.label='Idioma no compatible';}
     return {version:R.version,ruleVersion:R.version,sourceText:rawText,sourceFingerprint:fingerprint(rawText),offsetEncoding:'UTF-16',status,classification,
       score_kind:'editorial_observations',authorship:{status:'not_determined',probability:null,externalDetectorPrediction:null},
@@ -153,6 +153,7 @@
       coverage,findings,dimensions,sentences,blocks,metrics:{meanSentenceWords:round(avg(lengths)),sentenceLengthCV:lengths.length>1?round(std(lengths)/avg(lengths)):null},
       totalWords:coverage.analyzedWords,totalSentences:body.length,highRiskSentences:highCount,mediumRiskSentences:medCount,
       verdictColor:findings.some(f=>f.severity==='high')?'red':findings.length?'yellow':'neutral',verdictSummary:summary,verdictBadge:classification,
+      preflight:root.ZeroIAAcademic?.preflight?root.ZeroIAAcademic.preflight(rawText,{review:academic,stage:options.stage||'progress',rubric:options.rubric,structure:options.extraction?.structure}):null,
       academic_review:academic,watermark_analysis:detectInvisibleWatermarks(rawText),
       externalChecks:[],
       extraction:options.extraction||{format:'text',warnings:[],coverage:'Texto proporcionado; no se verifica el documento de origen.'}};
@@ -164,11 +165,13 @@
     return text.slice(0,s.start)+s.suggestion.replacement+text.slice(s.end);
   }
   function summary(report) {
-    const lines=['# Validador Académico · Zero-IA', '',`Motor: ${report.version} · Reglas: ${report.ruleVersion}`,`Identificador de contenido (no criptográfico): ${report.sourceFingerprint}`,`Estado: ${report.classification}`,`Índice de validación: ${report.validationScore!==null?report.validationScore+'%':'N/D'} (${report.cleanPercentage!==null?report.cleanPercentage+'% texto libre de incidencias':'no evaluable'})`,'',report.verdictSummary,'','Autoría: no determinada. No predice Turnitin ni otros detectores.',`Cobertura: ${report.coverage.analyzedWords}/${report.coverage.totalWords} palabras; excluidas: ${report.coverage.excludedWords}.`,...report.extraction.warnings.map(w=>'Extracción: '+w),'','## Observaciones'];
+    const lines=['# Validador Académico · Zero-IA', '',`Motor: ${report.version} · Reglas: ${report.ruleVersion}`,`Identificador de contenido (no criptográfico): ${report.sourceFingerprint}`,`Estado: ${report.classification}`,`Índice editorial: ${report.validationScore!==null?report.validationScore+'/100':'N/D'} (${report.cleanPercentage!==null?report.cleanPercentage+'% de frases sin observaciones medias o altas':'no evaluable'})`,'',report.verdictSummary,'','Autoría: no determinada. No predice Turnitin ni otros detectores.',`Cobertura: ${report.coverage.analyzedWords}/${report.coverage.totalWords} palabras; excluidas: ${report.coverage.excludedWords}.`,...report.extraction.warnings.map(w=>'Extracción: '+w),'','## Observaciones'];
     for(const f of report.findings) {lines.push('',`### ${f.rule} · ${f.severity}`,f.message, f.advice);for(const e of f.evidence)lines.push(`- Frase ${e.sentenceId+1} [${e.start}, ${e.end}): ${e.text}`);}
     lines.push('','## Formato Unicode',report.watermark_analysis.message);
     for(const position of report.watermark_analysis.positions)lines.push(`${position.hex} · posición ${position.start} · ${position.name}: ${position.context}`);
     if(report.academic_review&&root.ZeroIAAcademic)lines.push('',root.ZeroIAAcademic.summary(report.academic_review));
+    if(report.deliveryReview&&root.ZeroIAPreflight)lines.splice(2,0,root.ZeroIAPreflight.summary(report.deliveryReview),'');
+    else if(report.preflight)lines.push('','## Pendientes académicos',...report.preflight.findings.map(f=>`${f.severity}: ${f.message} — ${typeof f.evidence==='string'?f.evidence:JSON.stringify(f.evidence)}`));
     for(const check of report.externalChecks||[]) lines.push('', '## Consulta DOI', JSON.stringify(check));
     return lines.join('\n');
   }

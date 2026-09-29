@@ -9,10 +9,10 @@
   <!-- Tipografías de Google -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
   <!-- Estilos CSS -->
-  <link rel="stylesheet" href="css/styles.css?v=20260925-2">
+  <link rel="stylesheet" href="css/styles.css?v=3.0.0">
 
   <!-- Librerías Client-Side para Word y PDF (Gratuitas y CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
@@ -23,9 +23,10 @@
   <!-- Barra Superior Minimalista -->
   <header class="gemini-header">
     <div class="brand-wrapper">
-      <div class="gemini-sparkle">✦</div>
+      <div class="gemini-sparkle" aria-hidden="true">✦</div>
       <div class="brand-text">Zero-IA</div>
       <span class="brand-tag">Validador académico</span>
+      <span class="brand-version-pill">v3.0 Pro</span>
     </div>
 
     <div class="header-actions">
@@ -43,9 +44,13 @@
 
     <!-- Vista Inicial: Estilo Gemini / ChatGPT -->
     <section class="hero-container" id="heroContainer">
+      <div class="hero-badge-pill">
+        <span class="hero-badge-dot"></span>
+        <span>Validación Académica & Asistencia Editorial 100% Local</span>
+      </div>
       <div class="eyebrow">VALIDADOR ACADÉMICO</div>
-      <h1 class="hero-title">Una mirada analítica y clara<br>a tu manuscrito.</h1>
-      <p class="hero-subtitle">Valida la pulcritud editorial, detecta repeticiones, analiza legibilidad y comprueba la coherencia bibliográfica.</p>
+      <h1 class="hero-title">Revisa tu trabajo<br><span class="hero-title-gradient">antes de entregarlo.</span></h1>
+      <p class="hero-subtitle">Reúne el resultado de IA, los pendientes académicos y la revisión editorial en un informe claro. El porcentaje de IA requiere un resultado externo; la app no lo estima.</p>
 
       <!-- Input Box Flotante -->
       <div class="gemini-prompt-box">
@@ -74,16 +79,47 @@
         </div>
       </div>
       <p class="input-note">Word, PDF o texto · Procesamiento en tu navegador · Sin registro</p>
+
+      <!-- Indicadores de confianza y propuesta de valor -->
+      <div class="trust-features-grid">
+        <div class="trust-item">
+          <div class="trust-icon">🔒</div>
+          <div class="trust-info">
+            <span class="trust-title">100% Local & Privado</span>
+            <span class="trust-desc">Tus manuscritos nunca salen de tu navegador</span>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">⚡</div>
+          <div class="trust-info">
+            <span class="trust-title">Análisis Instantáneo</span>
+            <span class="trust-desc">Soporte directo Word (.docx), PDF y texto</span>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">📋</div>
+          <div class="trust-info">
+            <span class="trust-title">Rigor Editorial</span>
+            <span class="trust-desc">Legibilidad, referencias y marcas invisibles</span>
+          </div>
+        </div>
+      </div>
     </section>
 
+    <section class="delivery-settings review-coverage" aria-label="Configuración de la entrega">
+      <h2>Tu entrega</h2>
+      <div class="delivery-fields"><label>Etapa del trabajo<select id="deliveryStage"><option value="proposal">Propuesta / anteproyecto</option><option value="progress" selected>Avance</option><option value="final">Entrega final</option></select></label>
+      <label>Requisitos del profesor (uno por línea, opcional)<textarea id="deliveryRubric" rows="2" maxlength="12000" placeholder="Ej.: Incluir bibliografía y explicar la muestra"></textarea></label></div>
+      <p>Los requisitos se conservan como lista para tu comprobación manual; no se da por probado su cumplimiento.</p>
+    </section>
     <div class="analysis-progress"><p id="analysisStatus" role="status" aria-live="polite"></p><button id="cancelAnalysisBtn" class="btn-secondary" hidden>Cancelar revisión</button></div>
     <!-- Informe de revisión -->
     <section class="results-container" id="resultsContainer" aria-label="Resultados del análisis">
       <div class="report-heading">
         <div>
           <div class="eyebrow">INFORME DE VALIDACIÓN</div>
-          <h1>Resultados de la validación.</h1>
-          <p>Indicadores objetivos y reproducibles para una edición consciente y fundamentada.</p>
+          <h1>Tu revisión antes de entregar.</h1>
+          <p>IA, requisitos académicos y redacción: cada resultado con su alcance y evidencia.</p>
         </div>
         <div class="report-heading-actions">
           <button type="button" class="btn-guide-toggle" id="btnToggleGuide" aria-expanded="false" aria-controls="metricsGuideSection" title="Explicación de las métricas">
@@ -94,6 +130,25 @@
           <span class="report-status">Análisis completado</span>
         </div>
       </div>
+
+      <section class="ai-result-card" aria-labelledby="aiResultTitle">
+        <div class="eyebrow">RESULTADO DE IA</div><h2 id="aiResultTitle">Porcentaje de IA</h2>
+        <div id="aiPercentage" class="ai-percentage">No determinado</div>
+        <p id="aiResultExplanation">Añade el resultado de Turnitin para mostrar aquí su porcentaje. Las reglas editoriales no permiten calcularlo.</p>
+        <p id="aiResultProvenance" class="result-provenance"></p>
+        <details class="external-report"><summary>Registrar un resultado externo</summary>
+          <form id="externalReportForm">
+            <div class="external-fields"><label>Detector<input id="externalProvider" value="Turnitin" maxlength="80" required></label><label>Tipo de resultado<select id="externalAIStatus"><option value="reported">Porcentaje exacto</option><option value="below_threshold">Asterisco / inferior al umbral</option></select></label><label>IA (%)<input id="externalAI" type="number" min="0" max="100" step="0.1" required></label><label>Similitud (%) · opcional<input id="externalSimilarity" type="number" min="0" max="100" step="0.1"></label><label>Fecha del informe<input id="externalDate" type="date" required></label></div>
+            <label>Procedencia del dato<input id="externalProvenance" maxlength="600" placeholder="Ej.: captura del comentario del profesor" required></label>
+            <label class="checkbox-label"><input id="externalVersionConfirm" type="checkbox" required> Confirmo que corresponde exactamente al texto de esta revisión.</label>
+            <p>Registro declarado por ti, sin verificación con Turnitin. El porcentaje se refiere al texto que evalúa ese detector; no es una probabilidad de autoría.</p>
+            <div class="report-controls"><button class="btn-primary" type="submit">Guardar resultado</button><button class="btn-secondary" id="removeExternalReport" type="button">Quitar resultado</button></div>
+          </form>
+        </details>
+      </section>
+      <section class="review-coverage preflight-panel" aria-labelledby="preflightTitle"><h2 id="preflightTitle">Pendientes antes de entregar</h2><p id="preflightSummary"></p><div id="preflightFindings"></div><div id="rubricChecklist"></div><p>Ninguna puntuación certifica la aprobación del trabajo. Contrasta los pendientes con las instrucciones del profesor.</p></section>
+      <details class="review-coverage"><summary>Informe y registro de versiones</summary><div class="report-controls"><button type="button" class="btn-secondary" id="exportReviewJSON">Exportar informe JSON</button><button type="button" class="btn-secondary" id="importReviewJSON">Importar resultado JSON</button><input type="file" id="reviewJSONFile" accept=".json,application/json" hidden></div><p>El informe exportado contiene metadatos y observaciones; revisa su contenido antes de compartirlo.</p><label class="checkbox-label"><input type="checkbox" id="historyConsent"> Guardar metadatos de revisiones en este navegador (sin manuscrito)</label><button type="button" class="btn-secondary" id="clearReviewHistory">Borrar historial local</button><div id="localReviewHistory"></div></details>
+      <p id="reviewRecordStatus" role="status" aria-live="polite"></p>
 
       <!-- Guía explicativa de terminologías (Desplegable) -->
       <div class="metrics-guide-panel" id="metricsGuideSection" style="display: none;">
@@ -115,7 +170,7 @@
       
       <!-- Barra Superior de Estadísticas -->
       <div class="top-stats-bar">
-        <div class="stat-card primary">
+        <div class="stat-card">
           <div class="stat-title-row">
             <div class="stat-title">Índice de Pulcritud Editorial</div>
             <button type="button" class="stat-info-btn" data-guide-target="guideCardPatrones" title="¿Qué significa Índice de Pulcritud Editorial?">ⓘ</button>
@@ -162,7 +217,7 @@
         <div class="executive-verdict-header">
           <div class="verdict-icon-container" id="verdictIconContainer">🛡️</div>
           <div class="executive-verdict-title-box">
-            <h2 class="executive-verdict-title" id="executiveVerdictTitle">Dictamen de validación</h2>
+            <h2 class="executive-verdict-title" id="executiveVerdictTitle">Resumen editorial</h2>
             <div class="executive-verdict-subtitle" id="executiveVerdictSubtitle">Cobertura, pulcritud editorial y coherencia de referencias.</div>
           </div>
           <div id="executiveVerdictPill" class="tag-badge badge-green">Dictamen</div>
@@ -284,13 +339,14 @@
   </main>
 
   <!-- Scripts de la Aplicación -->
-  <script src="js/editorial-rules.js"></script>
-  <script src="js/text-structure.js"></script>
-  <script src="js/academic-review.js"></script>
-  <script src="js/detector.js"></script>
-  <script src="js/analysis-client.js"></script>
-  <script src="js/document-parser.js"></script>
-  <script src="js/reference-check.js"></script>
-  <script src="js/app.js?v=20260925-2"></script>
+  <script src="js/editorial-rules.js?v=3.0.0"></script>
+  <script src="js/text-structure.js?v=3.0.0"></script>
+  <script src="js/academic-review.js?v=3.0.0"></script>
+  <script src="js/detector.js?v=3.0.0"></script>
+  <script src="js/analysis-client.js?v=3.0.0"></script>
+  <script src="js/document-parser.js?v=3.0.0"></script>
+  <script src="js/reference-check.js?v=3.0.0"></script>
+  <script src="js/preflight.js?v=3.0.0"></script>
+  <script src="js/app.js?v=3.0.0"></script>
 </body>
 </html>

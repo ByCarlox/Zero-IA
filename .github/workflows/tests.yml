@@ -17,3 +17,5 @@ jobs:
       - run: python -m unittest discover tests/ -v
       - run: python tools/build_rules.py --check
       - run: node tests/test_browser.js
+      - run: node tests/test_academic_v3.js
+      - run: node tests/test_authorship.cjs

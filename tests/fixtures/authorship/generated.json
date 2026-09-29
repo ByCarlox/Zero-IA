@@ -1,0 +1,23 @@
+[
+  {
+    "id": "ai-academic-business",
+    "label": "ai_generated",
+    "language": "es",
+    "provenance": {"generator": "Codex assistant in QA session", "date": "2026-09-29", "prompt": "Redacta un ejemplo original breve de metodología MBA para control sintético; sin citas inventadas.", "limits": "Known generated control, not a Turnitin result; one generator and short sample."},
+    "text": "El estudio propone examinar la relación entre la retención de clientes y el margen operativo de una empresa de servicios. La unidad de análisis será la cuenta comercial activa durante el periodo observado. Se utilizarán registros internos anonimizados y se documentarán las exclusiones antes de calcular los indicadores. Los ingresos se distinguirán de los cobros para evitar que los retrasos administrativos alteren la interpretación económica.\n\nLa comparación tendrá un alcance descriptivo. Un aumento simultáneo de la retención y del margen no demostrará causalidad, porque podrían intervenir variaciones de precios, cambios en la cartera o condiciones del mercado. Se presentarán resultados por cohorte y se informará el tamaño de cada grupo. Los valores ausentes permanecerán identificados en una tabla de control. La decisión de imputarlos requerirá una justificación específica.\n\nEl valor de vida del cliente se estimará bajo escenarios explícitos de duración, descuento y permanencia. Un horizonte anual solo permitirá describir la contribución de ese periodo, salvo que exista un modelo adicional para proyectar los flujos futuros. Las simulaciones servirán para explorar sensibilidad y no se presentarán como observaciones empíricas. Los resultados negativos o inciertos también se conservarán en el informe final."
+  },
+  {
+    "id": "ai-personal-plain",
+    "label": "ai_generated",
+    "language": "es",
+    "provenance": {"generator": "Codex assistant in QA session", "date": "2026-09-29", "prompt": "Escribe una narración ficticia en español coloquial, sin fórmulas académicas, como control generado.", "limits": "Fiction generated for testing; stylistic informality does not make it human."},
+    "text": "Ayer abrí la hoja de cálculo y vi que faltaban tres recibos. Pensé que los había borrado yo. Busqué en la carpeta vieja, llamé a Marta y volví a empezar. Nada. Al final estaban guardados con la fecha del mes pasado. Me dio rabia haber perdido una hora por algo tan pequeño.\n\nHoy escribí los pasos en una libreta. Primero reviso las fechas; después comparo los importes. No es un método brillante, pero a mí me sirve. La próxima semana veremos si alguien más lo entiende sin que tenga que explicárselo."
+  },
+  {
+    "id": "ai-technical-list",
+    "label": "ai_generated",
+    "language": "es",
+    "provenance": {"generator": "Codex assistant in QA session", "date": "2026-09-29", "prompt": "Genera una lista breve de control de calidad de datos.", "limits": "Short non-prose control, not suitable for authorship measurement."},
+    "text": "CONTROL DE DATOS\n1. Confirmar la unidad de cada variable.\n2. Documentar duplicados antes de eliminarlos.\n3. Comparar el total importado con el registro de origen.\n4. Conservar una copia del archivo recibido.\n5. Revisar manualmente los valores atípicos."
+  }
+]

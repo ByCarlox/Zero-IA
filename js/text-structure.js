@@ -30,8 +30,11 @@
     push(text.length);
     return spans;
   }
-  function blocks(text) {
+  function blocks(text, structure) {
     const out=[]; let inBibliography=false;
+    const metadata = (Array.isArray(structure) ? structure : structure?.blocks || []).filter(b =>
+      b && Number.isInteger(b.start) && Number.isInteger(b.end) && b.start >= 0 && b.end > b.start && b.end <= text.length &&
+      typeof b.text === 'string' && text.slice(b.start,b.end) === b.text);
     for(const match of text.matchAll(/[^\r\n]+/g)) {
       const line=match[0]; if(!line.trim()) continue;
       const trimmed=line.trim().normalize('NFC');
@@ -39,14 +42,23 @@
       if(bibliographyHeading.test(trimmed)) {kind='heading';inBibliography=true;}
       else if(sectionHeading.test(trimmed) || /^#{1,6}\s/u.test(trimmed)) {kind='heading';inBibliography=false;}
       else if(inBibliography) kind='bibliography';
+      else if(/(?:\.{3,}|\t+)\s*\d+\s*$/u.test(line)) kind='toc';
       else if(/\t|\|/u.test(line)) kind='table';
       else if(/^\s*(?:[-*•]|\d+[.)])\s/u.test(line)) kind='list';
-      out.push({id:out.length,kind,start:match.index,end:match.index+line.length,text:line});
+      const native = metadata.find(b=>b.start<=match.index+line.indexOf(line.trim()) && b.end>=match.index+line.trimEnd().length && ['heading','table','list','toc'].includes(b.kind));
+      if(native && !bibliographyHeading.test(trimmed)) {
+        if(native.kind==='heading') {kind='heading';inBibliography=false;}
+        else if(!inBibliography) kind=native.kind;
+      }
+      const markdownLevel=(trimmed.match(/^(#{1,6})\s/u)||[])[1]?.length;
+      const numberedLevel=(trimmed.match(/^(\d+(?:\.\d+)*)\.?\s/u)||[])[1]?.split('.').length;
+      const level=kind==='heading' ? (Number.isInteger(native?.level) && native.level>=1 && native.level<=6 ? native.level : markdownLevel || numberedLevel || 1) : undefined;
+      out.push({id:out.length,kind,start:match.index,end:match.index+line.length,text:line,...(level ? {level} : {})});
     }
     return out;
   }
-  function splitBibliography(text) {
-    const parts=blocks(text);
+  function splitBibliography(text, structure) {
+    const parts=blocks(text, structure);
     const found=parts.some(b=>bibliographyHeading.test(b.text.normalize('NFC')));
     return {body:parts.filter(b=>b.kind!=='bibliography'&&!bibliographyHeading.test(b.text.normalize('NFC'))).map(b=>b.text).join('\n'),
       bibliography:parts.filter(b=>b.kind==='bibliography').map(b=>b.text).join('\n'), hasBibliography:found};
