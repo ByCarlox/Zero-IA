@@ -789,7 +789,11 @@ function renderPreflight() {
   if (editorDirty) {
     aiPercentageEl.textContent = "Cambios sin revisar";
     aiExplanationEl.textContent = "Recalcula el manuscrito para actualizar la probabilidad científica de IA.";
-    if (aiVerdictBadgeEl) aiVerdictBadgeEl.hidden = true;
+    if (aiVerdictBadgeEl) {
+      aiVerdictBadgeEl.hidden = true;
+      aiVerdictBadgeEl.style.display = "none";
+      aiVerdictBadgeEl.textContent = "";
+    }
   } else if (ai.percentage !== null && ai.percentage !== undefined) {
     aiPercentageEl.textContent = `${ai.percentage}%`;
     const colorClass = ai.color === "red" ? "ai-percentage-red" : ai.color === "yellow" ? "ai-percentage-yellow" : "ai-percentage-green";
@@ -798,15 +802,20 @@ function renderPreflight() {
       aiVerdictBadgeEl.textContent = ai.badge || ai.classification || "";
       aiVerdictBadgeEl.className = `tag-badge badge-${ai.color || 'yellow'}`;
       aiVerdictBadgeEl.hidden = false;
+      aiVerdictBadgeEl.style.display = "";
     }
     aiExplanationEl.textContent = ai.notice || ai.summary || "";
     aiProvenanceEl.textContent = ai.provenance === "computed_internal"
       ? `🔬 Detección estadística interna: Predictibilidad ${aiProbMetrics.predictabilityScore || 0}% · Cadencia CV ${aiProbMetrics.burstiness || 0} · ${aiProbMetrics.highRiskSentences || 0} frases sintéticas críticas.`
       : (ai.provenance === "manual" ? `Informe externo declarado (${ai.provider || 'Turnitin'})` : `Informe externo importado (${ai.provider || 'Turnitin'})`);
   } else {
-    aiPercentageEl.textContent = "0%";
-    aiExplanationEl.textContent = "Texto sin señales sintéticas detectadas.";
-    if (aiVerdictBadgeEl) aiVerdictBadgeEl.hidden = true;
+    aiPercentageEl.textContent = "--%";
+    aiExplanationEl.textContent = "Texto sin señales sintéticas detectadas o sin muestra suficiente.";
+    if (aiVerdictBadgeEl) {
+      aiVerdictBadgeEl.hidden = true;
+      aiVerdictBadgeEl.style.display = "none";
+      aiVerdictBadgeEl.textContent = "";
+    }
   }
 
   const btnToggleAIHighlight = document.getElementById("btnToggleAIHighlight");
@@ -974,6 +983,8 @@ function renderPreflight() {
   if (editorDirty) {
     document.getElementById("aiPercentage").textContent = "Cambios sin revisar";
     document.getElementById("aiResultExplanation").textContent = "Recalcula el manuscrito. El resultado externo pertenece a la versión registrada.";
+    const b = document.getElementById("aiVerdictBadge");
+    if (b) { b.hidden = true; b.style.display = "none"; b.textContent = ""; }
   }
   const rubric = document.getElementById("deliveryRubric").value.trim().split(/\n/).filter(Boolean);
   document.getElementById("rubricChecklist").innerHTML = rubric.length ? `<h3>Comprobación manual de tus requisitos</h3>${rubric.map(line => `<label class="checkbox-label"><input type="checkbox">${escapeHTML(line)}</label>`).join("")}` : "<p>No has añadido requisitos del profesor. La revisión no puede confirmar que cumple la consigna.</p>";
@@ -1025,5 +1036,12 @@ function saveReviewMetadata() {
 document.getElementById("historyConsent").addEventListener("change", () => {saveReviewMetadata();});
 document.getElementById("clearReviewHistory").addEventListener("click", () => {try {localStorage.removeItem(reviewMetadataKey);document.getElementById("historyConsent").checked=false;showReviewMetadata();recordStatus("Historial local borrado.");} catch (_) {recordStatus("No se pudo acceder al almacenamiento local.");}});
 for (const id of ["deliveryStage","deliveryRubric"]) document.getElementById(id).addEventListener("change", () => {if(currentAnalysis) {renderPreflight();liveEditorText.dispatchEvent(new Event("input"));}});
-liveEditorText.addEventListener("input", () => {if(liveEditorText.value!==currentRawText) {document.getElementById("aiPercentage").textContent="Cambios sin revisar";document.getElementById("aiResultExplanation").textContent="Recalcula el texto. Cualquier resultado externo pertenece a la versión registrada y no se traslada a los cambios.";} else renderPreflight();});
+liveEditorText.addEventListener("input", () => {
+  if (liveEditorText.value !== currentRawText) {
+    document.getElementById("aiPercentage").textContent = "Cambios sin revisar";
+    document.getElementById("aiResultExplanation").textContent = "Recalcula el texto. Cualquier resultado externo pertenece a la versión registrada y no se traslada a los cambios.";
+    const b = document.getElementById("aiVerdictBadge");
+    if (b) { b.hidden = true; b.style.display = "none"; b.textContent = ""; }
+  } else renderPreflight();
+});
 showReviewMetadata();

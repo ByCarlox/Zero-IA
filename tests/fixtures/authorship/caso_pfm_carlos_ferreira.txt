@@ -1,0 +1,129 @@
+Diseño y Validación de un Modelo Prescriptivo de Apoyo a la Decisión para el Abastecimiento Dual de Insumos Críticos en la Industria de Alimentos Balanceados para Animales en República Dominicana.
+
+Carlos Manuel II Ferreira Arias
+
+MBA | Logística & Cadena de Suministro
+
+28/09/2026
+
+Índice
+
+Índice	2
+
+Resumen	3
+
+Abstract	3
+
+1.	Introducción	4
+
+2.	Revisión de la literatura	8
+
+3.	Metodología	9
+
+4.	Análisis de resultados	10
+
+5.	Conclusiones y Recomendaciones	11
+
+6.	Bibliografía	12
+
+7.	Anexos	13
+
+Resumen
+
+Abstract
+
+Introducción
+
+Este Proyecto Final de Máster diseña y valida un modelo prescriptivo de apoyo a la decisión para la gestión del abastecimiento dual (dual sourcing) de materias primas e insumos críticos en la industria dominicana de alimentos balanceados. La investigación aborda el dilema continuo de las plantas de manufactura: importar directamente para capturar economías de escala frente a la necesidad de recurrir a compras de contingencia en el mercado distribuidor local cuando se presentan retrasos portuarios, demoras aduaneras o discrepancias en los inventarios en fábrica. El resultado busca ser una herramienta cuantitativa que determine con rigor matemático cuándo sostener la espera del suministro internacional y en qué momento exacto activar compras locales sin incurrir en sobrecostes innecesarios.
+
+La motivación personal detrás de este trabajo surge de vivir a diario las fricciones de las compras internacionales y la logística de planta. Gestionar la llegada de embarques sabiendo que el retraso de un solo contenedor de micro-ingredientes puede paralizar líneas completas de producción, comprometiendo el suministro a las granjas, genera una tensión operativa constante. En la práctica, estas contingencias suelen resolverse bajo presión: comprando de urgencia en el mercado spot local con sobreprecios elevados o inflando empíricamente los inventarios de seguridad. Esta desconexión entre la urgencia de la fábrica y el análisis de costes fue el detonante para buscar una solución de raíz.
+
+En el plano académico, cursar el MBA con especialidad en Logística y Cadena de Suministro me proporcionó el instrumental analítico, los modelos estocásticos de inventario y las técnicas de optimización necesarias para traducir esa experiencia de campo en un modelo formal. El objetivo de esta investigación es cerrar la brecha entre la teoría de abastecimiento dual y las complejidades reales de una economía insular, reemplazando la intuición y las hojas de cálculo estáticas por reglas de decisión claras que protejan la continuidad operativa y la rentabilidad del negocio.
+
+Planteamiento del problema
+
+La industria dominicana de alimentos balanceados abastece la producción pecuaria de los sectores avícola, porcino y ganadero. Al no contar con una producción agrícola nacional suficiente de cereales y oleaginosas, las empresas del sector dependen de una red de aprovisionamiento transoceánica. Esta cadena de suministro opera bajo una doble estructura asimétrica determinada por el volumen, el origen geográfico y la modalidad de transporte de las materias primas.
+
+Por un lado, los macro-ingredientes energéticos y proteicos, integrados por el maíz amarillo y la harina de soya, representan entre el 85% y el 90% del peso total de las fórmulas nutricionales. Estos insumos se importan a granel en buques graneleros (bulk vessels) desde Estados Unidos (puertos del Golfo), Brasil y Argentina. La descarga se realiza en las terminales de Puerto Plata y Río Haina mediante tolvas, cucharas o sistemas neumáticos de succión, trasladándose en camiones graneleros hacia los silos y bodegas de almacenamiento en fábrica.
+
+Por otro lado, los micro-ingredientes y especialidades nutricionales componen el 10% a 15% restante de la formulación. Este grupo abarca materias primas de baja dosificación, pero alta sensibilidad técnica: aminoácidos sintéticos (DL-metionina, L-lisina y L-treonina), fuentes inorgánicas de fósforo, concentrados proteicos animales y aditivos antifúngicos líquidos. A diferencia de los graneles agrícolas, estos productos provienen de mercados distantes como Asia, Europa y Norteamérica, y se transportan en contenedores completos (FCL), embalados en sacos de 25 kg, big bags o flexitanques.
+
+La elaboración de estos alimentos se rige por algoritmos de formulación a costo mínimo (least-cost formulation) sujetos a especificaciones zootécnicas estrictas. La falta de un micro-ingrediente especializado con inclusiones bajas, como la metionina (entre 0.20% y 0.30% de la ración), detiene la producción del lote completo, pues su omisión no puede sustituirse sin degradar la tasa de conversión alimenticia o causar desbalances metabólicos en los animales. En la operación diaria, la fábrica se paraliza de la misma manera por la ausencia de un contenedor de aminoácidos que por el vaciado de un silo de maíz.
+
+El aprovisionamiento de estas materias primas abarca el ciclo logístico internacional completo, registrando variaciones acumuladas en sus tiempos de ciclo (lead time). En el trayecto marítimo, factores como cancelaciones imprevistas de escalas, congestión en puertos de transbordo del Caribe y contingencias climáticas desplazan continuamente las fechas estimadas de atraque (ETA). Al llegar a los puertos de Río Haina o Puerto Plata, la carga entra en el circuito de nacionalización, donde los plazos de liberación dependen de los aforos físicos, las revisiones documentales de la Dirección General de Aduanas (DGA) y las autorizaciones zoosanitarias del Ministerio de Agricultura. Cuando las demoras portuarias sobrepasan los días libres acordados con las líneas navieras, la empresa asume penalizaciones por demoras de contenedor y sobreestadía de chasis, a las que se suman las demoras del transporte terrestre hacia las plantas.
+
+A esta dispersión temporal del suministro externo se añade la latencia en el registro de los inventarios internos. En diversas fábricas, el consumo real en las tolvas de dosificación no se sincroniza en tiempo real con los sistemas de gestión, y los inventarios físicos sufren ajustes periódicos por mermas operativas o tolerancias mecánicas de pesaje. Esta falta de visibilidad distorsiona el cálculo del tiempo de agotamiento de stock, ocultando la fecha real en que ocurrirá la rotura de inventario.
+
+Frente a una orden de importación demorada y con existencias en fábrica próximas al agotamiento, la gerencia de compras evalúa recurrir a los distribuidores del mercado spot local. Estos proveedores disponen de producto nacionalizado para entrega en 24 a 48 horas, pero aplican sobreprecios que oscilan entre el 20% y el 50% frente al coste de importación directa, operando bajo cotizaciones variables según la urgencia de la demanda y sin acuerdos formales de nivel de servicio. En la actualidad, la decisión de compra de emergencia se gestiona mediante criterios cualitativos y hojas de cálculo estáticas, sin contrastar el coste horario de inactividad de la planta frente al sobreprecio exigido por el distribuidor.
+
+Por tanto, el problema central radica en la ausencia de un modelo analítico prescriptivo capaz de procesar la variabilidad completa del ciclo de importación (tránsito marítimo, despacho aduanero y transporte terrestre), integrarla con las desviaciones del inventario en planta y definir las reglas óptimas de decisión sobre cuándo, cuánto y a qué coste activar compras de contingencia en el mercado local para evitar la parada de la fábrica.
+
+Justificación
+
+La relevancia de esta investigación se articula a través de tres dimensiones fundamentales: el impacto económico y operativo en la gestión empresarial, la contribución al cuerpo de conocimiento académico sobre cadenas de suministro en economías insulares y la trascendencia estratégica para la seguridad alimentaria nacional.
+
+Desde la perspectiva práctica y empresarial, la manufactura de alimentos balanceados no admite discontinuidades operativas. A diferencia de otras industrias donde una rotura de stock genera demoras en la entrega de productos terminados almacenables, en el sector pecuario los destinatarios finales son seres vivos (pollos de engorde, ponedoras y cerdos) cuyos planes de alimentación responden a ciclos biológicos estrictos e ininterrumpidos. Una interrupción de 24 a 48 horas en el suministro de balanceado en granja desencadena impactos zootécnicos severos: caída abrupta en la tasa de conversión alimenticia, pérdidas irreversibles de ganancia de peso diario, canibalismo en lotes de aves y desajustes en los calendarios de procesamiento comercial. Por consiguiente, el coste real de una parada de fábrica excede por mucho los costes directos de mano de obra inactiva o la depreciación de maquinaria; compromete directamente la viabilidad económica de toda la integración pecuaria.
+
+En este contexto, la falta de un criterio cuantitativo conduce a dos ineficiencias recurrentes: recurrir a compras locales spot con sobreprecios elevados para evitar paradas de manufactura, o sobredimensionar el inventario de seguridad en fábrica. La segunda opción inmoviliza capital de trabajo e incrementa el riesgo de mermas por apelmazamiento o degradación microbiológica de aditivos en condiciones de alta humedad relativa. Justificar este trabajo radica en dotar a la gerencia de un modelo prescriptivo que pondere la probabilidad de rotura de stock frente a los sobrecostes del mercado spot, transformando decisiones de compra reactivas en políticas de abastecimiento estructuradas y sustentadas en datos.
+
+En el plano académico, la literatura especializada en abastecimiento dual (dual sourcing) y gestión de inventarios estocásticos ha concentrado tradicionalmente sus modelos en mercados industrializados de Norteamérica, Europa y Asia, asumiendo infraestructuras logísticas terrestres altamente predecibles y redes de suministro de soporte inmediato. Existe una brecha evidente en la investigación aplicada sobre cadenas agroindustriales en economías insulares en desarrollo, donde la rigidez del transporte marítimo y los cuellos de botella burocráticos portuarios condicionan radicalmente la elasticidad de respuesta. Esta investigación aporta un marco analítico replicable que integra las particularidades operativas de los puertos y la asimetría entre buques graneleros (bulk vessels) y contenedores FCL en un entorno de proveedores locales con capacidad finita.
+
+Finalmente, desde el punto de vista socioeconómico, los sectores avícola y porcino proveen la fuente principal y más económica de proteína de la canasta básica familiar en la República Dominicana. Garantizar la continuidad de las operaciones y la contención de costes en la elaboración de alimentos balanceados incide de manera directa en la estabilidad de precios del pollo, el huevo y el cerdo. Optimizar la resiliencia y la eficiencia de esta cadena de suministro genera una contribución que trasciende el balance financiero de una fábrica en particular, fortaleciendo la soberanía y la seguridad alimentaria del país.
+
+Objetivos
+
+Objetivo general
+
+Diseñar y validar un modelo prescriptivo de apoyo a la decisión para la gestión de abastecimiento dual en la industria dominicana de alimentos balanceados para animales, optimizando el equilibrio económico entre la importación internacional (a granel y FCL) y la compra local spot según el perfil de criticidad de cada insumo.
+
+Objetivos específicos
+
+Diagnosticar las causas de variabilidad en el tramo puerto-planta y cuantificar el coste financiero de una rotura de stock según la categoría del insumo.
+
+Evaluar la capacidad de respuesta y disponibilidad inmediata de los distribuidores locales frente a pedidos de emergencia.
+
+Desarrollar la arquitectura lógica del modelo prescriptivo diferenciando las reglas de activación para macro y micro-ingredientes.
+
+Validar la viabilidad financiera del modelo mediante la simulación de escenarios comparativos aplicados a un caso de estudio real.
+
+Preguntas de la investigación
+
+Las preguntas clave formuladas para guiar la investigación en concordancia con los objetivos son:
+
+¿Cómo deben diferenciarse las reglas de activación de compras de emergencia entre macro-ingredientes a granel y especialidades nutricionales importadas en FCL?
+
+¿Bajo qué condiciones de penalización por parada de planta se justifica económicamente absorber el sobreprecio de la oferta local spot frente a las demoras del suministro internacional?
+
+¿Qué nivel de respuesta logística real ofrecen los proveedores locales en el mercado dominicano para mitigar desajustes imprevistos de inventario?
+
+Antecedentes
+
+El desarrollo de la industria pecuaria en la República Dominicana ha experimentado una profunda transformación durante las últimas tres décadas, evolucionando desde esquemas productivos artesanales hacia sistemas intensivos de alta tecnificación. Este crecimiento ha estado impulsado por el aumento sostenido en la demanda interna de pollo de engorde, huevos de mesa y carne de cerdo, consolidándose como las fuentes proteicas primordiales de la dieta nacional. Dicha expansión agroindustrial trajo consigo una reconfiguración de la matriz de insumos: la sustitución progresiva de subproductos locales heterogéneos por fórmulas balanceadas de alta densidad nutricional, diseñadas con precisión milimétrica para maximizar los índices de conversión alimenticia.
+
+Esta sofisticación biológica acentuó la dependencia estructural de las importaciones a través del sistema portuario nacional, situando al Puerto de Haina en el centro neurálgico del abastecimiento de granos y aditivos. Históricamente, las fábricas de balanceados operaban bajo esquemas de planificación determinísticos relativamente estables, donde las variaciones en las fechas de arribo marítimo eran moderadas y los inventarios de seguridad convencionales lograban amortiguar los desajustes operativos habituales. No obstante, las crisis de suministro global desencadenadas en el periodo postpandemia, la congestión recurrente en los centros de transbordo del Caribe y la volatilidad en las tarifas y frecuencias de las líneas navieras alteraron drásticamente la regularidad de los tránsitos internacionales.
+
+Simultáneamente, la logística de las materias primas contenerizadas comenzó a experimentar una fricción aduanera y regulatoria creciente. Las exigencias fito-zoosanitarias y los controles documentales en los puertos dominicanos han incorporado mayores niveles de fiscalización, lo que con frecuencia dilata la liberación física de contenedores con aminoácidos sintéticos, fosfatos o antifúngicos más allá de los plazos teóricos estimados. Frente a esta realidad, el sector pecuario ha recurrido tradicionalmente a la intervención improvisada de intermediarios y distribuidores del mercado spot local. Si bien este canal informal de contingencia ha evitado interrupciones no programadas en las líneas de producción en las fábricas, su uso desarticulado ha generado sobrecostos financieros significativos que comprometen los márgenes operativos de las empresas, evidenciando la necesidad impostergable de sustituir las respuestas intuitivas por un modelo analítico riguroso y formalizado de abastecimiento dual.
+
+Estructura del proyecto
+
+Conforme a los estándares académicos del programa de máster, la presente disertación se encuentra organizada en cinco capítulos secuenciales que abordan de forma sistemática la investigación:
+
+En el capítulo de revisión de la literatura se realiza un análisis crítico y estructurado del estado del arte y los marcos teóricos seminales sobre el abastecimiento dual (Dual-Sourcing), las teorías de gestión de inventarios con demanda y tiempos de suministro estocásticos, la cuantificación de costes de rotura de stock y la aplicación de analítica prescriptiva y predictiva en la toma de decisiones en la cadena de suministro.
+
+Seguidamente, en el capítulo de metodología se define el paradigma y enfoque general de investigación de naturaleza mixta, describiendo detalladamente las herramientas e instrumentos de recolección de datos primarios, integrados por entrevistas semiestructuradas aplicadas a directores de compras y cuestionarios estructurados dirigidos a empresas distribuidoras locales, junto con la especificación de los criterios de validez, fiabilidad, consideraciones éticas y el marco conceptual para la simulación analítica de escenarios.
+
+Después, en el capítulo de análisis de resultados se exponen de manera rigurosa los hallazgos cualitativos y cuantitativos derivados del trabajo de campo, se formula y programa la arquitectura matemática y lógica del modelo prescriptivo de decisión, y se presentan las simulaciones numéricas de escenarios que contrastan el desempeño operativo y financiero del modelo propuesto frente a las prácticas tradicionales de compras.
+
+Y para finalizar, en el capítulo de conclusiones y recomendaciones se evalúa el cumplimiento de cada uno de los objetivos específicos y el objetivo general, se sintetizan las contribuciones teóricas y gerenciales del estudio para la industria de alimentos balanceados, se explicitan las limitaciones operativas y metodológicas encontradas y se trazan las recomendaciones para futuras investigaciones en el área.
+
+Revisión de la literatura
+
+Metodología
+
+Análisis de resultados
+
+Conclusiones y Recomendaciones
+
+Bibliografía
+
+Anexos

@@ -20,6 +20,17 @@ assert.ok(pfmResult.aiPercentage >= 60, `El porcentaje de IA del PFM (${pfmResul
 assert.equal(pfmResult.verdictColor, 'red');
 assert.ok(pfmResult.metrics.highRiskSentences >= 20);
 
+// 1b. Caso Real PFM (Carlos Ferreira - Turnitin 84%)
+const carlosText = fs.readFileSync('tests/fixtures/authorship/caso_pfm_carlos_ferreira.txt', 'utf8');
+const carlosBlocks = S.blocks(carlosText);
+const carlosBody = carlosBlocks.filter(b => b.kind === 'body').flatMap(b => S.sentenceSpans(b.text, b.start).map(s => ({ ...s, wordCount: S.words(s.text).length })));
+
+const carlosResult = Engine.evaluate(carlosBody, carlosText);
+console.log(`[TEST] PFM Carlos Ferreira AI Percentage: ${carlosResult.aiPercentage}% | Classification: ${carlosResult.classification}`);
+assert.ok(carlosResult.aiPercentage >= 70, `El porcentaje de IA de Carlos Ferreira (${carlosResult.aiPercentage}%) debe ser >= 70% (Turnitin 84%)`);
+assert.equal(carlosResult.verdictColor, 'red');
+assert.ok(carlosResult.metrics.highRiskSentences >= 20);
+
 // 2. Controles Humanos Históricos (Cervantes & Ramón y Cajal)
 const humanData = JSON.parse(fs.readFileSync('tests/fixtures/authorship/human.json', 'utf8'));
 for (const h of humanData) {
