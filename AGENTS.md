@@ -245,3 +245,47 @@ Tras una sesión de deliberación estratégica entre el **Gerente General** y el
 - **Google Stitch MCP Server (`stitch`):**
   - Servidor MCP integrado en `.agents/mcp_config.json`.
   - Utilizado por el **Equipo de Diseño** y el **Equipo de UX/UI** para explorar pantallas, variantes estilísticas, tokens de diseño y generación ágil de componentes visuales modernos.
+
+---
+
+## 6. Arsenal de Habilidades de Diseño Avanzado (Skills Especializadas)
+
+Para erradicar cualquier estética genérica o sensación de "página generada por IA" y elevar la plataforma a nivel de producto galardonado internacionalmente, Gerencia General ha incorporado y ordenado la asimilación obligatoria de tres suites de habilidades especializadas en `.agents/skills/`:
+
+### 1. 🎯 `impeccable` (por Paul Bakaus)
+- **Propósito:** Dirección de arte rigurosa y eliminación de clichés de IA en el frontend.
+- **Herramientas Clave:** 24 comandos especializados (`/impeccable polish`, `critique`, `bolder`, `quieter`, `distill`, `harden`, `typeset`, `layout`, `animate`) y 61 reglas deterministas de auditoría visual.
+- **Misión en Kriterion:** Establecer y mantener la verdad durable del producto en `PRODUCT.md` y el sistema formal en `DESIGN.md`, garantizando tipografía madura, contrastes deliberados y cero componentes clonados.
+
+### 2. ✨ `emilkowalski/skills` (por Emil Kowalski)
+- **Propósito:** Excelencia en micro-interacciones, física de movimiento y diseño al nivel de Apple.
+- **Habilidades Clave:** `apple-design`, `animate`, `animation-vocabulary`, `ask-sonner`, `break-ui`, `emil-design-eng`, `prototype`.
+- **Misión en Kriterion:** Reemplazar animaciones toscas o mecánicas con coreografía fluida, feedback contextual de alta gama (toasts no intrusivos tipo Sonner) y transiciones elásticas que transmitan solidez y serenidad técnica.
+
+### 3. 🛡️ `taste-skill` (por Leonxlnx)
+- **Propósito:** Disciplina visual "Anti-Slop" (anti-plantillas predecibles de IA).
+- **Habilidades Clave:** `taste-skill`, `redesign-skill`, `brandkit`, `minimalist-skill`, `stitch-skill`, `gpt-tasteskill`.
+- **Misión en Kriterion:** Desterrar los rectángulos simétricos repetitivos, degradados cliché púrpura/azul y tipografías genéricas. Diseñar una experiencia editorial asimétrica, sofisticada y con carácter propio que refleje la soberanía del investigador.
+
+---
+
+## 7. Directiva de Gerencia General: Hoja de Ruta para el Rediseño Total
+
+El **Gerente General** dictamina el inicio inmediato de la reestructuración visual y narrativa de Kriterion, organizando a los líderes de Marketing, Diseño, UX y Frontend para absorber y ejecutar estas habilidades:
+
+```mermaid
+flowchart LR
+    GM[👔 Gerencia General] --> MKT[📢 Marketing Lead]
+    GM --> DES[🎨 Brand Design Lead]
+    GM --> UX[✨ UX Lead]
+    
+    MKT -->|Narrativa Editorial & Copy Robinhood Multilingüe| DES
+    DES -->|Impeccable + Taste-Skill: Identidad y Tipografía| UX
+    UX -->|Emil Kowalski Motion + Micro-Interacciones| CODE[💻 Frontend Core]
+    CODE --> QA[🧪 QA Certification]
+```
+
+1. **Veto Expreso al "Look de IA":** Quedan prohibidas las tarjetas genéricas uniformes, los emojis como iconos de navegación y los gradientes artificiales.
+2. **Jerarquía Editorial Académica:** Cada pantalla debe lucir como un instrumento de precisión científica suizo: tipografía serif refinada combinada con monospace de ingeniería, contrastes de superficie sutiles y métricas integradas con armonía.
+3. **Flujo de Usuario Impecable:** De la entrada limpia a la revelación fluida del diagnóstico preflight, con micro-feedback inmediato y cero fricción.
+
