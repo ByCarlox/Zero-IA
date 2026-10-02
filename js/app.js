@@ -43,6 +43,8 @@ const tabEditor = document.getElementById("tabEditor");
 const liveEditorText = document.getElementById("liveEditorText");
 const recalculateBtn = document.getElementById("recalculateBtn");
 const newAnalysisBtn = document.getElementById("newAnalysisBtn");
+const brandHomeBtn = document.getElementById("brandHomeBtn");
+const btnReportNewAnalysis = document.getElementById("btnReportNewAnalysis");
 const downloadReportBtn = document.getElementById("downloadReportBtn");
 const btnToggleGuide = document.getElementById("btnToggleGuide");
 const btnCloseGuide = document.getElementById("btnCloseGuide");
@@ -684,7 +686,7 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 recalculateBtn.addEventListener("click", () => runReview(liveEditorText.value, {recordHistory:true,keepScroll:true}));
 
 // Volver a inicio / Nueva Auditoría
-newAnalysisBtn.addEventListener("click", () => {
+function resetToHome() {
   if (analysisInProgress) return;
   currentAnalysis = null; currentRawText = ""; initialText = ""; reviewHistory = []; extractionInfo = null; externalReport = null; currentPreflight = null;
   document.getElementById("externalReportForm").reset();
@@ -699,7 +701,19 @@ newAnalysisBtn.addEventListener("click", () => {
   fileInput.value = "";
   filePill.style.display = "none";
   window.scrollTo({ top: 0, behavior: "smooth" });
-});
+}
+
+newAnalysisBtn?.addEventListener("click", resetToHome);
+if (brandHomeBtn) {
+  brandHomeBtn.addEventListener("click", resetToHome);
+  brandHomeBtn.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      resetToHome();
+    }
+  });
+}
+btnReportNewAnalysis?.addEventListener("click", resetToHome);
 
 // Descargar Reporte en Markdown
 downloadReportBtn.addEventListener("click", () => {

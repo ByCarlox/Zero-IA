@@ -189,6 +189,27 @@ svg {
   display: flex;
   align-items: center;
   gap: 12px;
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 8px;
+  margin: -4px -8px;
+  border-radius: 10px;
+  transition: opacity 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
+}
+
+.brand-wrapper:hover {
+  opacity: 0.92;
+  transform: translateY(-0.5px);
+  background: var(--bg-surface-hover);
+}
+
+.brand-wrapper:active {
+  transform: translateY(0.5px);
+}
+
+.brand-wrapper:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 3px;
 }
 
 .gemini-sparkle {
@@ -817,6 +838,33 @@ svg {
   box-shadow: 0 0 8px var(--accent-primary);
 }
 
+.btn-header-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+}
+
+.btn-header-new:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-active);
+  transform: translateY(-1px);
+}
+
+.btn-header-new svg {
+  flex-shrink: 0;
+  color: var(--accent-primary);
+}
+
 .btn-guide-toggle {
   display: inline-flex;
   align-items: center;
@@ -942,14 +990,19 @@ svg {
 }
 
 /* ==========================================================================
-   Barra Superior de Estadísticas (Top Stats Bar)
+   Barra Superior de Estadísticas (Top Stats Bar) - Unified Editorial Rail
    ========================================================================== */
 
 .top-stats-bar {
   display: grid;
-  grid-template-columns: 1.3fr 1fr 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 28px;
+  grid-template-columns: 1.25fr 1fr 1fr 1fr;
+  gap: 0;
+  margin-bottom: 24px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-card {
@@ -957,35 +1010,24 @@ svg {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 16px;
-  padding: 22px 24px;
+  padding: 18px 22px;
   min-width: 0;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
-}
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
   background: transparent;
-  transition: background 0.2s ease;
+  border: none;
+  border-right: 1px solid var(--border-subtle);
+  border-radius: 0;
+  box-shadow: none;
+  transition: background-color 0.16s ease;
 }
 
-.stat-card:first-child::before {
-  background: var(--accent-gradient);
+.stat-card:last-child {
+  border-right: none;
 }
 
 .stat-card:hover {
-  border-color: var(--border-active);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  background: var(--bg-surface-hover);
+  transform: none;
+  box-shadow: none;
 }
 
 .stat-title-row {
@@ -993,42 +1035,47 @@ svg {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .stat-title {
-  font-size: 12px;
-  font-weight: 650;
-  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-tertiary);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  font-family: var(--font-primary);
 }
 
 .stat-info-btn {
   background: none;
   border: 0;
   color: var(--text-tertiary);
-  font-size: 13px;
-  padding: 2px 6px;
-  border-radius: 6px;
+  font-size: 12px;
+  padding: 1px 5px;
+  border-radius: 4px;
   cursor: pointer;
+  opacity: 0.65;
   transition: all 0.15s ease;
+  line-height: 1;
 }
 
 .stat-info-btn:hover {
+  opacity: 1;
   color: var(--accent-primary);
   background: var(--bg-surface-elevated);
 }
 
 .stat-metric-hero {
-  font-size: clamp(30px, 3.2vw, 42px);
-  line-height: 1.25;
-  letter-spacing: -0.05em;
+  font-size: clamp(24px, 2.5vw, 32px);
+  line-height: 1.15;
+  letter-spacing: -0.035em;
   font-weight: 800;
-  margin: 6px 0;
+  margin: 4px 0 2px 0;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
   color: var(--text-primary);
+  font-family: 'Plus Jakarta Sans', var(--font-primary);
 }
 
 /* Badges & Tags con Micro-Animaciones */
@@ -1212,37 +1259,42 @@ svg {
 
 .ai-result-card {
   border: 1px solid var(--border-subtle);
-  border-top: 3px solid var(--accent-primary);
-  border-radius: 18px;
-  padding: 30px;
-  margin: 28px 0;
+  border-radius: 14px;
+  padding: 24px 26px;
+  margin: 24px 0;
   background: var(--bg-surface);
   box-shadow: var(--shadow-sm);
 }
 
 .ai-result-card h2 {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 700;
-  margin: 10px 0;
+  margin: 6px 0;
   color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 .ai-percentage {
-  font-size: clamp(2.5rem, 5.5vw, 4rem);
+  font-size: clamp(2.4rem, 4.5vw, 3.4rem);
   font-weight: 800;
-  letter-spacing: -0.05em;
-  margin: 14px 0;
+  letter-spacing: -0.04em;
+  margin: 0;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
+  font-family: 'Plus Jakarta Sans', var(--font-primary);
   background: var(--accent-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  min-width: 130px;
+  display: flex;
+  align-items: center;
 }
 
 .ai-result-card p {
-  line-height: 1.7;
+  line-height: 1.65;
   color: var(--text-secondary);
   max-width: 900px;
-  font-size: 13.5px;
+  font-size: 13px;
 }
 
 .ai-result-header {
@@ -1255,42 +1307,60 @@ svg {
 
 .ai-main-metric-row {
   display: flex;
-  align-items: center;
-  gap: 36px;
-  margin: 18px 0;
+  align-items: stretch;
+  gap: 24px;
+  margin: 18px 0 16px 0;
   flex-wrap: wrap;
 }
 
 .ai-metrics-breakdown {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
   flex: 1;
+  min-width: 280px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 .ai-mini-metric {
-  background: var(--bg-surface-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border-subtle);
+  border-radius: 0;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  justify-content: center;
+  gap: 3px;
+  transition: background-color 0.15s ease;
+}
+
+.ai-mini-metric:last-child {
+  border-right: none;
+}
+
+.ai-mini-metric:hover {
+  background: var(--bg-surface-hover);
 }
 
 .ai-mini-metric .mini-label {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10.5px;
+  font-weight: 650;
   color: var(--text-tertiary);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  font-family: var(--font-primary);
 }
 
 .ai-mini-metric strong {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
+  font-family: 'Plus Jakarta Sans', var(--font-primary);
 }
 
 .ai-percentage-red {
@@ -2361,6 +2431,14 @@ dialog.kriterion-modal::backdrop {
   .top-stats-bar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .stat-card:nth-child(1),
+  .stat-card:nth-child(2) {
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .stat-card:nth-child(2),
+  .stat-card:nth-child(4) {
+    border-right: none;
+  }
   .trust-features-grid {
     grid-template-columns: 1fr;
   }
@@ -2394,6 +2472,17 @@ dialog.kriterion-modal::backdrop {
     width: 100%;
     justify-content: space-between;
   }
+  .ai-metrics-breakdown {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ai-mini-metric:nth-child(1),
+  .ai-mini-metric:nth-child(2) {
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .ai-mini-metric:nth-child(2),
+  .ai-mini-metric:nth-child(4) {
+    border-right: none;
+  }
   .guide-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2419,6 +2508,23 @@ dialog.kriterion-modal::backdrop {
 @media (max-width: 550px) {
   .top-stats-bar {
     grid-template-columns: 1fr;
+  }
+  .stat-card {
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .stat-card:last-child {
+    border-bottom: none;
+  }
+  .ai-metrics-breakdown {
+    grid-template-columns: 1fr;
+  }
+  .ai-mini-metric {
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .ai-mini-metric:last-child {
+    border-bottom: none;
   }
   .guide-grid {
     grid-template-columns: 1fr;

@@ -25,6 +25,7 @@ Thumbs.db
 # Uploaded private test documents
 uploads/
 output/
+outputs/
 *.docx
 *.pdf
 !examples/*.docx
