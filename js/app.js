@@ -494,10 +494,16 @@ function renderResults(analysis) {
     verdictCard.className = `executive-verdict-card verdict-${analysis.verdictColor}`;
     verdictTitle.innerText = "Resumen editorial";
     verdictSubtitle.innerText = `Motor ${analysis.version} · ${analysis.totalSentences} frases · Idioma de revisión: español`;
-    verdictPill.innerText = analysis.verdictBadge || (analysis.verdictColor === "red" ? "🔴 ALTA CONCENTRACIÓN" : analysis.verdictColor === "yellow" ? "🟡 CONCENTRACIÓN MEDIA" : "🟢 POCOS PATRONES");
+    verdictPill.innerText = analysis.verdictBadge || (analysis.verdictColor === "red" ? "Alta Concentración" : analysis.verdictColor === "yellow" ? "Concentración Media" : "Pocos Patrones");
     verdictPill.className = `tag-badge badge-${analysis.verdictColor}`;
     verdictBody.innerText = analysis.verdictSummary;
-    verdictIcon.innerText = analysis.verdictColor === "red" ? "!" : analysis.verdictColor === "yellow" ? "—" : "✓";
+    if (verdictIcon) {
+      verdictIcon.innerHTML = analysis.verdictColor === "red" 
+        ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+        : analysis.verdictColor === "yellow"
+        ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>'
+        : '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>';
+    }
   }
 
   // 1.2 Escudo Forense de Marcas de Agua Ocultas & Caracteres de Ancho Cero
@@ -510,7 +516,9 @@ function renderResults(analysis) {
   const wm = analysis.watermark_analysis;
   if (wm && wm.hasWatermark) {
     wmShieldBox.className = "watermark-shield-box shield-alert";
-    if (wmIcon) wmIcon.innerText = "🚨";
+    if (wmIcon) {
+      wmIcon.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+    }
     if (wmShieldText) {
       wmShieldText.innerHTML = `<strong>Marcas de agua de IA detectadas (${wm.covertWatermarksCount} señal${wm.covertWatermarksCount > 1 ? 'es' : ''} forense${wm.covertWatermarksCount > 1 ? 's' : ''}).</strong> ${wm.message}`;
     }
@@ -525,7 +533,9 @@ function renderResults(analysis) {
     }
   } else if (wm && wm.hasFormatting) {
     wmShieldBox.className = "watermark-shield-box shield-info";
-    if (wmIcon) wmIcon.innerText = "ℹ️";
+    if (wmIcon) {
+      wmIcon.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+    }
     if (wmShieldText) {
       wmShieldText.textContent = wm.message;
     }

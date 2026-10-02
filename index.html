@@ -60,11 +60,7 @@
     </div>
 
     <div class="header-actions">
-      <nav class="header-nav">
-        <button type="button" class="header-nav-btn" id="openMethodologyBtn">Metodología</button>
-        <button type="button" class="header-nav-btn" id="openPrivacyBtn">Privacidad</button>
-        <button type="button" class="header-nav-btn" id="openTermsBtn">Términos</button>
-      </nav>
+      <span hidden><button id="openMethodologyBtn" type="button"></button><button id="openPrivacyBtn" type="button"></button><button id="openTermsBtn" type="button"></button></span>
       <button class="icon-btn" id="themeToggleBtn" title="Cambiar tema">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
       </button>
@@ -115,24 +111,41 @@
       </div>
       <p class="input-note">Word, PDF o texto · Procesamiento en tu navegador · Sin registro</p>
 
-      <!-- Indicadores de confianza y propuesta de valor -->
+      <!-- Indicadores de confianza y propuesta de valor con iconos vectoriales -->
       <div class="trust-features-grid">
         <div class="trust-item">
-          <div class="trust-icon">🔒</div>
+          <div class="trust-icon trust-icon-emerald">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
           <div class="trust-info">
             <span class="trust-title">100% Local & Privado</span>
             <span class="trust-desc">Tus manuscritos nunca salen de tu navegador</span>
           </div>
         </div>
         <div class="trust-item">
-          <div class="trust-icon">⚡</div>
+          <div class="trust-icon trust-icon-cyan">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
           <div class="trust-info">
             <span class="trust-title">Análisis Instantáneo</span>
             <span class="trust-desc">Soporte directo Word (.docx), PDF y texto</span>
           </div>
         </div>
         <div class="trust-item">
-          <div class="trust-icon">📋</div>
+          <div class="trust-icon trust-icon-purple">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
           <div class="trust-info">
             <span class="trust-title">Rigor Editorial</span>
             <span class="trust-desc">Legibilidad, referencias y marcas invisibles</span>
@@ -141,12 +154,11 @@
       </div>
     </section>
 
-    <section class="delivery-settings review-coverage" aria-label="Configuración de la entrega">
-      <h2>Tu entrega</h2>
-      <div class="delivery-fields"><label>Etapa del trabajo<select id="deliveryStage"><option value="proposal">Propuesta / anteproyecto</option><option value="progress" selected>Avance</option><option value="final">Entrega final</option></select></label>
-      <label>Requisitos del profesor (uno por línea, opcional)<textarea id="deliveryRubric" rows="2" maxlength="12000" placeholder="Ej.: Incluir bibliografía y explicar la muestra"></textarea></label></div>
-      <p>Los requisitos se conservan como lista para tu comprobación manual; no se da por probado su cumplimiento.</p>
-    </section>
+    <!-- Parámetros de auditoría (conservados para compatibilidad funcional sin recargar la interfaz visual) -->
+    <div style="display:none;" aria-hidden="true">
+      <select id="deliveryStage"><option value="final" selected>Entrega final</option></select>
+      <textarea id="deliveryRubric"></textarea>
+    </div>
     <div class="analysis-progress"><p id="analysisStatus" role="status" aria-live="polite"></p><button id="cancelAnalysisBtn" class="btn-secondary" hidden>Cancelar revisión</button></div>
     <!-- Informe de revisión -->
     <section class="results-container" id="resultsContainer" aria-label="Resultados del análisis">
@@ -282,7 +294,9 @@
       <!-- Tarjeta de Veredicto General Ejecutivo & Escudo de Marcas Invisibles -->
       <div class="executive-verdict-card verdict-green" id="executiveVerdictCard">
         <div class="executive-verdict-header">
-          <div class="verdict-icon-container" id="verdictIconContainer">🛡️</div>
+          <div class="verdict-icon-container" id="verdictIconContainer">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          </div>
           <div class="executive-verdict-title-box">
             <h2 class="executive-verdict-title" id="executiveVerdictTitle">Resumen editorial</h2>
             <div class="executive-verdict-subtitle" id="executiveVerdictSubtitle">Cobertura, pulcritud editorial y coherencia de referencias.</div>
@@ -294,7 +308,9 @@
         </div>
         <div class="watermark-shield-box shield-clean" id="watermarkShieldBox">
           <div class="watermark-content-left">
-            <span class="watermark-icon-badge" id="watermarkIcon">🔒</span>
+            <span class="watermark-icon-badge" id="watermarkIcon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </span>
             <div>
               <div style="display: flex; align-items: center; gap: 8px;">
                 <strong>Análisis Forense de Marcas de Agua IA</strong>
@@ -309,7 +325,7 @@
         </div>
       </div>
 
-<details class="review-coverage"><summary>🔬 Detalle Forense de Marcas de Agua IA y Formato Unicode</summary><pre id="unicodeDetails" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></details>
+<details class="review-coverage"><summary><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Inspección Forense de Marcas de Agua IA y Formato Unicode</summary><pre id="unicodeDetails" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></details>
       <section class="review-coverage" aria-label="Alcance de la revisión"><h2>Cobertura y alcance</h2><p id="coverageDetails"></p><p id="extractionWarnings" class="academic-alert"></p><div id="dimensionSummary" class="citations-summary-stats"></div><p>Sin evaluación de autoría, exactitud factual ni respaldo semántico de las fuentes. Pocas observaciones no certifican que una entrega sea correcta.</p></section>
       <details open class="academic-review-card">
         <summary>
@@ -403,7 +419,9 @@
       <div class="footer-bottom">
         <div class="footer-links">
           <button type="button" class="footer-link-btn" id="footerTermsBtn">Términos de Servicio y Deslinde</button>
-          <button type="button" class="footer-link-btn" id="footerPrivacyBtn">Política de Privacidad Local</button>
+          <span class="footer-sep">·</span>
+          <button type="button" class="footer-link-btn" id="footerPrivacyBtn">Privacidad 100% Local</button>
+          <span class="footer-sep">·</span>
           <button type="button" class="footer-link-btn" id="footerMethodologyBtn">Metodología y Transparencia</button>
         </div>
         <span>Kriterion · Academic Preflight & Integrity Suite © 2026</span>

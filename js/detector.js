@@ -213,10 +213,10 @@
     let message = 'No se encontraron marcas de agua invisibles ni caracteres de formato ocultos.';
     if (hasWatermark) {
       status = 'alert';
-      message = `🚨 Se detectaron ${covertCount} marca(s) de agua invisibles de IA en el documento (${vendorSignatures.join(', ')}). Este rastro esteganográfico aporta +${watermarkScoreContribution}% a la probabilidad de generación por IA.`;
+      message = `Se detectaron ${covertCount} marca(s) de agua invisibles de IA en el documento (${vendorSignatures.join(', ')}). Este rastro esteganográfico aporta +${watermarkScoreContribution}% a la probabilidad de generación por IA.`;
     } else if (hasFormatting) {
       status = 'info';
-      message = 'ℹ️ Se detectaron caracteres de formato estándar (emojis o maquetación tipográfica). No corresponden a marcas de agua ni esteganografía de IA.';
+      message = 'Se detectaron caracteres de formato estándar (secuencias de maquetación tipográfica). No corresponden a marcas de agua ni esteganografía de IA.';
     }
 
     return {
