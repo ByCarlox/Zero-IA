@@ -1,5 +1,5 @@
-# Workflow para desplegar Zero-IA de forma 100% gratuita en GitHub Pages
-name: Deploy Zero-IA to GitHub Pages
+# Workflow para desplegar Kriterion de forma 100% gratuita en GitHub Pages
+name: Deploy Kriterion to GitHub Pages
 
 on:
   push:
@@ -52,8 +52,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Desplegar raíz del repositorio (donde reside index.html)
-          path: 'dist/Zero-IA-3.0.0'
+          path: 'dist/Kriterion-3.2.0'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

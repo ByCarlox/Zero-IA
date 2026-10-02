@@ -51,7 +51,10 @@ const metricsGuideSection = document.getElementById("metricsGuideSection");
 // Tema Oscuro / Claro
 function initTheme() {
   let savedTheme = "dark";
-  try { if (localStorage.getItem("zeroia_theme") === "light") savedTheme = "light"; } catch (_) {}
+  try {
+    const stored = localStorage.getItem("kriterion_theme") || localStorage.getItem("zeroia_theme");
+    if (stored === "light") savedTheme = "light";
+  } catch (_) {}
   document.documentElement.setAttribute("data-theme", savedTheme);
   updateThemeIcon(savedTheme);
 }
@@ -60,7 +63,10 @@ function toggleTheme() {
   const current = document.documentElement.getAttribute("data-theme") || "dark";
   const next = current === "dark" ? "light" : "dark";
   document.documentElement.setAttribute("data-theme", next);
-  try { localStorage.setItem("zeroia_theme", next); } catch (_) {}
+  try {
+    localStorage.setItem("kriterion_theme", next);
+    localStorage.setItem("zeroia_theme", next);
+  } catch (_) {}
   updateThemeIcon(next);
 }
 
@@ -1096,3 +1102,76 @@ liveEditorText.addEventListener("input", () => {
   } else renderPreflight();
 });
 showReviewMetadata();
+
+// ============================================================================
+// Modales de Gobernanza, Legal y Metodología (Kriterion Modals)
+// ============================================================================
+function openKriterionModal(id) {
+  const modal = document.getElementById(id);
+  if (!modal) return;
+  if (typeof modal.showModal === "function") {
+    modal.showModal();
+  } else {
+    modal.setAttribute("open", "");
+  }
+}
+
+function closeKriterionModal(id) {
+  const modal = document.getElementById(id);
+  if (!modal) return;
+  if (typeof modal.close === "function") {
+    modal.close();
+  } else {
+    modal.removeAttribute("open");
+  }
+}
+
+const modalBindings = [
+  { triggers: ["openTermsBtn", "footerTermsBtn"], modal: "termsModal", closers: ["closeTermsModal", "acceptTermsModal"] },
+  { triggers: ["openPrivacyBtn", "footerPrivacyBtn"], modal: "privacyModal", closers: ["closePrivacyModal", "acceptPrivacyModal"] },
+  { triggers: ["openMethodologyBtn", "footerMethodologyBtn"], modal: "methodologyModal", closers: ["closeMethodologyModal", "acceptMethodologyModal"] }
+];
+
+modalBindings.forEach(({ triggers, modal, closers }) => {
+  triggers.forEach(tId => {
+    const el = document.getElementById(tId);
+    if (el) el.addEventListener("click", () => openKriterionModal(modal));
+  });
+  closers.forEach(cId => {
+    const el = document.getElementById(cId);
+    if (el) el.addEventListener("click", () => closeKriterionModal(modal));
+  });
+  const m = document.getElementById(modal);
+  if (m) {
+    m.addEventListener("click", (e) => {
+      if (e.target === m) closeKriterionModal(modal);
+    });
+  }
+});
+
+// Soporte Visual Drag & Drop para documentos
+const promptBox = document.querySelector(".gemini-prompt-box");
+if (promptBox) {
+  ["dragenter", "dragover"].forEach(evtName => {
+    promptBox.addEventListener(evtName, (e) => {
+      e.preventDefault();
+      promptBox.classList.add("drag-over");
+    });
+  });
+  ["dragleave", "drop"].forEach(evtName => {
+    promptBox.addEventListener(evtName, (e) => {
+      e.preventDefault();
+      promptBox.classList.remove("drag-over");
+    });
+  });
+  promptBox.addEventListener("drop", (e) => {
+    const files = e.dataTransfer && e.dataTransfer.files;
+    if (files && files.length > 0 && typeof DataTransfer !== "undefined") {
+      const file = files[0];
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      fileInput.files = dt.files;
+      fileInput.dispatchEvent(new Event("change"));
+    }
+  });
+}

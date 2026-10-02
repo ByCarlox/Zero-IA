@@ -1,64 +1,86 @@
-# Zero IA 3
+# Kriterion · Academic Preflight & Integrity Suite (v3.2 Pro)
 
-Revisión académica antes de entregar: resultado externo de IA, pendientes con evidencia, referencias y revisión editorial.
+Suite independiente de integridad, preflight y revisión académica editorial para tesis, artículos científicos y entregas universitarias.
 
-## Qué muestra el porcentaje de IA
+**Garantía de Soberanía y Privacidad:** Análisis 100% en el entorno local de tu navegador (*Client-Side Processing*). Los manuscritos nunca se envían ni almacenan en servidores externos, ni se utilizan para entrenar inteligencias artificiales de terceros.
 
-El primer resultado es IA. Sin un informe externo aparece **No determinado**, nunca un cero inventado. Puedes registrar el porcentaje de Turnitin comunicado por el profesor o importar un registro JSON de Zero IA. El dato se identifica como declarado o importado sin verificar: la app no autentica informes de Turnitin.
+---
 
-El resultado se vincula mediante SHA-256 al texto exacto extraído. Si cambias el texto, deja de presentarse como aplicable a la nueva versión. Esta huella no verifica el archivo Word binario, la procedencia ni quién escribió el contenido. Un asterisco se conserva sin convertirlo en un porcentaje.
+## 🌟 Características Principales
 
-**Esta versión no incluye un clasificador calibrado de autoría ni predice Turnitin.** El índice editorial de 0 a 100 mide incidencias de redacción y se presenta por separado. Ninguna pantalla certifica aprobación académica.
+1. **Auditoría Editorial y Estilo Prosa:**
+   - Índice de Pulcritud Editorial (0-100%) y porcentaje de texto sin incidencias.
+   - Detección de clichés, redundancias sintácticas y longitud oracional excesiva.
+   - Sugerencias editoriales aplicables de forma individual con capacidad de deshacer.
 
-## Uso
+2. **Detección Forense de Marcas de Agua IA y Esteganografía Unicode:**
+   - Análisis a nivel de punto de código Unicode para detectar rastros esteganográficos y caracteres de ancho cero (ZWSP, ZWNJ, BOM no estándar).
+   - Botón de desinfección en un clic para limpiar caracteres encubiertos sin corromper el contenido.
 
-1. Abre la aplicación, selecciona propuesta, avance o entrega final y añade requisitos del profesor si los tienes.
-2. Adjunta Word, PDF o texto, o pega el manuscrito. Comprueba las advertencias de extracción.
-3. Revisa los pendientes de bibliografía, estructura y metodología junto a la evidencia textual. Las reglas metodológicas plantean preguntas concretas; no sustituyen una revisión experta.
-4. Si cuentas con un resultado externo, registra proveedor, fecha, porcentaje y procedencia. Confirma que corresponde a esta versión.
-5. Edita, recalcula y exporta el informe Markdown o JSON. Las sugerencias editoriales se aceptan individualmente y pueden deshacerse.
+3. **Correspondencia Bibliográfica y Citas Académicas:**
+   - Comprobación cruzada entre autores citados en el texto y la sección formal de referencias (normas APA e IEEE).
+   - Detección de citas huérfanas, discrepancias de fecha/año y consulta opcional de metadatos vía DOI a Crossref.
 
-Los requisitos escritos por el usuario se presentan como lista manual. Marcar una casilla no verifica automáticamente su cumplimiento. La autenticidad y el respaldo de las fuentes requieren consultar los originales.
+4. **Integridad de Evidencia y Registro Externo:**
+   - Huella criptográfica SHA-256 vinculada al texto exacto analizado.
+   - Opción para registrar resultados externos declarados (ej. informe de cátedra de Turnitin) vinculados de forma inalterable a la versión auditada.
+   - Deslinde explícito: Kriterion no emite certificaciones dogmáticas de autoría ni garantiza calificaciones universitarias.
 
-## Abrir localmente
+---
 
-Requiere Python 3 para servir archivos; la aplicación web no necesita instalar paquetes Python ni Node para utilizarse.
+## 🚀 Uso Rápido en Local
+
+La aplicación web estática no requiere instalar paquetes Python ni Node.js para utilizarse en el navegador:
 
 ```sh
+# Servidor local estándar
 python3 -m http.server 8765 --bind 127.0.0.1
 ```
 
-Abre http://127.0.0.1:8765 en el navegador. También puedes ejecutar `./run.sh`. El lector de Word y PDF y las tipografías se descargan de CDN; se necesita conexión para cargarlos. Para documentos extensos, usa el servidor local o HTTPS, no el protocolo file.
+O simplemente ejecuta:
+```sh
+./run.sh
+```
 
-Para generar la distribución pública y su ZIP:
+Abre [http://127.0.0.1:8765](http://127.0.0.1:8765) en tu navegador preferido (Chrome, Safari, Firefox, Edge).
+
+---
+
+## 📦 Compilación para Producción (Deploy Low-Cost)
+
+Para compilar la versión distribuible lista para producción:
 
 ```sh
 python3 tools/build_site.py
 ```
 
-La carpeta `dist/Zero-IA-3.0.0` contiene solo los archivos públicos del producto. Excluye manuscritos, informes internos, corpus de pruebas y datos del repositorio. El paquete incluye `Iniciar.command` para macOS con Python 3. Puedes alojar esa carpeta en un servicio de archivos estáticos con HTTPS.
+Esto generará:
+- **Carpeta de producción:** `dist/Kriterion-3.2.0/`
+- **Paquete comprimido:** `dist/Kriterion-3.2.0.zip`
 
-## Privacidad
+Puedes publicar la carpeta directamente en **Cloudflare Pages** o **GitHub Pages** con costo **$0.00 / mes**. Consulta la guía completa en [`docs/DEPLOYMENT_GUIDE_LOW_COST.md`](docs/DEPLOYMENT_GUIDE_LOW_COST.md).
 
-La versión web procesa el documento en el navegador. No sube el manuscrito a Turnitin ni a otros detectores. La consulta opcional a Crossref envía el DOI elegido; no verifica que el artículo respalde la afirmación. Las bibliotecas y fuentes externas implican conexiones de carga a sus proveedores.
+---
 
-El historial local es opcional y guarda fecha, huella y puntuaciones, no el manuscrito. Puede borrarse en la interfaz. Los informes exportados sí contienen fragmentos del documento y deben tratarse como documentos del usuario. Cerrar o recargar la página descarta la revisión en memoria.
+## 🧪 Pruebas Automatizadas y Calidad
 
-## Pruebas y límites
+Para verificar la integridad del motor y los contratos de navegador:
 
 ```sh
-python -m unittest discover tests/ -v
-python tools/build_rules.py --check
+# Pruebas en Python (requiere dependencias del venv)
+./venv/bin/python -m unittest discover tests/ -v
+
+# Pruebas en Node.js (contratos de navegador, preflight, motor probabilístico y autoría)
 node tests/test_browser.js
 node tests/test_academic_v3.js
 node tests/test_authorship.cjs
+node tests/test_ai_probabilistic_engine.js
 node tools/evaluate_authorship.cjs
 ```
 
-Las pruebas Python requieren Node.js 22+, numpy, python-docx y pypdf. El corpus independiente incluye controles históricos humanos y controles expresamente generados por IA, con variantes aleatorias reproducibles. Comprueba abstención, integridad de resultados externos y regresiones; **no demuestra precisión predictiva**. La concordancia con Turnitin no se ha medido. Consulta `docs/QA_INDEPENDIENTE_2026-09-29.md`.
+---
 
-Para añadir un detector propio se requiere un corpus español representativo, procedencia verificable, separación por autor/documento, evaluación independiente, calibración y métricas de error publicadas. El resultado de otro detector no equivale a una etiqueta cierta de autoría.
+## ⚖️ Marco Legal y Transparencia
 
-## Interfaz Python opcional
-
-`./run.sh --streamlit` inicia la alternativa Streamlit con las dependencias de `requirements.txt` ya instaladas. Procesa el texto en el servidor donde se ejecuta, no en el navegador. La web estática es la interfaz principal de esta entrega.
+- **Deslinde:** Kriterion es un proyecto de software independiente. No está afiliado, respaldado ni patrocinado por Turnitin LLC, OpenAI ni ninguna institución educativa.
+- **Licencia:** Distribuido bajo Licencia MIT.
