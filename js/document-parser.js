@@ -41,13 +41,96 @@ async function extractTextFromFile(file) {
     try {
       for(let number=1;number<=pdf.numPages;number++) {
         const page=await pdf.getPage(number),content=await page.getTextContent();
-        const chunk=content.items.map(item=>item.str+(item.hasEOL?'\n':' ')).join('');
-        chunks.push(chunk);report.pages.push({page:number,start:cursor,end:cursor+chunk.length,hasText:!!chunk.trim()});cursor+=chunk.length+2;
-        if(!chunk.trim())report.warnings.push(`Página ${number}: sin texto extraíble; puede requerir OCR.`);
+        const items = content.items || [];
+        
+        // 1. Reconstruir líneas respetando coordenadas espaciales
+        const lines = [];
+        let currentLine = [];
+        let lastY = null;
+        let lastX = null;
+        let lastWidth = 0;
+        
+        for (const item of items) {
+          if (!item.str && !item.hasEOL) continue;
+          const tx = item.transform ? item.transform[4] : 0;
+          const ty = item.transform ? item.transform[5] : 0;
+          
+          const isNewLine = item.hasEOL || (lastY !== null && Math.abs(ty - lastY) > 3.5);
+          if (isNewLine && currentLine.length > 0) {
+            const lineStr = currentLine.join('').trim();
+            if (lineStr) lines.push({ text: lineStr, y: lastY, yDiff: lastY !== null ? Math.abs(ty - lastY) : 0 });
+            currentLine = [];
+            lastX = null;
+          }
+          
+          if (lastX !== null && tx > lastX + lastWidth + 2.5 && currentLine.length > 0) {
+            if (!currentLine[currentLine.length - 1].endsWith(' ') && !item.str.startsWith(' ')) {
+              currentLine.push(' ');
+            }
+          }
+          currentLine.push(item.str);
+          lastY = ty;
+          lastX = tx;
+          lastWidth = item.width || 0;
+        }
+        if (currentLine.length > 0) {
+          const lineStr = currentLine.join('').trim();
+          if (lineStr) lines.push({ text: lineStr, y: lastY, yDiff: 0 });
+        }
+        
+        // 2. Reconstruir párrafos: unir líneas del mismo párrafo y des-guionar (unhyphenate)
+        const tocRegex = /(?:\.{2,}|\t+|\s{3,})\s*\d+\s*$/u;
+        const pageParagraphs = [];
+        let currentPara = '';
+        
+        for (let i = 0; i < lines.length; i++) {
+          let line = lines[i].text;
+          
+          // Unir palabras partidas con guion al final de línea
+          if (line.endsWith('-') && i + 1 < lines.length && /^[a-záéíóúüñ]/i.test(lines[i + 1].text)) {
+            line = line.slice(0, -1);
+            if (currentPara) currentPara += ' ' + line;
+            else currentPara = line;
+            continue;
+          }
+          
+          const isTOC = tocRegex.test(line);
+          const isHeading = /^(?:[0-9]+(?:\.[0-9]+)*\.?\s+[A-ZÁÉÍÓÚÑ]|#)/.test(line);
+          const isStandaloneShort = /^(?:índice|resumen|abstract|bibliografía|anexos?)$/iu.test(line);
+          
+          if (isTOC || isHeading || isStandaloneShort) {
+            if (currentPara) {
+              pageParagraphs.push(currentPara);
+              currentPara = '';
+            }
+            pageParagraphs.push(line);
+          } else if (currentPara.length === 0) {
+            currentPara = line;
+          } else {
+            const prevEndsSentence = /[.!?:]\s*$/.test(currentPara);
+            const lineStartsCapital = /^[A-ZÁÉÍÓÚÑ]/.test(line);
+            const largeYGap = lines[i].yDiff > 20;
+            
+            if (prevEndsSentence && (lineStartsCapital || largeYGap)) {
+              pageParagraphs.push(currentPara);
+              currentPara = line;
+            } else {
+              currentPara += ' ' + line;
+            }
+          }
+        }
+        if (currentPara) pageParagraphs.push(currentPara);
+        
+        const chunk = pageParagraphs.join('\n\n');
+        chunks.push(chunk);
+        report.pages.push({page:number,start:cursor,end:cursor+chunk.length,hasText:!!chunk.trim()});
+        cursor += chunk.length + 2;
+        if(!chunk.trim()) report.warnings.push(`Página ${number}: sin texto extraíble; puede requerir OCR.`);
         page.cleanup();
       }
     } finally {await pdf.destroy();}
-    text=chunks.join('\n\n');report.warnings.push('PDF: revisa orden de columnas, tablas, guiones y notas antes de interpretar el informe.');
+    text = chunks.join('\n\n');
+    report.warnings.push('PDF: texto normalizado con detección espacial de párrafos y unificación de prosa.');
   } else if(/\.(txt|md)$/.test(name)) {text=await file.text();report.coverage='Texto plano; idioma seleccionado: español.';}
   else throw new Error('Formato no compatible. Usa Word, PDF, TXT o Markdown.');
   if(!text.trim())throw new Error('No se extrajo texto. Si el documento está escaneado, necesita OCR.');

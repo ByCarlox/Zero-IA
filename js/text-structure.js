@@ -3,7 +3,10 @@
   'use strict';
   const words = text => text.normalize('NFC').toLowerCase().match(/\p{L}[\p{L}\p{M}]*|\d+(?:[.,]\d+)*/gu) || [];
   const bibliographyHeading = /^\s*(?:#{1,6}\s*)?(?:\d+(?:\.\d+)*\.?\s+)?(?:referencias(?: bibliográficas)?|bibliografía|references|bibliography)\s*:?\s*$/iu;
-  const sectionHeading = /^\s*(?:#{1,6}\s*)?(?:\d+(?:\.\d+)*\.?\s+)?(?:anexos?|apéndices?|appendix|appendices|introducción|resumen|abstract|conclusiones?|discusión|resultados|metodología|métodos?)\s*:?\s*$/iu;
+  const sectionHeading = /^\s*(?:#{1,6}\s*)?(?:\d+(?:\.\d+)*\.?\s+)?(?:anexos?|apéndices?|appendix|appendices|introducción|resumen|abstract|conclusiones?|discusión|resultados|metodología|métodos?|índice|tabla de contenidos?|contenido|prólogo|agradecimientos?|dedicatoria)\s*:?\s*$/iu;
+  const standalonePage = /^\s*(?:p[aá]g\.?|p\.|p[aá]gina)?\s*\d{1,4}\s*$/iu;
+  const standaloneDate = /^\s*\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}\s*$/u;
+  const tocLine = /(?:\.{2,}|\t+|\s{3,})\s*\d+\s*$/u;
   function sentenceSpans(text, offset=0) {
     const spans=[];
     let start=0;
@@ -32,6 +35,9 @@
   }
   function blocks(text, structure) {
     const out=[]; let inBibliography=false;
+    const hasFrontmatter = /(?:\.{2,}|\t+|\s{3,})\s*\d+\s*$/mu.test(text) && /^\s*(?:\d+(?:\.\d+)*\.?\s+)?(?:introducción|resumen|abstract|conclusiones?|metodología|índice)\b/imu.test(text);
+    let inFrontmatter=hasFrontmatter;
+    let nonFrontmatterStarted=!hasFrontmatter;
     const metadata = (Array.isArray(structure) ? structure : structure?.blocks || []).filter(b =>
       b && Number.isInteger(b.start) && Number.isInteger(b.end) && b.start >= 0 && b.end > b.start && b.end <= text.length &&
       typeof b.text === 'string' && text.slice(b.start,b.end) === b.text);
@@ -39,12 +45,25 @@
       const line=match[0]; if(!line.trim()) continue;
       const trimmed=line.trim().normalize('NFC');
       let kind='body';
-      if(bibliographyHeading.test(trimmed)) {kind='heading';inBibliography=true;}
-      else if(sectionHeading.test(trimmed) || /^#{1,6}\s/u.test(trimmed)) {kind='heading';inBibliography=false;}
+      if(bibliographyHeading.test(trimmed)) {kind='heading';inBibliography=true;inFrontmatter=false;nonFrontmatterStarted=true;}
+      else if(sectionHeading.test(trimmed) || /^#{1,6}\s/u.test(trimmed)) {
+        kind='heading';
+        inBibliography=false;
+        if(!/^(?:índice|tabla de contenidos?|contenido)$/iu.test(trimmed)) {
+          inFrontmatter=false;
+          nonFrontmatterStarted=true;
+        }
+      }
       else if(inBibliography) kind='bibliography';
-      else if(/(?:\.{3,}|\t+)\s*\d+\s*$/u.test(line)) kind='toc';
+      else if(tocLine.test(line)) kind='toc';
+      else if(standalonePage.test(trimmed)) kind='toc';
+      else if(standaloneDate.test(trimmed)) kind='heading';
       else if(/\t|\|/u.test(line)) kind='table';
       else if(/^\s*(?:[-*•]|\d+[.)])\s/u.test(line)) kind='list';
+      else if(inFrontmatter && !nonFrontmatterStarted) {
+        if(out.filter(b=>b.kind==='heading').length === 0) kind='heading';
+        else if(trimmed.length < 90 && !/[.!?]$/.test(trimmed)) kind='heading';
+      }
       const native = metadata.find(b=>b.start<=match.index+line.indexOf(line.trim()) && b.end>=match.index+line.trimEnd().length && ['heading','table','list','toc'].includes(b.kind));
       if(native && !bibliographyHeading.test(trimmed)) {
         if(native.kind==='heading') {kind='heading';inBibliography=false;}
