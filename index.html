@@ -60,6 +60,15 @@
     </div>
 
     <div class="header-actions">
+      <div class="lang-switcher" id="langSwitcher" role="group" aria-label="Idioma / Language">
+        <button type="button" class="lang-btn active" data-lang="es" aria-pressed="true">ES</button>
+        <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
+        <button type="button" class="lang-btn" data-lang="pt" aria-pressed="false">PT</button>
+      </div>
+      <a href="https://github.com/sponsors/ByCarlox" target="_blank" rel="noopener" class="header-sponsor-btn" id="headerSponsorBtn" title="Apoyar en GitHub Sponsors">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        <span data-i18n="sponsor_btn">Sponsor</span>
+      </a>
       <span hidden><button id="openMethodologyBtn" type="button"></button><button id="openPrivacyBtn" type="button"></button><button id="openTermsBtn" type="button"></button></span>
       <button class="icon-btn" id="themeToggleBtn" title="Cambiar tema">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
@@ -77,15 +86,16 @@
     <section class="hero-container" id="heroContainer">
       <div class="hero-badge-pill">
         <span class="hero-badge-dot"></span>
-        <span>Kriterion Suite · Auditoría Académica y Editorial 100% Local</span>
+        <span data-i18n="hero_badge">Kriterion Suite · El escudo ético del investigador y estudiante</span>
       </div>
-      <div class="eyebrow">ACADEMIC PREFLIGHT & INTEGRITY SUITE</div>
-      <h1 class="hero-title">Del borrador a la defensa<br><span class="hero-title-gradient">con rigor absoluto.</span></h1>
-      <p class="hero-subtitle">Audita la pulcritud de tu prosa, correspondencia bibliográfica, estructura y pendientes académicos en un informe integral y transparente. Procesamiento privado en tu navegador.</p>
+      <div class="eyebrow" data-i18n="hero_eyebrow">ACADEMIC PREFLIGHT & INTEGRITY SUITE · 100% LOCAL</div>
+      <h1 class="hero-title" data-i18n="hero_title">Del borrador a la defensa<br><span class="hero-title-gradient">con rigor absoluto.</span></h1>
+      <p class="hero-subtitle" data-i18n="hero_subtitle">Audita la pulcritud de tu prosa, correspondencia bibliográfica, estructura y probabilidad de IA sin suscripciones abusivas ni servidores oscuros. Procesamiento 100% privado en tu navegador.</p>
 
       <!-- Input Box Flotante -->
       <div class="gemini-prompt-box">
-        <label class="input-label" for="promptTextarea">Texto del documento</label><textarea id="promptTextarea" class="prompt-textarea" placeholder="Pega aquí el texto de tu tesis o capítulo..."></textarea>
+        <label class="input-label" for="promptTextarea" data-i18n="prompt_label">Texto del documento</label>
+        <textarea id="promptTextarea" class="prompt-textarea" placeholder="Pega aquí el texto de tu tesis o capítulo..." data-i18n-placeholder="prompt_placeholder"></textarea>
 
         <!-- Píldora de archivo adjunto -->
         <div id="filePill" class="file-pill" style="display: none;">
@@ -99,17 +109,18 @@
             <input type="file" id="fileInput" accept=".docx,.pdf,.txt,.md" style="display: none;">
             <button class="attach-btn" id="attachBtn" type="button">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-              Adjuntar Word o PDF
+              <span data-i18n="attach_btn">Adjuntar Word o PDF</span>
             </button>
-            <button class="sample-chip" id="sampleBtn" type="button">Ver un ejemplo</button>
+            <button class="sample-chip" id="sampleBtn" type="button" data-i18n="sample_btn">Ver un ejemplo</button>
           </div>
 
-          <button class="send-btn" id="sendBtn" disabled title="Analizar documento"><span>Analizar</span>
+          <button class="send-btn" id="sendBtn" disabled title="Analizar documento">
+            <span data-i18n="analyze_btn">Analizar</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
         </div>
       </div>
-      <p class="input-note">Word, PDF o texto · Procesamiento en tu navegador · Sin registro</p>
+      <p class="input-note" data-i18n="input_note">Word, PDF o texto · Procesamiento en tu navegador · Sin registro</p>
 
       <!-- Indicadores de confianza y propuesta de valor con iconos vectoriales -->
       <div class="trust-features-grid">
@@ -121,8 +132,8 @@
             </svg>
           </div>
           <div class="trust-info">
-            <span class="trust-title">100% Local & Privado</span>
-            <span class="trust-desc">Tus manuscritos nunca salen de tu navegador</span>
+            <span class="trust-title" data-i18n="trust_privacy_title">100% Local & Privado</span>
+            <span class="trust-desc" data-i18n="trust_privacy_desc">Tus manuscritos nunca salen de tu navegador ni entrenan IA</span>
           </div>
         </div>
         <div class="trust-item">
@@ -132,8 +143,8 @@
             </svg>
           </div>
           <div class="trust-info">
-            <span class="trust-title">Análisis Instantáneo</span>
-            <span class="trust-desc">Soporte directo Word (.docx), PDF y texto</span>
+            <span class="trust-title" data-i18n="trust_instant_title">Paridad Word & PDF</span>
+            <span class="trust-desc" data-i18n="trust_instant_desc">Extracción espacial sin sesgos de portada ni índices</span>
           </div>
         </div>
         <div class="trust-item">
@@ -147,8 +158,8 @@
             </svg>
           </div>
           <div class="trust-info">
-            <span class="trust-title">Rigor Editorial</span>
-            <span class="trust-desc">Legibilidad, referencias y marcas invisibles</span>
+            <span class="trust-title" data-i18n="trust_rigor_title">Rigor y Preflight</span>
+            <span class="trust-desc" data-i18n="trust_rigor_desc">Citas, marcas invisibles y diagnóstico probabilístico</span>
           </div>
         </div>
       </div>
@@ -406,6 +417,25 @@
       </div>
     </section>
 
+    <!-- Tarjeta de Patrocinio y Filosofía Robinhood -->
+    <div class="sponsor-banner-card">
+      <div class="sponsor-banner-glow" aria-hidden="true"></div>
+      <div class="sponsor-banner-content">
+        <div class="sponsor-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="#ec4899"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          <span data-i18n="sponsor_footer_badge">PROYECTO INDEPENDIENTE Y ÉTICO</span>
+        </div>
+        <h3 class="sponsor-title" data-i18n="sponsor_footer_heading">Kriterion: El proyecto Robinhood para la integridad académica</h3>
+        <p class="sponsor-desc" data-i18n="sponsor_footer_desc">Sin muros de pago de $30/mes ni venta de humanizadores oscuros. Mantén esta plataforma libre, transparente y 100% confidencial para estudiantes de todo el mundo apoyando el desarrollo en GitHub Sponsors.</p>
+      </div>
+      <div class="sponsor-banner-action">
+        <a href="https://github.com/sponsors/ByCarlox" target="_blank" rel="noopener" class="btn-sponsor-large">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          <span data-i18n="sponsor_footer_action">Apoyar en GitHub Sponsors</span>
+        </a>
+      </div>
+    </div>
+
     <!-- Footer con Disclaimer Legal Académico y Enlaces de Gobernanza -->
     <footer class="app-footer">
       <div class="disclaimer-card">
@@ -524,6 +554,7 @@
   <script src="js/document-parser.js?v=3.0.0"></script>
   <script src="js/reference-check.js?v=3.0.0"></script>
   <script src="js/preflight.js?v=3.0.0"></script>
-  <script src="js/app.js?v=3.0.0"></script>
+  <script src="js/i18n.js?v=3.2.0"></script>
+  <script src="js/app.js?v=3.2.0"></script>
 </body>
 </html>
