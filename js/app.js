@@ -575,7 +575,7 @@ function renderResults(analysis) {
     }
     unicodeLines.push("\n--- POSICIONES Y CONTEXTO EN EL DOCUMENTO ---");
     for (const p of wm.positions.slice(0, 100)) {
-      const tag = p.isCovert ? "[🚨 MARCA IA / ESTEGANOGRAFÍA]" : "[ℹ️ FORMATO ESTÁNDAR]";
+      const tag = p.isCovert ? "[MARCA IA / ESTEGANOGRAFÍA]" : "[FORMATO ESTÁNDAR]";
       unicodeLines.push(`${p.hex} · Posición ${p.start} · ${p.name} ${tag}`);
       unicodeLines.push(`   Riesgo: ${p.risk} | Proveedor: ${p.vendor || 'N/A'}`);
       unicodeLines.push(`   Contexto: "${p.context}"\n`);
@@ -880,14 +880,14 @@ function renderPreflight() {
     const colorClass = ai.color === "red" ? "ai-percentage-red" : ai.color === "yellow" ? "ai-percentage-yellow" : "ai-percentage-green";
     aiPercentageEl.classList.add(colorClass);
     if (aiVerdictBadgeEl) {
-      aiVerdictBadgeEl.textContent = ai.badge || ai.classification || "";
+      aiVerdictBadgeEl.textContent = (ai.badge || ai.classification || "").replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
       aiVerdictBadgeEl.className = `tag-badge badge-${ai.color || 'yellow'}`;
       aiVerdictBadgeEl.hidden = false;
       aiVerdictBadgeEl.style.display = "";
     }
     aiExplanationEl.textContent = ai.notice || ai.summary || "";
     aiProvenanceEl.textContent = ai.provenance === "computed_internal"
-      ? `🔬 Detección estadística interna: Predictibilidad ${aiProbMetrics.predictabilityScore || 0}% · Cadencia CV ${aiProbMetrics.burstiness || 0} · ${aiProbMetrics.highRiskSentences || 0} frases sintéticas críticas.` + (aiProbMetrics.watermarkSignals ? ` · 🚨 Marcas de agua IA: ${aiProbMetrics.watermarkSignals} señal(es) (+${aiProbMetrics.watermarkContribution}% al índice)` : '')
+      ? `Detección estadística interna: Predictibilidad ${aiProbMetrics.predictabilityScore || 0}% · Cadencia CV ${aiProbMetrics.burstiness || 0} · ${aiProbMetrics.highRiskSentences || 0} frases sintéticas críticas.` + (aiProbMetrics.watermarkSignals ? ` · Marcas de agua IA: ${aiProbMetrics.watermarkSignals} señal(es) (+${aiProbMetrics.watermarkContribution}% al índice)` : '')
       : (ai.provenance === "manual" ? `Informe externo declarado (${ai.provider || 'Turnitin'})` : `Informe externo importado (${ai.provider || 'Turnitin'})`);
   } else {
     aiPercentageEl.textContent = "--%";
@@ -959,9 +959,9 @@ function renderPreflight() {
     <div class="preflight-toolbar">
       <div class="preflight-filters" id="preflightFilterChips">
         <button type="button" class="filter-chip active" data-filter-cat="all">Todos (${findings.length})</button>
-        ${highCount > 0 ? `<button type="button" class="filter-chip" data-filter-cat="high">🔴 Prioridad alta (${highCount})</button>` : ''}
-        ${bibCount > 0 ? `<button type="button" class="filter-chip" data-filter-cat="bib">📚 Bibliografía (${bibCount})</button>` : ''}
-        ${structCount > 0 ? `<button type="button" class="filter-chip" data-filter-cat="struct">📑 Estructura (${structCount})</button>` : ''}
+        ${highCount > 0 ? `<button type="button" class="filter-chip" data-filter-cat="high"><span class="chip-dot dot-danger" aria-hidden="true"></span>Prioridad alta (${highCount})</button>` : ''}
+        ${bibCount > 0 ? `<button type="button" class="filter-chip" data-filter-cat="bib"><span class="chip-dot dot-warning" aria-hidden="true"></span>Bibliografía (${bibCount})</button>` : ''}
+        ${structCount > 0 ? `<button type="button" class="filter-chip" data-filter-cat="struct"><span class="chip-dot dot-info" aria-hidden="true"></span>Estructura (${structCount})</button>` : ''}
       </div>
       <button type="button" class="btn-toggle-all-preflight" id="btnToggleAllPreflight" title="Abrir o cerrar todos los acordeones">
         <span>Expandir todos</span>
