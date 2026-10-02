@@ -494,30 +494,81 @@ function renderResults(analysis) {
     verdictIcon.innerText = analysis.verdictColor === "red" ? "!" : analysis.verdictColor === "yellow" ? "—" : "✓";
   }
 
-  // 1.2 Escudo de Marcas de Agua Ocultas & Caracteres de Ancho Cero
+  // 1.2 Escudo Forense de Marcas de Agua Ocultas & Caracteres de Ancho Cero
   const wmShieldBox = document.getElementById("watermarkShieldBox");
   const wmShieldText = document.getElementById("watermarkShieldText");
   const wmIcon = document.getElementById("watermarkIcon");
   const btnStripWm = document.getElementById("btnStripWatermarks");
+  const wmScorePill = document.getElementById("watermarkScorePill");
 
   const wm = analysis.watermark_analysis;
-  if (wm && wm.hasFormatting) {
-    wmShieldBox.className = `watermark-shield-box shield-${wm.status}`;
-    if (wmIcon) wmIcon.innerText = "!";
+  if (wm && wm.hasWatermark) {
+    wmShieldBox.className = "watermark-shield-box shield-alert";
+    if (wmIcon) wmIcon.innerText = "🚨";
+    if (wmShieldText) {
+      wmShieldText.innerHTML = `<strong>Marcas de agua de IA detectadas (${wm.covertWatermarksCount} señal${wm.covertWatermarksCount > 1 ? 'es' : ''} forense${wm.covertWatermarksCount > 1 ? 's' : ''}).</strong> ${wm.message}`;
+    }
+    if (wmScorePill) {
+      wmScorePill.style.display = "inline-block";
+      wmScorePill.className = "tag-badge badge-red";
+      wmScorePill.textContent = `+${wm.watermarkScoreContribution}% al índice IA`;
+    }
+    if (btnStripWm) {
+      btnStripWm.style.display = "flex";
+      btnStripWm.textContent = `Desinfectar ${wm.covertWatermarksCount} marca(s) de IA`;
+    }
+  } else if (wm && wm.hasFormatting) {
+    wmShieldBox.className = "watermark-shield-box shield-info";
+    if (wmIcon) wmIcon.innerText = "ℹ️";
     if (wmShieldText) {
       wmShieldText.textContent = wm.message;
     }
-    if (btnStripWm) btnStripWm.style.display = wm.positions.some(p => p.removable) ? "flex" : "none";
+    if (wmScorePill) {
+      wmScorePill.style.display = "inline-block";
+      wmScorePill.className = "tag-badge badge-green";
+      wmScorePill.textContent = "0% IA (Formato estándar)";
+    }
+    if (btnStripWm) {
+      btnStripWm.style.display = wm.positions.some(p => p.removable) ? "flex" : "none";
+      btnStripWm.textContent = "Retirar BOM inicial";
+    }
   } else {
     wmShieldBox.className = "watermark-shield-box shield-clean";
     if (wmIcon) wmIcon.innerText = "✓";
     if (wmShieldText) {
-      wmShieldText.innerText = "No se detectaron caracteres invisibles de los tipos revisados.";
+      wmShieldText.innerText = "Integridad limpia: No se detectaron marcas de agua ni caracteres esteganográficos.";
+    }
+    if (wmScorePill) {
+      wmScorePill.style.display = "none";
     }
     if (btnStripWm) btnStripWm.style.display = "none";
   }
 
-  document.getElementById("unicodeDetails").textContent = wm.positions.slice(0,100).map(p=>`${p.hex} · posición ${p.start} · ${p.name}: ${p.context}`).join("\n") + (wm.positions.length>100 ? "\nMás posiciones en el informe." : "");
+  const unicodeLines = [];
+  if (wm && wm.positions.length) {
+    unicodeLines.push("=== DIAGNÓSTICO FORENSE DE MARCAS DE AGUA & CODIFICACIÓN UNICODE ===");
+    unicodeLines.push(`• Total caracteres de formato/invisibles: ${wm.totalInvisibleChars}`);
+    unicodeLines.push(`• Marcas de agua de IA confirmadas: ${wm.covertWatermarksCount}`);
+    unicodeLines.push(`• Densidad de marcas: ${wm.watermarkDensityPer1k} por 1,000 caracteres`);
+    unicodeLines.push(`• Confianza forense de firma: ${wm.watermarkConfidence}%`);
+    unicodeLines.push(`• Aporte porcentual al score de IA: +${wm.watermarkScoreContribution}%`);
+    if (wm.vendorSignatures && wm.vendorSignatures.length) {
+      unicodeLines.push(`• Firmas de IA detectadas: ${wm.vendorSignatures.join(', ')}`);
+    }
+    unicodeLines.push("\n--- POSICIONES Y CONTEXTO EN EL DOCUMENTO ---");
+    for (const p of wm.positions.slice(0, 100)) {
+      const tag = p.isCovert ? "[🚨 MARCA IA / ESTEGANOGRAFÍA]" : "[ℹ️ FORMATO ESTÁNDAR]";
+      unicodeLines.push(`${p.hex} · Posición ${p.start} · ${p.name} ${tag}`);
+      unicodeLines.push(`   Riesgo: ${p.risk} | Proveedor: ${p.vendor || 'N/A'}`);
+      unicodeLines.push(`   Contexto: "${p.context}"\n`);
+    }
+    if (wm.positions.length > 100) {
+      unicodeLines.push(`\n... y ${wm.positions.length - 100} posiciones más en el manuscrito.`);
+    }
+  } else {
+    unicodeLines.push("Texto limpio. No contiene caracteres invisibles ni marcas esteganográficas.");
+  }
+  document.getElementById("unicodeDetails").textContent = unicodeLines.join('\n');
   document.getElementById("coverageDetails").textContent = `${analysis.coverage.excludedWords} palabras excluidas del análisis de estilo (títulos, bibliografía, listas o tablas, o idioma no compatible). ${analysis.extraction.coverage || ""}`;
   document.getElementById("extractionWarnings").textContent = (analysis.extraction.warnings || []).join(" ");
   document.getElementById("dimensionSummary").innerHTML = analysis.dimensions.map(d => `<span class="citation-stat-badge"><strong>${d.count}</strong>${({repetition:"Repetición",structure:"Estructura",specificity:"Precisión",clarity:"Claridad"})[d.id]}</span>`).join("");
@@ -806,7 +857,7 @@ function renderPreflight() {
     }
     aiExplanationEl.textContent = ai.notice || ai.summary || "";
     aiProvenanceEl.textContent = ai.provenance === "computed_internal"
-      ? `🔬 Detección estadística interna: Predictibilidad ${aiProbMetrics.predictabilityScore || 0}% · Cadencia CV ${aiProbMetrics.burstiness || 0} · ${aiProbMetrics.highRiskSentences || 0} frases sintéticas críticas.`
+      ? `🔬 Detección estadística interna: Predictibilidad ${aiProbMetrics.predictabilityScore || 0}% · Cadencia CV ${aiProbMetrics.burstiness || 0} · ${aiProbMetrics.highRiskSentences || 0} frases sintéticas críticas.` + (aiProbMetrics.watermarkSignals ? ` · 🚨 Marcas de agua IA: ${aiProbMetrics.watermarkSignals} señal(es) (+${aiProbMetrics.watermarkContribution}% al índice)` : '')
       : (ai.provenance === "manual" ? `Informe externo declarado (${ai.provider || 'Turnitin'})` : `Informe externo importado (${ai.provider || 'Turnitin'})`);
   } else {
     aiPercentageEl.textContent = "--%";

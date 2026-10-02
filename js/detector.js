@@ -13,14 +13,250 @@
     return 'fnv1a32:'+ (hash>>>0).toString(16).padStart(8,'0');
   }
   const normalize=text=>S.words(text).join(' ');
+  const INVISIBLE_CODEPOINTS_REGISTRY = new Map([
+    // Zero-width & format joiners (Layer A steganography)
+    [0x200B, { name: 'Espacio de ancho cero (ZWSP)', category: 'zero_width', risk: 'critical', vendor: 'Claude / Anthropic / GenAI ZWSP' }],
+    [0x200C, { name: 'Separador de no unión (ZWNJ)', category: 'zero_width', risk: 'high', vendor: 'Separación esteganográfica / Ortografía persa' }],
+    [0x200D, { name: 'Unión de caracteres de ancho cero (ZWJ)', category: 'zero_width', risk: 'medium', vendor: 'Esteganografía / Pegamento de emojis' }],
+    [0x2060, { name: 'Unión de palabras (WJ)', category: 'zero_width', risk: 'critical', vendor: 'Word Joiner encubierto' }],
+    [0xFEFF, { name: 'Marca de orden de bytes / ZWNBSP', category: 'zero_width', risk: 'low', vendor: 'Unicode BOM / ZWNBSP' }],
+    [0x00AD, { name: 'Guion discrecional (Soft Hyphen)', category: 'soft_hyphen', risk: 'low', vendor: 'Maquetación tipográfica' }],
+    [0x034F, { name: 'Unión de grafemas combinables (CGJ)', category: 'zero_width', risk: 'high', vendor: 'Separador de grafema encubierto' }],
+
+    // Bidi format controls (directional overrides & steganography)
+    [0x061C, { name: 'Marca de letra árabe (ALM)', category: 'bidi_control', risk: 'low', vendor: 'Dirección bidi' }],
+    [0x200E, { name: 'Marca izquierda a derecha (LRM)', category: 'bidi_control', risk: 'low', vendor: 'Dirección bidi' }],
+    [0x200F, { name: 'Marca derecha a izquierda (RLM)', category: 'bidi_control', risk: 'low', vendor: 'Dirección bidi' }],
+    [0x202A, { name: 'Incrustación izquierda a derecha (LRE)', category: 'bidi_override', risk: 'critical', vendor: 'Reordenamiento de texto bidi' }],
+    [0x202B, { name: 'Incrustación derecha a izquierda (RLE)', category: 'bidi_override', risk: 'critical', vendor: 'Reordenamiento de texto bidi' }],
+    [0x202C, { name: 'Fin de formato direccional (PDF)', category: 'bidi_override', risk: 'medium', vendor: 'Terminador bidi' }],
+    [0x202D, { name: 'Sobrescritura izquierda a derecha (LRO)', category: 'bidi_override', risk: 'critical', vendor: 'Sobrescritura forzada bidi' }],
+    [0x202E, { name: 'Sobrescritura derecha a izquierda (RLO)', category: 'bidi_override', risk: 'critical', vendor: 'Sobrescritura forzada bidi' }],
+    [0x2066, { name: 'Aislamiento izquierda a derecha (LRI)', category: 'bidi_control', risk: 'high', vendor: 'Aislamiento bidi' }],
+    [0x2067, { name: 'Aislamiento derecha a izquierda (RLI)', category: 'bidi_control', risk: 'high', vendor: 'Aislamiento bidi' }],
+    [0x2068, { name: 'Aislamiento de primer fuerte (FSI)', category: 'bidi_control', risk: 'high', vendor: 'Aislamiento bidi' }],
+    [0x2069, { name: 'Fin de aislamiento direccional (PDI)', category: 'bidi_control', risk: 'high', vendor: 'Aislamiento bidi' }],
+
+    // Steganographic invisible function characters
+    [0x2061, { name: 'Aplicación de función invisible', category: 'invisible_math', risk: 'critical', vendor: 'Marcador encubierto de función' }],
+    [0x2062, { name: 'Multiplicación invisible', category: 'invisible_math', risk: 'critical', vendor: 'Marcador encubierto matemático' }],
+    [0x2063, { name: 'Separador invisible', category: 'invisible_math', risk: 'critical', vendor: 'Separador encubierto de texto' }],
+    [0x2064, { name: 'Suma invisible', category: 'invisible_math', risk: 'critical', vendor: 'Marcador aritmético encubierto' }],
+    [0x2065, { name: 'Punto ignorable reservado (U+2065)', category: 'reserved_ignorable', risk: 'critical', vendor: 'Portador encubierto no asignado' }],
+
+    // Fillers & selectors
+    [0x115F, { name: 'Hangul choseong filler', category: 'filler', risk: 'critical', vendor: 'Relleno de compatibilidad en blanco' }],
+    [0x1160, { name: 'Hangul jungseong filler', category: 'filler', risk: 'critical', vendor: 'Relleno de compatibilidad en blanco' }],
+    [0x3164, { name: 'Hangul filler (U+3164)', category: 'filler', risk: 'critical', vendor: 'Espacio steganográfico Hangul' }],
+    [0xFFA0, { name: 'Halfwidth Hangul filler', category: 'filler', risk: 'critical', vendor: 'Espacio steganográfico de ancho medio' }],
+    [0x180E, { name: 'Separador de vocal mongola', category: 'filler', risk: 'medium', vendor: 'Separador de formato' }]
+  ]);
+
+  function isEmojiBase(cp) {
+    if (!cp) return false;
+    if (cp >= 0x1F000 && cp <= 0x1FAFF) return true;
+    if (cp >= 0x2190 && cp <= 0x25FF) return true;
+    if (cp >= 0x2600 && cp <= 0x27BF) return true;
+    if (cp >= 0x2B00 && cp <= 0x2BFF) return true;
+    if (cp >= 0x1F3FB && cp <= 0x1F3FF) return true; // skin tone modifiers
+    if (cp === 0xFE0E || cp === 0xFE0F || cp === 0x200D) return true; // emoji glue
+    if (cp === 0x203C || cp === 0x2049 || cp === 0x2139 || cp === 0x2934 || cp === 0x2935) return true;
+    if (cp === 0x00A9 || cp === 0x00AE || cp === 0x2122 || cp === 0x3030 || cp === 0x303D || cp === 0x3297 || cp === 0x3299) return true;
+    return (cp === 0x0023 || cp === 0x002A || (cp >= 0x0030 && cp <= 0x0039));
+  }
+
+  function getPrevCodePoint(str, idx) {
+    if (idx <= 0) return null;
+    const prevChar = str.charCodeAt(idx - 1);
+    if (prevChar >= 0xDC00 && prevChar <= 0xDFFF && idx >= 2) {
+      const highChar = str.charCodeAt(idx - 2);
+      if (highChar >= 0xD800 && highChar <= 0xDBFF) {
+        return str.codePointAt(idx - 2);
+      }
+    }
+    return str.codePointAt(idx - 1);
+  }
+
+  function isArabicIndicOrPersian(cp) {
+    return (cp >= 0x0600 && cp <= 0x08FF) || (cp >= 0x0900 && cp <= 0x0DFF) || (cp >= 0x1780 && cp <= 0x17FF);
+  }
+
   function detectInvisibleWatermarks(text) {
-    const types={'\u200B':'Espacio de ancho cero','\u200C':'Separador de unión','\u200D':'Unión de caracteres','\u2060':'Unión de palabras','\uFEFF':'Marca de orden de bytes','\u00AD':'Guion discrecional','\u200E':'Dirección izquierda-derecha','\u200F':'Dirección derecha-izquierda'};
-    const positions=[];
-    for(let i=0;i<text.length;i++) if(types[text[i]]) positions.push({start:i,end:i+1,hex:'U+'+text.charCodeAt(i).toString(16).toUpperCase().padStart(4,'0'),name:types[text[i]],removable:i===0&&text[i]==='\uFEFF',context:text.slice(Math.max(0,i-16),i+17)});
-    return {hasWatermark:false,hasFormatting:positions.length>0,totalInvisibleChars:positions.length,
-      steganographyDetected:false,status:positions.length?'info':'clean',positions,
-      detectedTypes:[...new Set(positions.map(p=>p.hex))].map(hex=>({hex,count:positions.filter(p=>p.hex===hex).length,name:positions.find(p=>p.hex===hex).name})),
-      message:positions.length?'Se encontraron caracteres de formato. Su presencia no identifica IA ni demuestra una marca de agua. Solo se propone retirar un BOM inicial; las uniones, direcciones y guiones se conservan.':'No se encontraron caracteres de formato de los tipos revisados.'};
+    if (typeof text !== 'string') text = '';
+    const positions = [];
+    const detectedVendors = new Set();
+
+    let i = 0;
+    while (i < text.length) {
+      const cp = text.codePointAt(i);
+      const charLen = cp > 0xFFFF ? 2 : 1;
+      const prevCp = getPrevCodePoint(text, i);
+      const nextCp = (i + charLen < text.length) ? text.codePointAt(i + charLen) : null;
+      const hex = 'U+' + cp.toString(16).toUpperCase().padStart(4, '0');
+
+      let entry = INVISIBLE_CODEPOINTS_REGISTRY.get(cp) || null;
+      const isVariationSelector = (cp >= 0xFE00 && cp <= 0xFE0F) || (cp >= 0xE0100 && cp <= 0xE01EF);
+      const isTagPlane = (cp >= 0xE0020 && cp <= 0xE007F);
+      const isReservedIgnorable = (cp === 0x2065 || cp === 0xE0000 || (cp >= 0xFFF0 && cp <= 0xFFF9) || (cp >= 0xE0080 && cp <= 0xE0100));
+      const isNonCharacter = (cp >= 0xFDD0 && cp <= 0xFDEF) || (cp & 0xFFFE) === 0xFFFE;
+
+      if (!entry) {
+        if (isVariationSelector) {
+          entry = { name: `Selector de variación (${hex})`, category: 'variation_selector', risk: 'high', vendor: 'Inyección de variación / canal esteganográfico' };
+        } else if (isTagPlane) {
+          entry = { name: `Carácter de etiqueta Unicode (${hex})`, category: 'tag_character', risk: 'critical', vendor: 'OpenAI / Canal encubierto de etiquetas' };
+        } else if (isReservedIgnorable) {
+          entry = { name: `Punto ignorable reservado (${hex})`, category: 'reserved_ignorable', risk: 'critical', vendor: 'Portador encubierto no asignado' };
+        } else if (isNonCharacter) {
+          entry = { name: `No-carácter Unicode (${hex})`, category: 'non_character', risk: 'critical', vendor: 'Marcador esteganográfico prohibido' };
+        }
+      }
+
+      if (entry) {
+        let isLegitimate = false;
+        let isCovert = true;
+        let reason = 'Carácter invisible o de control sospechoso';
+
+        // 1. Initial BOM
+        if (cp === 0xFEFF && i === 0) {
+          isLegitimate = true;
+          isCovert = false;
+          reason = 'Marca de orden de bytes (BOM) inicial de archivo';
+        }
+        // 2. Emoji presentation glue (ZWJ, variation selectors after emoji base)
+        else if ((cp === 0x200D || isVariationSelector) && prevCp && isEmojiBase(prevCp)) {
+          isLegitimate = true;
+          isCovert = false;
+          reason = 'Secuencia legítima de presentación de emoji';
+        }
+        // 3. Complex script orthography (Arabic, Persian, Indic)
+        else if ((cp === 0x200C || cp === 0x200D) && ((prevCp && isArabicIndicOrPersian(prevCp)) || (nextCp && isArabicIndicOrPersian(nextCp)))) {
+          isLegitimate = true;
+          isCovert = false;
+          reason = 'Ortografía legítima de escritura compleja (árabe/persa/índica)';
+        }
+        // 4. Directional marks and isolates in mixed text (LRM, RLM, ALM, isolates)
+        else if (cp === 0x200E || cp === 0x200F || cp === 0x061C || (cp >= 0x2066 && cp <= 0x2069)) {
+          isLegitimate = true;
+          isCovert = false;
+          reason = 'Marca o aislamiento de dirección estándar';
+        }
+        // 5. Soft hyphen (typesetting)
+        else if (cp === 0x00AD) {
+          isLegitimate = true;
+          isCovert = false;
+          reason = 'Guion discrecional estándar de maquetación tipográfica';
+        }
+
+        // If not legitimate in this context, it is a covert AI watermark!
+        if (isCovert) {
+          detectedVendors.add(entry.vendor);
+        }
+
+        positions.push({
+          start: i,
+          end: i + charLen,
+          hex,
+          codepoint: cp,
+          name: entry.name,
+          category: entry.category,
+          risk: entry.risk,
+          isLegitimate,
+          isCovert,
+          reason,
+          vendor: entry.vendor,
+          removable: (i === 0 && cp === 0xFEFF) || isCovert,
+          context: text.slice(Math.max(0, i - 16), Math.min(text.length, i + charLen + 16))
+        });
+      }
+
+      i += charLen;
+    }
+
+    const covertPositions = positions.filter(p => p.isCovert);
+    const covertCount = covertPositions.length;
+    const hasWatermark = covertCount > 0;
+    const hasFormatting = positions.length > 0;
+    const vendorSignatures = Array.from(detectedVendors);
+
+    // Contribution to AI score
+    let watermarkScoreContribution = 0;
+    let watermarkConfidence = 0;
+    if (covertCount === 1) {
+      watermarkScoreContribution = 40;
+      watermarkConfidence = 85;
+    } else if (covertCount === 2) {
+      watermarkScoreContribution = 70;
+      watermarkConfidence = 95;
+    } else if (covertCount >= 3) {
+      watermarkScoreContribution = Math.min(100, 85 + Math.min(15, covertCount * 3));
+      watermarkConfidence = 99;
+    }
+
+    const watermarkDensityPer1k = text.length > 0
+      ? Math.round((covertCount / text.length) * 100000) / 100
+      : 0;
+
+    const detectedTypes = [...new Set(positions.map(p => p.hex))].map(hex => {
+      const match = positions.find(p => p.hex === hex);
+      const count = positions.filter(p => p.hex === hex).length;
+      return {
+        hex,
+        count,
+        name: match.name,
+        category: match.category,
+        isCovert: match.isCovert
+      };
+    });
+
+    let status = 'clean';
+    let message = 'No se encontraron marcas de agua invisibles ni caracteres de formato ocultos.';
+    if (hasWatermark) {
+      status = 'alert';
+      message = `🚨 Se detectaron ${covertCount} marca(s) de agua invisibles de IA en el documento (${vendorSignatures.join(', ')}). Este rastro esteganográfico aporta +${watermarkScoreContribution}% a la probabilidad de generación por IA.`;
+    } else if (hasFormatting) {
+      status = 'info';
+      message = 'ℹ️ Se detectaron caracteres de formato estándar (emojis o maquetación tipográfica). No corresponden a marcas de agua ni esteganografía de IA.';
+    }
+
+    return {
+      hasWatermark,
+      hasFormatting,
+      totalInvisibleChars: positions.length,
+      covertWatermarksCount: covertCount,
+      steganographyDetected: hasWatermark,
+      watermarkScoreContribution,
+      watermarkConfidence,
+      watermarkDensityPer1k,
+      vendorSignatures,
+      status,
+      positions,
+      covertPositions,
+      detectedTypes,
+      message
+    };
+  }
+
+  function stripInvisibleCharacters(text, aggressive = false) {
+    if (typeof text !== 'string') return '';
+    const inspection = detectInvisibleWatermarks(text);
+    if (!inspection.positions.length) return text;
+    const removeIndices = new Set();
+    for (const p of inspection.positions) {
+      if (p.removable || (aggressive && !p.isLegitimate)) {
+        for (let idx = p.start; idx < p.end; idx++) {
+          removeIndices.add(idx);
+        }
+      }
+    }
+    if (!removeIndices.size) return text;
+    let cleaned = '';
+    for (let i = 0; i < text.length; i++) {
+      if (!removeIndices.has(i)) {
+        cleaned += text[i];
+      }
+    }
+    return cleaned;
   }
   function safeSuggestion(text) {
     // Only one removable introductory prefix. Never edit quotations or protected data.
@@ -143,7 +379,8 @@
     const issuePercentage=isEvaluable?Math.max(0,100-cleanPercentage):null;
     const penalty=isEvaluable?Math.min(100,Math.round(((highCount*1.0+medCount*0.5)/body.length)*100)):null;
     const validationScore=isEvaluable?Math.max(0,100-penalty):null;
-    const aiEngine = root.ZeroIAProbabilisticEngine ? root.ZeroIAProbabilisticEngine.evaluate(body, rawText) : null;
+    const watermarkAnalysis = detectInvisibleWatermarks(rawText);
+    const aiEngine = root.ZeroIAProbabilisticEngine ? root.ZeroIAProbabilisticEngine.evaluate(body, rawText, { ...options, watermarkAnalysis }) : null;
     if (aiEngine && Array.isArray(aiEngine.scoredSentences)) {
       const aiMap = new Map(aiEngine.scoredSentences.map(s => [s.globalIdx, s]));
       for (const s of body) {
@@ -174,7 +411,7 @@
       totalWords:coverage.analyzedWords,totalSentences:body.length,highRiskSentences:highCount,mediumRiskSentences:medCount,
       verdictColor:findings.some(f=>f.severity==='high')?'red':findings.length?'yellow':'neutral',verdictSummary:summary,verdictBadge:classification,
       preflight:root.ZeroIAAcademic?.preflight?root.ZeroIAAcademic.preflight(rawText,{review:academic,stage:options.stage||'progress',rubric:options.rubric,structure:options.extraction?.structure}):null,
-      academic_review:academic,watermark_analysis:detectInvisibleWatermarks(rawText),
+      academic_review:academic,watermark_analysis:watermarkAnalysis,
       externalChecks:[],
       extraction:options.extraction||{format:'text',warnings:[],coverage:'Texto proporcionado; no se verifica el documento de origen.'}};
   }
@@ -187,14 +424,14 @@
   function summary(report) {
     const lines=['# Validador Académico · Zero-IA', '',`Motor: ${report.version} · Reglas: ${report.ruleVersion}`,`Identificador de contenido (no criptográfico): ${report.sourceFingerprint}`,`Estado: ${report.classification}`,`Índice editorial: ${report.validationScore!==null?report.validationScore+'/100':'N/D'} (${report.cleanPercentage!==null?report.cleanPercentage+'% de frases sin observaciones medias o altas':'no evaluable'})`,'',report.verdictSummary,'','Autoría: no determinada. No predice Turnitin ni otros detectores.',`Cobertura: ${report.coverage.analyzedWords}/${report.coverage.totalWords} palabras; excluidas: ${report.coverage.excludedWords}.`,...report.extraction.warnings.map(w=>'Extracción: '+w),'','## Observaciones'];
     for(const f of report.findings) {lines.push('',`### ${f.rule} · ${f.severity}`,f.message, f.advice);for(const e of f.evidence)lines.push(`- Frase ${e.sentenceId+1} [${e.start}, ${e.end}): ${e.text}`);}
-    lines.push('','## Formato Unicode',report.watermark_analysis.message);
-    for(const position of report.watermark_analysis.positions)lines.push(`${position.hex} · posición ${position.start} · ${position.name}: ${position.context}`);
+    lines.push('','## Formato Unicode y Marcas de Agua Forenses',report.watermark_analysis.message);
+    for(const position of report.watermark_analysis.positions)lines.push(`${position.hex} · posición ${position.start} · ${position.name} (${position.isCovert ? 'Marca IA / Esteganografía' : 'Formato estándar'}): ${position.context}`);
     if(report.academic_review&&root.ZeroIAAcademic)lines.push('',root.ZeroIAAcademic.summary(report.academic_review));
     if(report.deliveryReview&&root.ZeroIAPreflight)lines.splice(2,0,root.ZeroIAPreflight.summary(report.deliveryReview),'');
     else if(report.preflight)lines.push('','## Pendientes académicos',...report.preflight.findings.map(f=>`${f.severity}: ${f.message} — ${typeof f.evidence==='string'?f.evidence:JSON.stringify(f.evidence)}`));
     for(const check of report.externalChecks||[]) lines.push('', '## Consulta DOI', JSON.stringify(check));
     return lines.join('\n');
   }
-  root.ZeroIADetector={analyzeDocument,splitSentences:text=>S.sentenceSpans(text).map(s=>s.text),splitParagraphs:text=>text.split(/\r?\n\s*\r?\n/).map(s=>s.trim()).filter(Boolean),detectInvisibleWatermarks,stripInvisibleCharacters:text=>text.startsWith('\uFEFF')?text.slice(1):text,safeSuggestion,applySuggestion,summary,fingerprint};
+  root.ZeroIADetector={analyzeDocument,splitSentences:text=>S.sentenceSpans(text).map(s=>s.text),splitParagraphs:text=>text.split(/\r?\n\s*\r?\n/).map(s=>s.trim()).filter(Boolean),detectInvisibleWatermarks,stripInvisibleCharacters,safeSuggestion,applySuggestion,summary,fingerprint};
   if(typeof module!=='undefined')module.exports=root.ZeroIADetector;
 })(globalThis);

@@ -268,7 +268,7 @@
     return Math.round(ent * 100) / 100;
   }
 
-  function evaluate(bodySentences, rawText) {
+  function evaluate(bodySentences, rawText, options = {}) {
     if (!bodySentences || bodySentences.length === 0) {
       return {
         aiPercentage: 0,
@@ -392,10 +392,28 @@
 
     // Porcentaje global ponderado (Paradigma Turnitin)
     const rawAiPercentage = ((flaggedWords * 1.0 + mediumWords * 0.45) / (totalWords || 1)) * 100;
-    const aiPercentage = Math.min(100, Math.round(rawAiPercentage));
+    const linguisticAiPercentage = Math.min(100, Math.round(rawAiPercentage));
+
+    const wm = options.watermarkAnalysis || (typeof root !== 'undefined' && root.ZeroIADetector ? root.ZeroIADetector.detectInvisibleWatermarks(rawText || '') : null);
+    let watermarkContribution = 0;
+    let aiPercentage = linguisticAiPercentage;
+
+    if (wm && wm.hasWatermark && wm.covertWatermarksCount > 0) {
+      watermarkContribution = wm.watermarkScoreContribution || Math.min(95, wm.covertWatermarksCount * 35);
+      // Hard forensic physical proof boosts linguistic probability
+      aiPercentage = Math.min(100, Math.max(linguisticAiPercentage, Math.round(linguisticAiPercentage * 0.35 + watermarkContribution * 0.65 + 10)));
+      if (wm.covertWatermarksCount >= 3) {
+        aiPercentage = Math.max(aiPercentage, 95);
+      }
+    }
 
     let classification, verdictBadge, verdictColor, verdictSummary;
-    if (aiPercentage >= 65) {
+    if (wm && wm.hasWatermark) {
+      classification = 'Marcas de agua de IA detectadas';
+      verdictBadge = '🔴 MARCAS DE AGUA IA DETECTADAS';
+      verdictColor = 'red';
+      verdictSummary = `El análisis forense detectó ${wm.covertWatermarksCount} marca(s) de agua de IA (${(wm.vendorSignatures || []).join(', ')}). Este hallazgo aporta +${watermarkContribution}% al índice global de IA, estableciendo una probabilidad combinada del ${aiPercentage}%.`;
+    } else if (aiPercentage >= 65) {
       classification = 'Alta probabilidad de generación por IA';
       verdictBadge = '🔴 ALTA PROBABILIDAD DE IA';
       verdictColor = 'red';
@@ -418,6 +436,9 @@
 
     return {
       aiPercentage,
+      linguisticAiPercentage,
+      watermarkContribution,
+      watermarkAnalysis: wm,
       classification,
       verdictBadge,
       verdictColor,
@@ -434,7 +455,10 @@
         totalSentences: bodySentences.length,
         highRiskSentences: scoredSentences.filter(s => s.aiRisk === 'high').length,
         mediumRiskSentences: scoredSentences.filter(s => s.aiRisk === 'medium').length,
-        naturalSentences: scoredSentences.filter(s => s.aiRisk === 'low').length
+        naturalSentences: scoredSentences.filter(s => s.aiRisk === 'low').length,
+        watermarkSignals: wm ? wm.covertWatermarksCount : 0,
+        watermarkDensity: wm ? wm.watermarkDensityPer1k : 0,
+        watermarkContribution
       },
       scoredSentences
     };
